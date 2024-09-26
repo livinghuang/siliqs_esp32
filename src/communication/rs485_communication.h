@@ -1,3 +1,4 @@
+#include "bsp.h"
 #ifdef USE_RS485
 #ifndef RS485_COMMUNICATION_H
 #define RS485_COMMUNICATION_H
@@ -8,6 +9,15 @@
 
 // RS485 引脚配置和默认波特率
 #define DEFAULT_RS485_BAUD_RATE 9600
+#define MODBUS_MAX_DATA_LENGTH 255
+typedef struct
+{
+  uint8_t address;
+  uint8_t function;
+  uint8_t data[MODBUS_MAX_DATA_LENGTH]; // Adjust the size as needed
+  uint16_t crc;                         // CRC value
+  uint8_t length;                       // Length of data
+} modbus_t;
 
 class RS485Communication : public Communication
 {
@@ -16,10 +26,11 @@ public:
   RS485Communication(HardwareSerial &serial = Serial1, int baudRate = DEFAULT_RS485_BAUD_RATE, int RO = pRS485_RO, int DI = pRS485_DI, int directionPin = pRS485_DE, int powerPin = -1);
 
   // 重写基类方法
-  void begin() override;                           // 初始化 RS485 通信
-  void send(const char *data) override;            // 发送 RS485 数据
-  void receive(char *buffer, int length) override; // 接收 RS485 数据
-
+  void begin() override;                                                  // 初始化 RS485 通信
+  void send(const char *data) override;                                   // 发送 RS485 数据
+  void receive(char *buffer, int maxLength, int timeout = 1000) override; // 接收 RS485 数据
+  void send_modbus(modbus_t *mb);
+  void receive_modbus(modbus_t *mb, int timeout = 1000);
   // 覆写 powerOn 和 powerOff 方法
   void powerOn() override;
   void powerOff() override;
@@ -36,6 +47,9 @@ private:
 
   void enableTransmit(); // 切换到发送模式
   void enableReceive();  // 切换到接收模式
+  void crc(modbus_t *mb);
+  void print_modbus_frame(modbus_t *mb);
+  void update_crc(uint16_t *crc);
 };
 
 #endif // RS485_COMMUNICATION_H

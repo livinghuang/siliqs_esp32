@@ -1,3 +1,4 @@
+#include "bsp.h"
 #ifdef USE_LORA
 #ifndef LORA_COMMUNICATION_H
 #define LORA_COMMUNICATION_H
@@ -24,9 +25,9 @@ public:
   LoraCommunication();
 
   // 实现抽象类的虚函数
-  void begin() override;                           // 初始化LoRa设备
-  void send(const char *data) override;            // 发送数据包
-  void receive(char *buffer, int length) override; // 接收数据包
+  void begin() override;                                        // 初始化LoRa设备
+  void send(const char *data) override;                         // 发送数据包
+  void receive(char *buffer, int length, int timeout) override; // 接收数据包
 
   // 发射完成的静态回调函数
   static void OnTxDone();

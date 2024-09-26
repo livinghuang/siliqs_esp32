@@ -1,3 +1,4 @@
+#include "bsp.h"
 #ifdef USE_LORA
 #include "lora_communication.h"
 
@@ -41,7 +42,7 @@ void LoraCommunication::send(const char *data)
   Radio.IrqProcess();
 }
 
-void LoraCommunication::receive(char *buffer, int length)
+void LoraCommunication::receive(char *buffer, int length, int timeout)
 {
   if (lora_idle)
   {

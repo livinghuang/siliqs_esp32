@@ -1,3 +1,4 @@
+#include "bsp.h"
 #ifdef USE_LORAWAN
 #ifndef LORAWAN_COMMUNICATION_H
 #define LORAWAN_COMMUNICATION_H

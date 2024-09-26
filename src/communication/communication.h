@@ -10,9 +10,9 @@ public:
   // 构造函数，允许初始化电源引脚
   Communication(int pin = -1) : powerPin(pin) {}
 
-  virtual void begin() = 0;                           // 声明虚拟 begin 方法
-  virtual void send(const char *data) = 0;            // 声明虚拟 send 方法
-  virtual void receive(char *buffer, int length) = 0; // 声明虚拟 receive 方法
+  virtual void begin() = 0;                                               // 声明虚拟 begin 方法
+  virtual void send(const char *data) = 0;                                // 声明虚拟 send 方法
+  virtual void receive(char *buffer, int length, int timeout = 1000) = 0; // 声明虚拟 receive 方法
 
   // 电源控制方法
   virtual void powerOn()
