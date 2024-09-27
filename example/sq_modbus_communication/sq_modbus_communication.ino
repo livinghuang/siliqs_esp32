@@ -37,10 +37,9 @@ void loop()
   case 1:
     memcpy(modbusData.data, modbusPayload2, sizeof(modbusPayload2));
     modbusData.length = sizeof(modbusPayload2);
-    send_modbus_command = 0;
+    send_modbus_command_selector = 0;
     break;
   }
-  modbusData.length = sizeof(modbusPayload);
   modbusComm.send_modbus(&modbusData);
 
   if (modbusComm.receive_modbus(&modbusData) > 0)
