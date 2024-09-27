@@ -7,17 +7,8 @@
 #include <HardwareSerial.h> // 用于 RS485 通信的硬件串口
 #include "pins_defined.h"   // 包含引脚定义
 
-// RS485 引脚配置和默认波特率
 #define DEFAULT_RS485_BAUD_RATE 9600
-#define MODBUS_MAX_DATA_LENGTH 255
-typedef struct
-{
-  uint8_t address;
-  uint8_t function;
-  uint8_t data[MODBUS_MAX_DATA_LENGTH]; // Adjust the size as needed
-  uint16_t crc;                         // CRC value
-  uint8_t length;                       // Length of data
-} modbus_t;
+#define RS485_MAX_DATA_LENGTH 255
 
 class RS485Communication : public Communication
 {
@@ -26,11 +17,9 @@ public:
   RS485Communication(HardwareSerial &serial = Serial1, int baudRate = DEFAULT_RS485_BAUD_RATE, int RO = pRS485_RO, int DI = pRS485_DI, int directionPin = pRS485_DE, int powerPin = -1);
 
   // 重写基类方法
-  void begin() override;                                                  // 初始化 RS485 通信
-  void send(const char *data) override;                                   // 发送 RS485 数据
-  void receive(char *buffer, int maxLength, int timeout = 1000) override; // 接收 RS485 数据
-  void send_modbus(modbus_t *mb);
-  void receive_modbus(modbus_t *mb, int timeout = 1000);
+  void begin() override;                                                                            // 初始化 RS485 通信
+  void send(const char *data, int length) override;                                                 // 发送 RS485 数据
+  size_t receive(char *buffer, size_t length = RS485_MAX_DATA_LENGTH, int timeout = 1000) override; // 接收 RS485 数据
   // 覆写 powerOn 和 powerOff 方法
   void powerOn() override;
   void powerOff() override;
@@ -38,7 +27,7 @@ public:
   // 析构函数，释放资源
   ~RS485Communication();
 
-private:
+protected:
   HardwareSerial &_serial; // 硬件串口的引用
   int _RO;                 // 接收数据引脚
   int _DI;                 // 发送数据引脚
@@ -47,10 +36,7 @@ private:
 
   void enableTransmit(); // 切换到发送模式
   void enableReceive();  // 切换到接收模式
-  void crc(modbus_t *mb);
-  void print_modbus_frame(modbus_t *mb);
-  void update_crc(uint16_t *crc);
 };
-
+void print_bytes(const uint8_t *data, int length);
 #endif // RS485_COMMUNICATION_H
 #endif // USE_RS485

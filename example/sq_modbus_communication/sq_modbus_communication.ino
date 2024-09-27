@@ -1,8 +1,8 @@
 #include "bsp.h"
 #include "siliqs_heltec_esp32.h"
 #include "communication/rs485_communication.h"
-
-RS485Communication rs485Comm;
+#include "communication/modbus_communication.h"
+ModbusCommunication modbusComm;
 
 /**
  * @brief setup 函数，用于初始化系统
@@ -18,19 +18,39 @@ void setup()
 
 void loop()
 {
-  modbus_t mb;
-  mb.address = 1;
-  mb.function = 3; // Function code for reading registers
+  static uint8_t send_modbus_command_selector = 0;
+  // 初始化 Modbus 数据
+  modbus_data_t modbusData;
+  modbusData.address = 0x01;
+  modbusData.function = 0x03;
 
-  // Correct initialization of data array
-  uint8_t modbusData[] = {0x03, 0x04, 0x00, 0x09};
-  memcpy(mb.data, modbusData, sizeof(modbusData)); // Copy data into mb.data
+  // 设置数据部分
+  uint8_t modbusPayload1[] = {0x03, 0x04, 0x00, 0x09};
+  uint8_t modbusPayload2[] = {0x05, 0x04, 0x00, 0x14};
+  switch (send_modbus_command_selector)
+  {
+  case 0:
+    memcpy(modbusData.data, modbusPayload1, sizeof(modbusPayload1));
+    modbusData.length = sizeof(modbusPayload1);
+    send_modbus_command_selector = 1;
+    break;
+  case 1:
+    memcpy(modbusData.data, modbusPayload2, sizeof(modbusPayload2));
+    modbusData.length = sizeof(modbusPayload2);
+    send_modbus_command = 0;
+    break;
+  }
+  modbusData.length = sizeof(modbusPayload);
+  modbusComm.send_modbus(&modbusData);
 
-  mb.length = sizeof(modbusData); // Set length to the actual number of bytes
-
-  RS485Communication rs485Comm;
-  rs485Comm.send_modbus(&mb); // Send the Modbus data
-  // rs485Comm.receive_modbus(&mb); // Uncomment if you want to receive after sending
-
+  if (modbusComm.receive_modbus(&modbusData) > 0)
+  {
+    Serial.println("Modbus 数据接收成功");
+    modbusComm.print_data(&modbusData);
+  }
+  else
+  {
+    Serial.println("CRC 校验失败");
+  }
   delay(1000);
 }

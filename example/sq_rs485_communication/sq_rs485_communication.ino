@@ -19,7 +19,14 @@ void setup()
 void loop()
 {
   char rs485_rxpacket[30]; // 确保这个变量正确声明
-  rs485Comm.send("Hello world");
-  rs485Comm.receive(rs485_rxpacket, 30);
-  Serial.println(rs485_rxpacket);
+  if (rs485Comm.receive(rs485_rxpacket, 30))
+  {
+    rs485Comm.send(rs485_rxpacket);
+    rs485Comm.send("\n");
+    Serial.println(rs485_rxpacket);
+  }
+  else
+  {
+    rs485Comm.send("hello\n");
+  }
 }
