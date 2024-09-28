@@ -15,18 +15,11 @@ void setup()
   RS485Communication rs485Comm(Serial1, 9600, pRS485_RO, pRS485_DI, pRS485_DE, pVext);
   rs485Comm.begin();
 }
-
 void loop()
 {
-  char rs485_rxpacket[30]; // 确保这个变量正确声明
-  if (rs485Comm.receive(rs485_rxpacket, 30))
-  {
-    rs485Comm.send(rs485_rxpacket);
-    rs485Comm.send("\n");
-    Serial.println(rs485_rxpacket);
-  }
-  else
-  {
-    rs485Comm.send("hello\n");
-  }
+  char data[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+  rs485Comm.send(data, 6);
+  Serial.println("Send: ");
+  print_bytes((uint8_t *)data, 6);
+  delay(1000);
 }

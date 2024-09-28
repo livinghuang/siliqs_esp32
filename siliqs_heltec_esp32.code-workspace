@@ -1,0 +1,54 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../../../code/github/nafco01"
+		},
+		{
+			"path": "../../../../code/github/siliqs"
+		},
+		{
+			"path": "../../../../code/github/xda002"
+		},
+		{
+			"path": "../../../../code/github/xda002-water_meter_simulater"
+		},
+		{
+			"path": "../../sq_xda002_water_meter_simulater"
+		},
+		{
+			"path": "../../sq_nafco01"
+		},
+		{
+			"path": "../../sq_xda002_nafco01_simulater"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"istream": "cpp",
+			"*.tcc": "cpp",
+			"__locale": "cpp",
+			"string": "cpp",
+			"string_view": "cpp",
+			"condition_variable": "cpp",
+			"functional": "cpp",
+			"compare": "cpp",
+			"array": "cpp",
+			"vector": "cpp",
+			"ostream": "cpp",
+			"__bit_reference": "cpp",
+			"__hash_table": "cpp",
+			"__split_buffer": "cpp",
+			"__tree": "cpp",
+			"deque": "cpp",
+			"initializer_list": "cpp",
+			"ios": "cpp",
+			"map": "cpp",
+			"unordered_map": "cpp",
+			"unordered_set": "cpp",
+			"stdexcept": "cpp"
+		}
+	}
+}

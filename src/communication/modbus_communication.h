@@ -25,7 +25,7 @@ public:
   void send_modbus(const modbus_data_t *modbusData);
 
   // 接收 Modbus 数据帧
-  size_t receive_modbus(modbus_data_t *modbusData, size_t length = MODBUS_MAX_DATA_LENGTH, int timeout = 1000);
+  size_t receive_modbus(modbus_data_t *modbusData, size_t length = MODBUS_MAX_DATA_LENGTH, int timeout = -1);
 
   // 打印 Modbus 数据
   void print_data(modbus_data_t *modbusData);

@@ -51,7 +51,7 @@ size_t ModbusCommunication::receive_modbus(modbus_data_t *modbusData, size_t len
   length = RS485Communication::receive((char *)buffer, length, timeout);
 
   // 调用父类的 receive 函数接收整个 Modbus 帧
-  if (length < 2)
+  if (length < 4)
   {
     // 如果接收失败，返回 false
     Serial.println("No data received or timeout occurred.");
