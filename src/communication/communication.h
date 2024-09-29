@@ -36,6 +36,22 @@ public:
   {
     powerOff(); // 在析构时关闭电源
   }
+
+protected:
+  void print_bytes(const uint8_t *data, int length)
+  {
+    for (int i = 0; i < length; i++)
+    {
+      // Print each byte in hexadecimal format with leading zeros
+      if (data[i] < 0x10)
+      {
+        Serial.print("0");
+      }
+      Serial.print(data[i], HEX);
+      Serial.print(" ");
+    }
+    Serial.println(); // Print a newline character at the end
+  }
 };
 
 #endif // COMMUNICATION_H

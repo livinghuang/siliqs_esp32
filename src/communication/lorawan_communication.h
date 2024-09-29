@@ -2,8 +2,8 @@
 #ifdef USE_LORAWAN
 #ifndef LORAWAN_COMMUNICATION_H
 #define LORAWAN_COMMUNICATION_H
-#include "siliqs_heltec_esp32.h"
 #include "LoRaWan_APP.h"
+#include "siliqs_heltec_esp32.h"
 
 // 全域變數定義
 extern uint8_t devEui[];
@@ -24,9 +24,20 @@ extern bool isTxConfirmed;
 extern uint8_t appPort;
 extern uint8_t confirmedNbTrials;
 
-void prepareTxFrame(uint8_t port);
-void lorawanSetup();
-void lorawanLoop();
+class SQ_LoRaWanClass : public LoRaWanClass
+{
+public:
+  // Constructor
+  SQ_LoRaWanClass();
+  void SQ_LoRaWan_Init(DeviceClass_t lorawanClass, LoRaMacRegion_t region);
+  void SQ_LoRaWan_SendData(uint8_t *data, uint8_t size);
+  void SQ_LoRaWan_send(void);
+  void SQ_LoRaWan_Cycle(uint32_t dutyCycle);
+  void SQ_LoRaWan_Sleep(DeviceClass_t classMode);
+  void SQ_LoRaWan_generateDeveuiByChipID(bool simple = true);
+
+protected:
+};
 
 #endif // LORAWAN_COMMUNICATION_H
 #endif // USE_LORAWAN

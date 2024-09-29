@@ -23,6 +23,9 @@
 		},
 		{
 			"path": "../../sq_xda002_nafco01_simulater"
+		},
+		{
+			"path": "../Heltec_ESP32_Dev-Boards"
 		}
 	],
 	"settings": {
@@ -48,7 +51,9 @@
 			"map": "cpp",
 			"unordered_map": "cpp",
 			"unordered_set": "cpp",
-			"stdexcept": "cpp"
+			"stdexcept": "cpp",
+			"bitset": "cpp",
+			"queue": "cpp"
 		}
 	}
 }

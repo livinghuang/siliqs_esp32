@@ -2,20 +2,6 @@
 #ifdef USE_RS485
 #include "rs485_communication.h"
 
-void print_bytes(const uint8_t *data, int length)
-{
-  for (int i = 0; i < length; i++)
-  {
-    // Print each byte in hexadecimal format with leading zeros
-    if (data[i] < 0x10)
-    {
-      Serial.print("0");
-    }
-    Serial.print(data[i], HEX);
-    Serial.print(" ");
-  }
-  Serial.println(); // Print a newline character at the end
-}
 RS485Communication::RS485Communication(HardwareSerial &serial, int baudRate, int RO, int DI, int directionPin, int powerPin)
     : _serial(serial), _baudRate(baudRate), _RO(RO), _DI(DI), _directionPin(directionPin)
 {

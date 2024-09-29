@@ -3,82 +3,144 @@
 #include "lorawan_communication.h"
 
 // 全域變數初始化
-uint8_t devEui[] = {0x70, 0xB3, 0xD5, 0x7E, 0xD0, 0x06, 0x53, 0xC8};
-uint8_t appEui[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-uint8_t appKey[] = {0x74, 0xD6, 0x6E, 0x63, 0x45, 0x82, 0x48, 0x27, 0xFE, 0xC5, 0xB7, 0x70, 0xBA, 0x2B, 0x50, 0x45};
+uint8_t devEui[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88};
+uint8_t appEui[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88};
+uint8_t appKey[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88};
 
-uint8_t nwkSKey[] = {0x15, 0xb1, 0xd0, 0xef, 0xa4, 0x63, 0xdf, 0xbe, 0x3d, 0x11, 0x18, 0x1e, 0x1e, 0xc7, 0xda, 0x85};
-uint8_t appSKey[] = {0xd7, 0x2c, 0x78, 0x75, 0x8c, 0xdc, 0xca, 0xbf, 0x55, 0xee, 0x4a, 0x77, 0x8d, 0x16, 0xef, 0x67};
-uint32_t devAddr = (uint32_t)0x007e6ae1;
+uint8_t nwkSKey[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88};
+uint8_t appSKey[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88};
+uint32_t devAddr = (uint32_t)0x88888888;
 
 uint16_t userChannelsMask[6] = {0x00FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
-LoRaMacRegion_t loraWanRegion = ACTIVE_REGION;
+LoRaMacRegion_t loraWanRegion = LORAMAC_REGION_AS923_AS2;
 DeviceClass_t loraWanClass = CLASS_A;
 uint32_t appTxDutyCycle = 15000;
-bool overTheAirActivation = true;
+bool overTheAirActivation = false;
 bool loraWanAdr = true;
-bool isTxConfirmed = true;
+bool isTxConfirmed = false;
 uint8_t appPort = 2;
 uint8_t confirmedNbTrials = 4;
-
-void prepareTxFrame(uint8_t port)
+void print_bytes(const uint8_t *data, int length)
 {
-  appDataSize = 4;
-  appData[0] = 0x00;
-  appData[1] = 0x01;
-  appData[2] = 0x02;
-  appData[3] = 0x03;
+  for (int i = 0; i < length; i++)
+  {
+    // Print each byte in hexadecimal format with leading zeros
+    if (data[i] < 0x10)
+    {
+      Serial.print("0");
+    }
+    Serial.print(data[i], HEX);
+    Serial.print(" ");
+  }
+  Serial.println(); // Print a newline character at the end
+}
+void print_bytes_reverse(uint8_t *data, int length)
+{
+  for (int i = length - 1; i >= 0; i--)
+  {
+    if (data[i] < 0x10)
+    {
+      Serial.print("0");
+    }
+    Serial.print(data[i], HEX);
+    // Serial.print(" ");
+  }
+  Serial.println();
+}
+// Constructor
+SQ_LoRaWanClass::SQ_LoRaWanClass()
+{
+  // You can add custom initialization code here if necessary
+  Serial.println("SQ_LoRaWanClass: Constructor called.");
 }
 
-void lorawanSetup()
+void SQ_LoRaWanClass::SQ_LoRaWan_Init(DeviceClass_t lorawanClass, LoRaMacRegion_t region)
 {
-  Serial.begin(115200);
-  Mcu.begin(HELTEC_BOARD, SLOW_CLK_TPYE);
+  // Call the base class initialization method
+  LoRaWanClass::init(lorawanClass, region);
+
+  // Additional custom initialization logic
+  Serial.println("SQ_LoRaWanClass: Initialization complete.");
 }
 
-void lorawanLoop()
+void SQ_LoRaWanClass::SQ_LoRaWan_send()
 {
-  switch (deviceState)
+  // Override the base class send method
+  LoRaWanClass::send(); // Call the parent class's send() method
+
+  // Additional functionality after sending data
+  Serial.println("SQ_LoRaWanClass: Data sent successfully.");
+}
+
+void SQ_LoRaWanClass::SQ_LoRaWan_SendData(uint8_t *data, uint8_t size)
+{
+  // Prepare the data to send over LoRaWAN
+  appDataSize = size;
+  memcpy(appData, data, size); // Copy the data to the buffer
+
+  // Set the device state to send data
+  deviceState = DEVICE_STATE_SEND;
+
+  // Log the data sending process
+  Serial.print("SQ_LoRaWanClass: Sending data of size ");
+  Serial.println(size);
+}
+
+void SQ_LoRaWanClass::SQ_LoRaWan_Cycle(uint32_t dutyCycle)
+{
+  // Call the base class cycle method
+  LoRaWanClass::cycle(dutyCycle);
+
+  // Additional logic if needed
+  Serial.print("SQ_LoRaWanClass: Cycling with duty cycle ");
+  Serial.println(dutyCycle);
+}
+
+void SQ_LoRaWanClass::SQ_LoRaWan_Sleep(DeviceClass_t classMode)
+{
+  // Call the base class sleep method
+  LoRaWanClass::sleep(classMode);
+
+  // Additional logic for sleep mode if necessary
+  Serial.println("SQ_LoRaWanClass: Device entering sleep mode.");
+}
+
+void generate_lorawan_settings_by_chip_id()
+{
+  uint64_t chipid = ESP.getEfuseMac();
+  Serial.printf("ESP32ChipID=%04X%08X\n", (uint16_t)(chipid >> 32), (uint32_t)chipid);
+
+  devAddr = (uint32_t)(chipid >> 32) * (uint32_t)chipid;
+  // 将MAC地址转换为字符串形式
+  char chipidStr[17];
+  snprintf(chipidStr, sizeof(chipidStr), "%016llx", chipid);
+
+  Serial.print("devEUI:");
+  memcpy(&devEui[2], &chipid, sizeof(devEui) - 2);
+  print_bytes((uint8_t *)&devEui, sizeof(devEui));
+  Serial.print("devAddr:");
+  print_bytes_reverse((uint8_t *)&devAddr, sizeof(devAddr));
+  memcpy(appKey, chipidStr, 16);
+  memcpy(appSKey, chipidStr, 16);
+  memcpy(nwkSKey, chipidStr, 16);
+  Serial.print("appKey:");
+  print_bytes((uint8_t *)&appKey, sizeof(appKey));
+  Serial.print("nwkSKey:");
+  print_bytes((uint8_t *)&nwkSKey, sizeof(nwkSKey));
+  Serial.print("appSKey:");
+  print_bytes((uint8_t *)&appSKey, sizeof(appSKey));
+}
+
+void SQ_LoRaWanClass::SQ_LoRaWan_generateDeveuiByChipID(bool simple)
+{
+  if (simple)
   {
-  case DEVICE_STATE_INIT:
-  {
-#if (LORAWAN_DEVEUI_AUTO)
-    LoRaWAN.generateDeveuiByChipID();
-#endif
-    LoRaWAN.init(loraWanClass, loraWanRegion);
-    LoRaWAN.setDefaultDR(3);
-    deviceState = DEVICE_STATE_JOIN;
-    break;
+    generate_lorawan_settings_by_chip_id();
   }
-  case DEVICE_STATE_JOIN:
+  else
   {
-    LoRaWAN.join();
-    break;
-  }
-  case DEVICE_STATE_SEND:
-  {
-    prepareTxFrame(appPort);
-    LoRaWAN.send();
-    deviceState = DEVICE_STATE_CYCLE;
-    break;
-  }
-  case DEVICE_STATE_CYCLE:
-  {
-    txDutyCycleTime = appTxDutyCycle + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
-    LoRaWAN.cycle(txDutyCycleTime);
-    deviceState = DEVICE_STATE_SLEEP;
-    break;
-  }
-  case DEVICE_STATE_SLEEP:
-  {
-    LoRaWAN.sleep(loraWanClass);
-    break;
-  }
-  default:
-  {
-    deviceState = DEVICE_STATE_INIT;
-    break;
-  }
+    generateDeveuiByChipID();
   }
 }
+
 #endif
