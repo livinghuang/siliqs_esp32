@@ -35,7 +35,7 @@ void LoraCommunication::send(const char *data)
   if (lora_idle)
   {
     snprintf(txpacket, BUFFER_SIZE, "%s", data); // 设置数据包
-    Serial.printf("\r\nSending packet: \"%s\" , length: %d\r\n", txpacket, strlen(txpacket));
+    console.log(sqINFO, "Sending packet: " + String(txpacket) + ", length: " + String(strlen(txpacket)));
     Radio.Send((uint8_t *)txpacket, strlen(txpacket)); // 发送数据包
     lora_idle = false;
   }
@@ -46,7 +46,7 @@ void LoraCommunication::receive(char *buffer, int length, int timeout)
 {
   if (lora_idle)
   {
-    Serial.println("Switching to RX mode");
+    console.log(sqINFO, "Switching to RX mode");
     Radio.Rx(0);
     lora_idle = false;
   }
@@ -57,7 +57,7 @@ void LoraCommunication::receive(char *buffer, int length, int timeout)
 // 发送完成的回调函数
 void LoraCommunication::OnTxDone()
 {
-  Serial.println("TX done.");
+  console.log(sqINFO, "TX done.");
   lora_idle = true;
 }
 
@@ -67,7 +67,7 @@ void LoraCommunication::OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, 
   memcpy(LoraCommunication::rxpacket, payload, size);
   LoraCommunication::rxpacket[size] = '\0'; // 终止接收到的数据包
 
-  Serial.printf("Received packet: \"%s\", RSSI: %d, Size: %d\r\n", LoraCommunication::rxpacket, rssi, size);
+  console.log(sqINFO, "Received packet: " + String(LoraCommunication::rxpacket) + ", RSSI: " + String(rssi) + ", Size: " + String(size));
   lora_idle = true;
 }
 

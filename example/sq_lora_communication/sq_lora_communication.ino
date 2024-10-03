@@ -24,5 +24,8 @@ void loop()
   char buffer[BUFFER_SIZE];
   loraComm.receive(buffer, BUFFER_SIZE);
 
+  // 打印接收到的数据
+  Serial.println(String(buffer));
+
   delay(1000); // 根据应用需求调整延迟
 }

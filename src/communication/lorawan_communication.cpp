@@ -51,7 +51,7 @@ void print_bytes_reverse(uint8_t *data, int length)
 SQ_LoRaWanClass::SQ_LoRaWanClass()
 {
   // You can add custom initialization code here if necessary
-  Serial.println("SQ_LoRaWanClass: Constructor called.");
+  console.log(sqINFO, "SQ_LoRaWanClass: Constructor called.");
 }
 
 void SQ_LoRaWanClass::SQ_LoRaWan_Init(DeviceClass_t lorawanClass, LoRaMacRegion_t region)
@@ -60,7 +60,7 @@ void SQ_LoRaWanClass::SQ_LoRaWan_Init(DeviceClass_t lorawanClass, LoRaMacRegion_
   LoRaWanClass::init(lorawanClass, region);
 
   // Additional custom initialization logic
-  Serial.println("SQ_LoRaWanClass: Initialization complete.");
+  console.log(sqINFO, "SQ_LoRaWanClass: Initialization complete.");
 }
 
 void SQ_LoRaWanClass::SQ_LoRaWan_send()
@@ -69,7 +69,7 @@ void SQ_LoRaWanClass::SQ_LoRaWan_send()
   LoRaWanClass::send(); // Call the parent class's send() method
 
   // Additional functionality after sending data
-  Serial.println("SQ_LoRaWanClass: Data sent successfully.");
+  console.log(sqINFO, "SQ_LoRaWanClass: Data sent successfully.");
 }
 
 void SQ_LoRaWanClass::SQ_LoRaWan_SendData(uint8_t *data, uint8_t size)
@@ -82,8 +82,7 @@ void SQ_LoRaWanClass::SQ_LoRaWan_SendData(uint8_t *data, uint8_t size)
   deviceState = DEVICE_STATE_SEND;
 
   // Log the data sending process
-  Serial.print("SQ_LoRaWanClass: Sending data of size ");
-  Serial.println(size);
+  console.log(sqINFO, "SQ_LoRaWanClass: Sending data of size " + String(size));
 }
 
 void SQ_LoRaWanClass::SQ_LoRaWan_Cycle(uint32_t dutyCycle)
@@ -92,8 +91,7 @@ void SQ_LoRaWanClass::SQ_LoRaWan_Cycle(uint32_t dutyCycle)
   LoRaWanClass::cycle(dutyCycle);
 
   // Additional logic if needed
-  Serial.print("SQ_LoRaWanClass: Cycling with duty cycle ");
-  Serial.println(dutyCycle);
+  console.log(sqINFO, "SQ_LoRaWanClass: Cycling with duty cycle " + String(dutyCycle));
 }
 
 void SQ_LoRaWanClass::SQ_LoRaWan_Sleep(DeviceClass_t classMode)
@@ -102,33 +100,31 @@ void SQ_LoRaWanClass::SQ_LoRaWan_Sleep(DeviceClass_t classMode)
   LoRaWanClass::sleep(classMode);
 
   // Additional logic for sleep mode if necessary
-  Serial.println("SQ_LoRaWanClass: Device entering sleep mode.");
+  console.log(sqINFO, "SQ_LoRaWanClass: Device entering sleep mode.");
 }
 
 void generate_lorawan_settings_by_chip_id()
 {
   uint64_t chipid = ESP.getEfuseMac();
-  Serial.printf("ESP32ChipID=%04X%08X\n", (uint16_t)(chipid >> 32), (uint32_t)chipid);
-
   devAddr = (uint32_t)(chipid >> 32) * (uint32_t)chipid;
   // 将MAC地址转换为字符串形式
   char chipidStr[17];
   snprintf(chipidStr, sizeof(chipidStr), "%016llx", chipid);
 
-  Serial.print("devEUI:");
+  console.log(sqINFO, "devEUI:");
   memcpy(&devEui[2], &chipid, sizeof(devEui) - 2);
-  print_bytes((uint8_t *)&devEui, sizeof(devEui));
-  Serial.print("devAddr:");
-  print_bytes_reverse((uint8_t *)&devAddr, sizeof(devAddr));
+  console.log(sqINFO, (uint8_t *)&devEui, sizeof(devEui));
+  console.log(sqINFO, "devAddr:");
+  console.log(sqINFO, (uint8_t *)&devAddr, sizeof(devAddr));
   memcpy(appKey, chipidStr, 16);
   memcpy(appSKey, chipidStr, 16);
   memcpy(nwkSKey, chipidStr, 16);
   Serial.print("appKey:");
-  print_bytes((uint8_t *)&appKey, sizeof(appKey));
+  console.log(sqINFO, (uint8_t *)&appKey, sizeof(appKey));
   Serial.print("nwkSKey:");
-  print_bytes((uint8_t *)&nwkSKey, sizeof(nwkSKey));
+  console.log(sqINFO, (uint8_t *)&nwkSKey, sizeof(nwkSKey));
   Serial.print("appSKey:");
-  print_bytes((uint8_t *)&appSKey, sizeof(appSKey));
+  console.log(sqINFO, (uint8_t *)&appSKey, sizeof(appSKey));
 }
 
 void SQ_LoRaWanClass::SQ_LoRaWan_generateDeveuiByChipID(bool simple)
