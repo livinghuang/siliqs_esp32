@@ -1,7 +1,8 @@
 #include "siliqs_heltec_esp32.h"
-void siliqs_heltec_esp32_setup(void)
+void siliqs_heltec_esp32_setup(int print_level)
 {
   Serial.begin(115200);
+  console.begin(print_level);
 }
 
 esp_sleep_wakeup_cause_t print_wakeup_reason()

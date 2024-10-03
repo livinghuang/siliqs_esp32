@@ -23,6 +23,9 @@
 		},
 		{
 			"path": "../Heltec_ESP32_Dev-Boards"
+		},
+		{
+			"path": "../../sq_nafco01_SQC485I"
 		}
 	],
 	"settings": {

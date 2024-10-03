@@ -33,12 +33,9 @@ void ModbusCommunication::send_modbus(const modbus_data_t *modbusData)
   // 调用父类的 send 函数来发送整个打包的帧
   RS485Communication::send((const char *)buffer, index);
 
-  // // 调试输出：打印发送的数据
-  // Serial.println("Sending Modbus Frame:");
-  // print_bytes(buffer, index);
-  // Serial.println();
-
-  Serial.flush(); // 确保数据发送完成
+  // 调试输出：打印发送的数据
+  console.log(sqINFO, "Sending Modbus Frame:");
+  console.log(sqINFO, buffer, index);
 }
 
 // 接收 Modbus 数据帧
@@ -54,13 +51,13 @@ size_t ModbusCommunication::receive_modbus(modbus_data_t *modbusData, size_t len
   if (length < 4)
   {
     // 如果接收失败，返回 false
-    Serial.println("No data received or timeout occurred.");
+    console.log(sqINFO, "No data received from Modbus.");
     return 0;
   }
-  // Serial.println("Received Modbus length:" + String(length));
-  // Serial.println("Received Modbus Frame:");
-  // // 调试输出：打印接收的数据
-  // print_bytes(buffer, length);
+  console.log(sqINFO, "Received Modbus length:" + String(length));
+  console.log(sqINFO, "Received Modbus Frame:");
+  // 调试输出：打印接收的数据
+  console.log(sqINFO, buffer, length);
   // 将接收到的数据解析为 modbus_data_t 结构
   modbusData->address = buffer[0];
   modbusData->function = buffer[1];
@@ -71,13 +68,11 @@ size_t ModbusCommunication::receive_modbus(modbus_data_t *modbusData, size_t len
   // 解析接收的 CRC
   uint16_t received_crc = buffer[length - 2] | (buffer[length - 1] << 8);
 
-  // Serial.print("Received CRC: ");
-  // print_bytes((uint8_t *)&received_crc, 2);
+  console.log(sqDEBUG, "Received CRC: ");
+  console.log(sqDEBUG, (uint8_t *)&received_crc, 2);
   uint16_t calculated_crc = calculateCRC(modbusData);
-  // Serial.print("\n Calculated CRC: ");
-  // print_bytes((uint8_t *)&calculated_crc, 2);
-  // Serial.println();
-
+  console.log(sqDEBUG, "\n Calculated CRC: ");
+  console.log(sqDEBUG, (uint8_t *)&calculated_crc, 2);
   // 计算 CRC 并验证
   return (calculated_crc == received_crc); // 返回是否 CRC 校验通过
 }

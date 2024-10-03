@@ -1,5 +1,6 @@
 #include "bsp.h"
 #ifdef USE_RS485
+#include "siliqs_heltec_esp32.h"
 #include "rs485_communication.h"
 
 RS485Communication::RS485Communication(HardwareSerial &serial, int baudRate, int RO, int DI, int directionPin, int powerPin)
@@ -56,10 +57,6 @@ size_t RS485Communication::receive(char *buffer, size_t length, int timeout)
 {
   // If timeout is -1, calculate a reasonable timeout based on baud rate and length
   timeout = (timeout == -1) ? get_reasonable_timeout(_baudRate, length) : timeout;
-
-  // Serial.println("rs485 receive expect length:" + String(length));
-  // Serial.println("rs485 receive expect timeout:" + String(timeout));
-
   enableReceive();             // Switch to receive mode
   _serial.setTimeout(timeout); // Set a timeout
 
@@ -70,13 +67,13 @@ size_t RS485Communication::receive(char *buffer, size_t length, int timeout)
   size_t lengthReceived = _serial.readBytes((uint8_t *)buffer, length);
   if (lengthReceived > 0)
   {
-    // Serial.print("rs485 Received: ");
-    // print_bytes((uint8_t *)buffer, lengthReceived); // Print received data in bytes
+    console.log(sqDEBUG, "RS485 Received: ");
+    console.log(sqDEBUG, (uint8_t *)buffer, lengthReceived); // Print received data in bytes
     return lengthReceived;
   }
   else
   {
-    Serial.println("No data received or timeout occurred.");
+    console.log(sqDEBUG, "no data received from rs485");
     return 0;
   }
 }
