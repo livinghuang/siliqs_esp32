@@ -129,8 +129,13 @@ void LoraCommunication::println(const String &data)
 String LoraCommunication::readString(size_t maxLength)
 {
   char buffer[maxLength];
-  receive(buffer, maxLength);
+  receive(buffer, maxLength, receiveTimeout);
   return String(buffer); // Convert the buffer to a String
+}
+
+void LoraCommunication::setReceiveTimeout(int timeout)
+{
+  receiveTimeout = timeout;
 }
 
 void OnTxDone(void)

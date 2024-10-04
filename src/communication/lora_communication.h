@@ -32,6 +32,9 @@ public:
   String readString(size_t maxLength = 51);
 
   void setReceiveTimeout(int timeout);
+
+private:
+  int receiveTimeout = 1000;
 };
 
 #endif // LORA_COMMUNICATION_H
