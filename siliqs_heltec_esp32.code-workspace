@@ -22,10 +22,13 @@
 			"path": "../../sq_xda002_nafco01_simulater"
 		},
 		{
-			"path": "../Heltec_ESP32_Dev-Boards"
+			"path": "../../sq_nafco01_SQC485I"
 		},
 		{
-			"path": "../../sq_nafco01_SQC485I"
+			"path": "../Heltec_ESP32"
+		},
+		{
+			"path": "../../../../Library/Arduino15/packages"
 		}
 	],
 	"settings": {
@@ -53,7 +56,22 @@
 			"unordered_set": "cpp",
 			"stdexcept": "cpp",
 			"bitset": "cpp",
-			"queue": "cpp"
+			"queue": "cpp",
+			"rope": "cpp",
+			"regex": "cpp",
+			"cmath": "cpp",
+			"complex": "cpp",
+			"slist": "cpp",
+			"ranges": "cpp",
+			"span": "cpp",
+			"stacktrace": "cpp",
+			"valarray": "cpp",
+			"mstd_iterator": "cpp",
+			"utility": "cpp",
+			"system_error": "cpp",
+			"algorithm": "cpp",
+			"chrono": "cpp",
+			"future": "cpp"
 		}
 	}
 }

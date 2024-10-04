@@ -39,34 +39,5 @@ esp_sleep_wakeup_cause_t print_wakeup_reason()
 uint64_t get_chip_id()
 {
   uint64_t chipid = ESP.getEfuseMac();
-  Serial.printf("ESP32ChipID=%04X%08X\n", (uint16_t)(chipid >> 32), (uint32_t)chipid);
   return chipid;
 }
-
-// void print_bytes(const uint8_t *data, int length)
-// {
-//   for (int i = 0; i < length; i++)
-//   {
-//     // Print each byte in hexadecimal format with leading zeros
-//     if (data[i] < 0x10)
-//     {
-//       Serial.print("0");
-//     }
-//     Serial.print(data[i], HEX);
-//     Serial.print(" ");
-//   }
-//   Serial.println(); // Print a newline character at the end
-// }
-// void print_bytes_reverse(uint8_t *data, int length)
-// {
-//   for (int i = length - 1; i >= 0; i--)
-//   {
-//     if (data[i] < 0x10)
-//     {
-//       Serial.print("0");
-//     }
-//     Serial.print(data[i], HEX);
-//     // Serial.print(" ");
-//   }
-//   Serial.println();
-// }

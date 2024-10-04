@@ -1,3 +1,4 @@
+#include "bsp.h"
 #ifndef CUSTOM_PINS
 #ifndef PINS_DEFINE_H
 #define PINS_DEFINE_H

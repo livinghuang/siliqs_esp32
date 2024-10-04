@@ -4,7 +4,6 @@
 #include <Arduino.h>
 #include "heltec.h"
 #include "pins_defined.h"
-#include "bsp.h"
 #include "system/serial_console/serial_console.h"
 
 void siliqs_heltec_esp32_setup(int print_level = SQ_NONE);
