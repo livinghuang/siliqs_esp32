@@ -3,6 +3,15 @@ void siliqs_heltec_esp32_setup(int print_level)
 {
   Serial.begin(115200);
   console.begin(print_level);
+
+#ifdef USE_BLE
+  console.log(sqINFO, "Start BLE service");
+  // 初始化 BLE 服务
+  SQ_BLEService.init(30000);
+  // 创建 BLE 服务的 FreeRTOS 任务
+  xTaskCreate(SQ_BLEServiceClass::bleTaskWrapper, "bleTask", 4096, NULL, 1, NULL);
+
+#endif
 }
 
 esp_sleep_wakeup_cause_t print_wakeup_reason()
