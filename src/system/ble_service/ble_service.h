@@ -15,7 +15,7 @@
 class SQ_BLEServiceClass
 {
 public:
-  void init(unsigned long timeout);
+  void init(unsigned long timeout, String namePrefix = "BLE-");
   void stop();
   void sendData(const char *data);
   void task(void *pvParameters);                  // FreeRTOS 任务函数

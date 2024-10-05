@@ -27,12 +27,20 @@ class MyCallbacks : public BLECharacteristicCallbacks
   }
 };
 
-void SQ_BLEServiceClass::init(unsigned long timeout)
+void SQ_BLEServiceClass::init(unsigned long timeout, String namePrefix)
 {
   console.log(sqINFO, "Initializing BLE...");
 
   // 初始化 BLE 设备
-  BLEDevice::init("ESP32-BLE");
+  // 获取 ESP32 的 MAC 地址
+  uint64_t macAddress = ESP.getEfuseMac();
+
+  // // 提取 MAC 地址的最后 2 字节并转换为 4 位十六进制数字
+  uint16_t macShort = (uint16_t)(macAddress >> 32); // 高 16 位
+  // 生成设备名称：格式为 "xxx-1234"
+  String deviceName = namePrefix + String(macShort, HEX);
+  deviceName.toUpperCase();
+  BLEDevice::init(deviceName);
 
   // 创建 BLE 服务器
   pServer = BLEDevice::createServer();
