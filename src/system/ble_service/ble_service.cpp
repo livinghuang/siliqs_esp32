@@ -134,9 +134,37 @@ String SQ_BLEServiceClass::getReceivedData()
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 {
+private:
+  SQ_BLEServiceClass &bleService; // 引用 SQ_BLEServiceClass 实例
+
+public:
+  // 构造函数，传递 SQ_BLEServiceClass 的引用
+  MyAdvertisedDeviceCallbacks(SQ_BLEServiceClass &service) : bleService(service) {}
+
   void onResult(BLEAdvertisedDevice advertisedDevice)
   {
-    console.log(sqINFO, "Found device: " + advertisedDevice.getAddress().toString());
+    // 获取当前设备的地址
+    BLEAddress address = advertisedDevice.getAddress();
+
+    // 查找设备是否已经存在于设备列表中
+    auto it = std::find_if(bleService.discoveredDevices.begin(), bleService.discoveredDevices.end(),
+                           [&address](const BLEAdvertisedDevice &device)
+                           {
+                             return const_cast<BLEAdvertisedDevice &>(device).getAddress() == address;
+                           });
+
+    // 如果设备已存在，先删除旧设备
+    if (it != bleService.discoveredDevices.end())
+    {
+      console.log(sqINFO, "Device already discovered, updating: " + address.toString());
+      bleService.discoveredDevices.erase(it); // 删除旧设备
+    }
+
+    // 无论设备是否存在，都插入新设备以更新状态
+    bleService.discoveredDevices.push_back(advertisedDevice); // 插入新设备
+    console.log(sqINFO, "Device updated: " + address.toString());
+
+    // 打印设备的详细信息
     if (advertisedDevice.haveName())
     {
       console.log(sqINFO, "Device name: " + advertisedDevice.getName());
@@ -152,10 +180,10 @@ void SQ_BLEServiceClass::scanDevices(int scanTime)
 {
   console.log(sqINFO, "Starting BLE scan...");
 
-  BLEScan *pBLEScan = BLEDevice::getScan(); // 创建扫描实例
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  pBLEScan->setActiveScan(true);    // 开启主动扫描模式
-  pBLEScan->start(scanTime, false); // 扫描 `scanTime` 秒
+  BLEScan *pBLEScan = BLEDevice::getScan();                                       // 创建扫描实例
+  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks(*this)); // 传递 SQ_BLEService 实例
+  pBLEScan->setActiveScan(true);                                                  // 开启主动扫描模式
+  pBLEScan->start(scanTime, false);                                               // 扫描 `scanTime` 秒
 
   console.log(sqINFO, "Scan completed.");
 }

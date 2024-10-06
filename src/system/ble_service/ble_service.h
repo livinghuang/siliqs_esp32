@@ -11,6 +11,8 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <vector>
+#include <algorithm>
 
 #define UART_CHARACTERISTIC_UUID_TX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 #define UART_CHARACTERISTIC_UUID_RX "6E400004-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -29,6 +31,8 @@ public:
   static void bleTaskWrapper(void *pvParameters); // FreeRTOS 任务包装
   bool deviceConnected = false;
   bool oldDeviceConnected = false;
+  // 声明一个设备列表
+  std::vector<BLEAdvertisedDevice> discoveredDevices;
 
 private:
   BLEServer *pServer = nullptr;
