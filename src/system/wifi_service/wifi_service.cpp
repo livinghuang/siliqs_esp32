@@ -1,13 +1,14 @@
-#include "bsp.h"
-#if USE_WIFI // Only compile Wi-Fi implementation if USE_WIFI is enabled
-#include "wifi_communication.h"
-WiFi_Communication::WiFi_Communication(const char *ssid, const char *password)
+#include "wifi_service.h"
+
+#ifdef USE_WIFI // Compile only if USE_WIFI is enabled
+
+WiFiService::WiFiService(const char *ssid, const char *password)
     : ssid(ssid), password(password), wifiTaskHandle(nullptr) {}
 
 // Static function that runs in a FreeRTOS task
-void WiFi_Communication::wifiTask(void *pvParameters)
+void WiFiService::wifiTask(void *pvParameters)
 {
-  WiFi_Communication *self = static_cast<WiFi_Communication *>(pvParameters);
+  WiFiService *self = static_cast<WiFiService *>(pvParameters);
   WiFi.begin(self->ssid, self->password);
 
   while (true)
@@ -28,28 +29,35 @@ void WiFi_Communication::wifiTask(void *pvParameters)
   }
 }
 
-void WiFi_Communication::begin()
+void WiFiService::begin()
 {
   if (wifiTaskHandle == nullptr)
   {
     xTaskCreatePinnedToCore(
-        wifiTask, "WiFi Task", 4096, this, 1, &wifiTaskHandle, 1);
+        wifiTask,        // Task function
+        "WiFi Task",     // Task name
+        4096,            // Stack size in bytes
+        this,            // Task input parameter (class instance)
+        1,               // Task priority
+        &wifiTaskHandle, // Task handle
+        1                // Core to run the task on
+    );
   }
 }
 
-bool WiFi_Communication::isConnected()
+bool WiFiService::isConnected()
 {
   return WiFi.status() == WL_CONNECTED;
 }
 
-void WiFi_Communication::stop()
+void WiFiService::stop()
 {
   if (wifiTaskHandle != nullptr)
   {
-    vTaskDelete(wifiTaskHandle);
+    vTaskDelete(wifiTaskHandle); // Delete the task
     wifiTaskHandle = nullptr;
   }
-  WiFi.disconnect();
+  WiFi.disconnect(); // Disconnect from Wi-Fi
   Serial.println("Wi-Fi stopped and disconnected");
 }
 

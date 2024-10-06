@@ -6,15 +6,29 @@
  *                                                                                      \
  * 该函数首先调用 siliqs_heltec_esp32_setup() 函数来初始化 ESP32 主板。 \
  */
+const char *ssid = "your_SSID";
+const char *password = "your_PASSWORD";
+
+WiFiService wifi(ssid, password);
+
 void setup()
 {
-  siliqs_heltec_esp32_setup(SQ_INFO); // use SQ_INFO for show sqINFO message but not sqDEBUG message, use SQ_DEBUG for show sqDEBUG message, if you do not want to show any console message, use SQ_NONE or leave it blank
-  console.log(sqINFO, "Serial Console 已初始化");
+  Serial.begin(115200);
+
+  // Start the Wi-Fi connection
+  wifi.begin();
 }
 
 void loop()
 {
-  // 此處編寫你的代碼
-  delay(1000);
-  console.log(sqDEBUG, "這是一條來自當前任務的調試消息，時間戳: %lu", millis());
+  if (wifi.isConnected())
+  {
+    Serial.println("ESP32 is connected to Wi-Fi");
+  }
+  else
+  {
+    Serial.println("ESP32 is not connected to Wi-Fi");
+  }
+
+  delay(5000); // Wait 5 seconds before checking again
 }
