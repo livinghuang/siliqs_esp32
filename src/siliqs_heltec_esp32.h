@@ -8,6 +8,9 @@
 #ifdef USE_BLE
 #include "system/ble_service/ble_service.h"
 #endif
+#ifdef USE_WIFI
+#include "system/wifi_service/wifi_service.h"
+#endif
 void siliqs_heltec_esp32_setup(int print_level = SQ_NONE);
 uint64_t get_chip_id();
 esp_sleep_wakeup_cause_t print_wakeup_reason(void);
