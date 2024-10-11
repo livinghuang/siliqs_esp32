@@ -14,6 +14,12 @@
 #include <vector>
 #include <algorithm>
 
+#include <freertos/queue.h>
+
+// 定义缓冲队列大小
+#define BLE_QUEUE_SIZE 10
+#define BLE_MESSAGE_MAX_SIZE 100
+
 #define SQ_SERVICE_UUID "83940000-5273-9374-2109-847320948571"
 #define SQ_CHARACTERISTIC_UUID_TX "83940001-5273-9374-2109-847320948571"
 #define SQ_CHARACTERISTIC_UUID_RX "83940002-5273-9374-2109-847320948571"
@@ -36,8 +42,10 @@ public:
   bool deviceConnected = false;
   bool oldDeviceConnected = false;
   std::vector<BLEAdvertisedDevice> discoveredDevices; // 声明一个设备列表
+  static void sendDataTask(void *pvParameters);       // 将任务函数声明为静态成员函数
 
 private:
+  QueueHandle_t bleQueue; // FreeRTOS队列
   BLEServer *pServer = nullptr;
   BLECharacteristic *pTxCharacteristic;
 

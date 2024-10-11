@@ -76,6 +76,12 @@ void SQ_BLEServiceClass::init(unsigned long timeout, String namePrefix)
   pServer->getAdvertising()->start();
   console.log(sqINFO, "Waiting for a client to connect...");
 
+  // 创建消息队列
+  bleQueue = xQueueCreate(BLE_QUEUE_SIZE, BLE_MESSAGE_MAX_SIZE);
+
+  // 创建处理发送数据的任务
+  xTaskCreate(SQ_BLEServiceClass::sendDataTask, "BLESendDataTask", 4096, this, 1, NULL);
+
   startTime = millis();
   waiting_connect_timeout = timeout;
   vTaskDelay(1);
@@ -83,22 +89,66 @@ void SQ_BLEServiceClass::init(unsigned long timeout, String namePrefix)
 
 void SQ_BLEServiceClass::stop()
 {
-  // 停止 BLE 服务
+  // 停止BLE服务
   pServer->disconnect(pServer->getConnId());
   pServer->getAdvertising()->stop();
   BLEDevice::deinit();
+
+  // 删除队列
+  if (bleQueue != NULL)
+  {
+    vQueueDelete(bleQueue);
+    bleQueue = NULL;
+  }
+
   console.log(sqINFO, "BLE service stopped.");
 }
+void SQ_BLEServiceClass::sendDataTask(void *pvParameters)
+{
+  SQ_BLEServiceClass *bleService = (SQ_BLEServiceClass *)pvParameters;
+  char dataBuffer[BLE_MESSAGE_MAX_SIZE];
 
+  while (1)
+  {
+    // 从队列中接收数据
+    if (xQueueReceive(bleService->bleQueue, &dataBuffer, portMAX_DELAY) == pdPASS)
+    {
+      // 发送数据给客户端
+      if (bleService->deviceConnected)
+      {
+        bleService->pTxCharacteristic->setValue((uint8_t *)dataBuffer, strlen(dataBuffer));
+        bleService->pTxCharacteristic->notify();
+        vTaskDelay(10 / portTICK_PERIOD_MS); // 延迟以避免BLE堆栈过载
+        console.log(sqINFO, "Data sent from queue to client.");
+      }
+      else
+      {
+        console.log(sqERROR, "No device connected, dropping data.");
+      }
+    }
+  }
+}
 void SQ_BLEServiceClass::sendData(const char *data)
 {
   if (deviceConnected)
   {
-    // 设置特性值并发送通知
-    pTxCharacteristic->setValue((uint8_t *)data, strlen(data));
-    pTxCharacteristic->notify(); // 向所有连接的客户端发送通知
-    vTaskDelay(10);              // 避免堆栈拥塞
-    console.log(sqINFO, "Data sent to client.");
+    // 检查数据长度
+    size_t dataLen = strlen(data);
+    if (dataLen > BLE_MESSAGE_MAX_SIZE)
+    {
+      console.log(sqERROR, "Data is too large to send!");
+      return;
+    }
+
+    // 将数据放入队列
+    if (xQueueSend(bleQueue, data, pdMS_TO_TICKS(100)) != pdPASS)
+    {
+      console.log(sqERROR, "Queue is full, data dropped!");
+    }
+    else
+    {
+      console.log(sqINFO, "Data queued successfully.");
+    }
   }
 }
 

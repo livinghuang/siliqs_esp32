@@ -76,7 +76,8 @@
 			"chrono": "cpp",
 			"future": "cpp",
 			"typeindex": "cpp",
-			"typeinfo": "cpp"
+			"typeinfo": "cpp",
+			"type_traits": "cpp"
 		}
 	}
 }

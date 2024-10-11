@@ -20,7 +20,7 @@ protected:
   String rxBuffer;
 
   // 当接收到未知指令时的默认错误响应
-  String defaultErrorResponse = "ERROR\r\n";
+  String defaultErrorResponse = "ERROR: Invalid command\r\n";
 
   // 记录是否启用了回显功能
   bool echoEnabled = true; // 默认为开启回显
@@ -30,6 +30,18 @@ protected:
 
   // 去除字符串前后空白字符的辅助函数
   String trim(const String &str);
+
+  // 处理 ATH 命令，获取所有注册的命令列表的辅助函数
+  void getCommandList();
+
+  // 处理 ATR 命令，重置设备
+  void resetDevice();
+
+  // 处理 ATE 命令，用于控制回显
+  void handleATECommand(const String &param);
+
+  // 处理 ATI 命令，用于控制回显
+  void showInfo();
 
 public:
   // 构造函数
@@ -47,8 +59,8 @@ public:
   // 发送回显的虚函数（在子类中实现，比如UART、BLE等）
   virtual void sendEchoCommand(const String &response) = 0;
 
-  // 设置自定义的错误响应
-  void setDefaultErrorResponse(const String &response);
+  // // 设置自定义的错误响应
+  // void setDefaultErrorResponse(const String &response);
 };
 
 class UARTATCommandService : public ATCommandService
@@ -80,9 +92,17 @@ public:
   void begin(int baudRate);
 };
 
+#ifdef USE_BLE
 class BLEATCommandService : public ATCommandService
 {
+private:
+  TaskHandle_t taskHandle = NULL; // FreeRTOS 任务句柄
+
+  // FreeRTOS 任务函数，用于处理 UART 数据
+  static void taskFunction(void *pvParameters);
+
 public:
+  BLEATCommandService(); // Declare the constructor
   // 启动 AT 命令任务
   void startTask(int taskPriority = 1, int stackSize = 4096);
 
@@ -94,7 +114,9 @@ public:
 
   // 实现 sendEchoCommand 函数，用于通过 UART 回显命令
   void sendEchoCommand(const String &response) override;
-};
 
+  void begin();
+};
+#endif
 #endif // AT_COMMAND_SERVICE_H
 #endif

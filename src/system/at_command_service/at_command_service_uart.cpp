@@ -59,6 +59,7 @@ void UARTATCommandService::sendResponse(const String &response)
 {
   serial.print("[CMD>] ");
   serial.println(response);
+  serial.flush();
 }
 
 // 实现 sendEchoCommand 函数，通过 UART 回显命令
@@ -68,6 +69,7 @@ void UARTATCommandService::sendEchoCommand(const String &response)
   {
     serial.print("[CMD<] ");
     serial.println(response);
+    serial.flush();
   }
 }
 #endif

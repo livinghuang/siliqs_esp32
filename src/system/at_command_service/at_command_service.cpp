@@ -13,21 +13,16 @@ ATCommandService::ATCommandService()
                   { this->sendResponse("OK\r\n"); });
   // 注册 "ATE" 命令，用于控制回显
   registerCommand("ATE", [this](String cmd, String param)
-                  {
-        if (param == "0")
-        {
-            echoEnabled = false;
-            this->sendResponse("Echo OFF\r\n");
-        }
-        else if (param == "1")
-        {
-            echoEnabled = true;
-            this->sendResponse("Echo ON\r\n");
-        }
-        else
-        {
-            this->sendResponse("ERROR: Invalid ATE parameter\r\n");
-        } });
+                  { this->handleATECommand(param); });
+  // 注册 "ATH" 命令，列出所有命令
+  registerCommand("ATH", [this](String cmd, String param)
+                  { this->getCommandList(); });
+  // 注册 "ATR" 命令，模拟设备重启
+  registerCommand("ATR", [this](String cmd, String param)
+                  { this->resetDevice(); });
+  // 注册 "ATI" 命令，显示设备信息
+  registerCommand("ATI", [this](String cmd, String param)
+                  { this->showInfo(); });
 }
 
 // 去除字符串前后空白字符
@@ -118,9 +113,11 @@ void ATCommandService::handleIncomingData(const String &data)
     // 提取完整的指令
     String command = rxBuffer.substring(0, pos);
 
+    console.log(sqDEBUG, "Received command: " + command);
     // Echo back
     if (echoEnabled)
     {
+      console.log(sqDEBUG, "Echoing back: " + command);
       sendEchoCommand(command);
     }
 
@@ -129,11 +126,5 @@ void ATCommandService::handleIncomingData(const String &data)
     // 从缓冲区中移除已处理的指令
     rxBuffer.remove(0, pos + 2);
   }
-}
-
-// 设置自定义的错误响应
-void ATCommandService::setDefaultErrorResponse(const String &response)
-{
-  defaultErrorResponse = response;
 }
 #endif
