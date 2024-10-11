@@ -14,7 +14,7 @@ class ATCommandService
 {
 protected:
   // 存储 AT 指令与其回调函数的映射
-  std::map<String, std::function<void(String, String)>> commandCallbacks;
+  static std::map<String, std::function<void(String, String)>> commandCallbacks;
 
   // 用于存储接收到的数据
   String rxBuffer;
@@ -79,5 +79,22 @@ public:
   // 初始化 UART，指定波特率
   void begin(int baudRate);
 };
+
+class BLEATCommandService : public ATCommandService
+{
+public:
+  // 启动 AT 命令任务
+  void startTask(int taskPriority = 1, int stackSize = 4096);
+
+  // 停止 AT 命令任务
+  void stopTask();
+
+  // 实现 sendResponse 函数，用于通过 UART 发送响应
+  void sendResponse(const String &response) override;
+
+  // 实现 sendEchoCommand 函数，用于通过 UART 回显命令
+  void sendEchoCommand(const String &response) override;
+};
+
 #endif // AT_COMMAND_SERVICE_H
 #endif

@@ -2,6 +2,9 @@
 #ifdef USE_AT_COMMAND_SERVICE
 
 #include "at_command_service.h"
+
+std::map<String, std::function<void(String, String)>> ATCommandService::commandCallbacks;
+
 // ATCommandService 构造函数，初始化默认命令
 ATCommandService::ATCommandService()
 {
