@@ -39,6 +39,7 @@ void UARTATCommandService::taskFunction(void *pvParameters)
 
   while (true)
   {
+    service->serial.setTimeout(1000);
     // 检查 UART 中是否有可读取的数据
     if (service->serial.available())
     {
