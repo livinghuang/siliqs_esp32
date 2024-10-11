@@ -29,6 +29,9 @@
 		},
 		{
 			"path": "../../../../Library/Arduino15/packages"
+		},
+		{
+			"path": "../.."
 		}
 	],
 	"settings": {
@@ -71,7 +74,9 @@
 			"system_error": "cpp",
 			"algorithm": "cpp",
 			"chrono": "cpp",
-			"future": "cpp"
+			"future": "cpp",
+			"typeindex": "cpp",
+			"typeinfo": "cpp"
 		}
 	}
 }

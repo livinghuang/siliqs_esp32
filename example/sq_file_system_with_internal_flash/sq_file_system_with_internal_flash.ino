@@ -10,6 +10,19 @@ void setup()
 {
   siliqs_heltec_esp32_setup(SQ_INFO); // use SQ_INFO for show sqINFO message but not sqDEBUG message, use SQ_DEBUG for show sqDEBUG message, if you do not want to show any console message, use SQ_NONE or leave it blank
   console.log(sqINFO, "Serial Console initialized");
+  Serial.begin(115200);
+
+  // Write a test file
+  fileSystem.writeFile("/testfile.txt", "Hello, LittleFS!");
+
+  // List files before deleting
+  fileSystem.listFiles();
+
+  // Delete the test file
+  fileSystem.deleteFile("/testfile.txt");
+
+  // List files after deleting to confirm removal
+  fileSystem.listFiles();
 }
 
 void loop()

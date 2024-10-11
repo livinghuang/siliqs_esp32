@@ -1,8 +1,26 @@
 #include "siliqs_heltec_esp32.h"
+
+FileSystem fileSystem; // Create an instance of FileSystem
+
+void setupFileSystem()
+{
+  if (fileSystem.begin())
+  {
+    console.log(sqINFO, "file system intialized！");
+  }
+  else
+  {
+    console.log(sqINFO, "file system initialization failed");
+  }
+}
+
 void siliqs_heltec_esp32_setup(int print_level)
 {
   Serial.begin(115200);
   console.begin(print_level);
+
+  // 初始化文件系统
+  setupFileSystem();
 }
 
 esp_sleep_wakeup_cause_t print_wakeup_reason()

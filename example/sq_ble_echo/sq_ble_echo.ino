@@ -27,15 +27,5 @@ void loop()
       SQ_BLEService.sendData(data);      // 发送数据 echo back
     }
   }
-  SQ_BLEService.scanDevices(5); // 扫描 5 秒 , it will block the ble send data service, in scan period you can send data but reserved in buffer
-  static int count = 0;
-  if (count++ % 2 == 0)
-  {
-    // print the scan result
-    for (int i = 0; i < SQ_BLEService.discoveredDevices.size(); i++)
-    {
-      Serial.println(SQ_BLEService.discoveredDevices[i].toString());
-    }
-  }
 #endif
 }

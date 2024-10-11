@@ -4,18 +4,6 @@
 
 #include "ble_service.h"
 
-const char *generateDynamicUUID()
-{
-  uint64_t macAddress = ESP.getEfuseMac();
-  static char uuid[37];
-  snprintf(uuid, sizeof(uuid), "%04X%04X-%04X-%04X-%04X-%04X%04X%04X",
-           (uint16_t)(macAddress >> 32), (uint16_t)(macAddress & 0xFFFF),
-           (uint16_t)random(0, 0xFFFF), (uint16_t)random(0, 0xFFFF),
-           (uint16_t)random(0, 0xFFFF), (uint16_t)random(0, 0xFFFF),
-           (uint16_t)random(0, 0xFFFF), (uint16_t)random(0, 0xFFFF));
-  return uuid;
-}
-
 class MyServerCallbacks : public BLEServerCallbacks
 {
   void onConnect(BLEServer *pServer)
@@ -63,9 +51,6 @@ void SQ_BLEServiceClass::init(unsigned long timeout, String namePrefix)
   // 创建 BLE 服务器
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
-
-  // 生成动态 UUID
-  SERVICE_UUID = generateDynamicUUID();
 
   // 创建 BLE 服务
   BLEService *pService = pServer->createService(SERVICE_UUID); // 使用 BLEService 创建服务
@@ -193,6 +178,22 @@ void SQ_BLEServiceClass::bleTaskWrapper(void *pvParameters)
   SQ_BLEService.task(pvParameters); // 使用 SQ_BLEService 实例
 }
 
+// if second is 0, scan all the time
+// if second is not 0, scan `second` seconds
+void SQ_BLEServiceClass::startDiscovery(int seconds)
+{
+  console.log(sqINFO, "Manually starting BLE scan...");
+
+  doDiscovery = true;
+  scanTime = seconds;
+}
+
+void SQ_BLEServiceClass::stopDiscovery()
+{
+  console.log(sqINFO, "Manually stopping BLE scan...");
+  doDiscovery = false;
+}
+
 void SQ_BLEServiceClass::task(void *pvParameters)
 {
   while (1)
@@ -206,6 +207,23 @@ void SQ_BLEServiceClass::task(void *pvParameters)
       console.log(sqINFO, "Timeout occurred, restarting advertising...");
       pServer->getAdvertising()->start();
       startTime = millis();
+    }
+
+    // 设备扫描逻辑
+    if (doDiscovery)
+    {
+      if (scanTime == 0)
+      {
+        console.log(sqINFO, "Starting BLE continuously scan...");
+        scanDevices(5); // 扫描 5 秒钟
+        // then restart the scan till doDiscovery is set to false
+      }
+      else
+      {
+        doDiscovery = false;
+        console.log(sqINFO, "Starting BLE scan in " + String(scanTime) + " seconds...");
+        scanDevices(scanTime);
+      }
     }
     vTaskDelay(100 / portTICK_PERIOD_MS); // 每 100 毫秒处理一次
   }
