@@ -21,6 +21,8 @@ void siliqs_heltec_esp32_setup(int print_level)
 
   // 初始化文件系统
   setupFileSystem();
+
+  fileSystem.writeFile("/test.txt", "Hello, SiliQ!");
 }
 
 esp_sleep_wakeup_cause_t print_wakeup_reason()

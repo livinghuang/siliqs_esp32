@@ -9,12 +9,25 @@
 #ifdef USE_BLE
 #include "system/ble_service/ble_service.h"
 #endif
-#ifdef USE_WIFI
-#include "system/wifi_service/wifi_service.h"
+
+#ifdef USE_NIMBLE
+#include "system/nimble_service/nimble_service.h"
+#endif
+
+#ifdef USE_WIFI_CLIENT
+#include "system/wifi_client/wifi_client.h"
+#endif
+
+#ifdef USE_WEB_SERVER
+#include "system/web_server/web_server.h"
 #endif
 
 #ifdef USE_AT_COMMAND_SERVICE
 #include "system/at_command_service/at_command_service.h"
+#endif
+
+#ifdef USE_LORAWAN
+#include "system/lorawan_service/lorawan_service.h"
 #endif
 
 void siliqs_heltec_esp32_setup(int print_level = SQ_NONE);

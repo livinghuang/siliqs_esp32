@@ -23,6 +23,15 @@ ATCommandService::ATCommandService()
   // 注册 "ATI" 命令，显示设备信息
   registerCommand("ATI", [this](String cmd, String param)
                   { this->showInfo(); });
+  // 注册 "ATLF 命令，List all files in LittleFS
+  registerCommand("ATLF", [this](String cmd, String param)
+                  { this->listFiles(param); });
+  // 注册 ATRF 命令，用于获取文件信息
+  registerCommand("ATRF", [this](String cmd, String param)
+                  { this->readFile(param); });
+  // 注册 ATWF 命令，用于写入文件信息
+  registerCommand("ATWF", [this](String cmd, String param)
+                  { this->writeFile(param); });
 }
 
 // 去除字符串前后空白字符

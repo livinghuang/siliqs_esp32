@@ -1,10 +1,6 @@
-#include "bsp.h" // Include user settings like USE_WIFI
-
-#ifdef USE_WIFI // Compile only if USE_WIFI is enabled
-
-#ifndef WIFI_SERVICE_H
-#define WIFI_SERVICE_H
-
+#pragma once
+#include "bsp.h"       // Include user settings like USE_WIFI_CLIENT
+#ifdef USE_WIFI_CLIENT // Compile only if USE_WIFI_CLIENT is enabled
 #include <WiFi.h>
 
 class WiFiService
@@ -21,7 +17,4 @@ public:
   bool isConnected(); // Checks if the device is connected
   void stop();        // Stops the Wi-Fi task and disconnects Wi-Fi
 };
-
-#endif // WIFI_SERVICE_H
-
-#endif // USE_WIFI
+#endif // USE_WIFI_CLIENT

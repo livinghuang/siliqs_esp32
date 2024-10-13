@@ -13,7 +13,7 @@ void setup()
   Serial.begin(115200);
 
   // Write a test file
-  fileSystem.writeFile("/testfile.txt", "Hello, LittleFS!");
+  fileSystem.writeFile("/testfile.txt", "Hello, SiliQ!");
 
   // List files before deleting
   fileSystem.listFiles();

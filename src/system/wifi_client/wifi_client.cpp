@@ -1,6 +1,6 @@
-#include "wifi_service.h"
+#include "wifi_client.h"
 
-#ifdef USE_WIFI // Compile only if USE_WIFI is enabled
+#ifdef USE_WIFI_CLIENT // Compile only if USE_WIFI_CLIENT is enabled
 
 WiFiService::WiFiService(const char *ssid, const char *password)
     : ssid(ssid), password(password), wifiTaskHandle(nullptr) {}

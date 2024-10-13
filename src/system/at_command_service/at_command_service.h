@@ -42,6 +42,14 @@ protected:
 
   // 处理 ATI 命令，用于控制回显
   void showInfo();
+  // 处理 ATLF 命令，用于 List all files in LittleFS
+  void listFiles(const String &param);
+
+  // 处理 ATRF 命令，用于获取文件信息
+  void readFile(const String &param);
+
+  // 处理 ATWF 命令，用于写入文件信息
+  void writeFile(const String &param);
 
 public:
   // 构造函数

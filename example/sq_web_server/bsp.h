@@ -1,6 +1,6 @@
-#ifndef BSP_H
-#define BSP_H
-#define USE_WIFI_CLIENT
+#pragma once
+#define USE_WEB_SERVER
+#define USE_BLE
 // if you want to use custom pins, please define CUSTOM_PINS in here, otherwise, it will use pins defined in pins_defined.h
 /*
 below is the example:
@@ -25,5 +25,3 @@ below is the example:
 // // 24 POWER
 // #define pSDN 3
 */
-
-#endif
