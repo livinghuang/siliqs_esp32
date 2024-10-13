@@ -6,9 +6,6 @@
 #include "pins_defined.h"
 #include "system/serial_console/serial_console.h"
 #include "system/file_system/file_system.h"
-#ifdef USE_BLE
-#include "system/ble_service/ble_service.h"
-#endif
 
 #ifdef USE_NIMBLE
 #include "system/nimble_service/nimble_service.h"

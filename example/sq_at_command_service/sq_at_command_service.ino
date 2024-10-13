@@ -7,7 +7,7 @@
  * 该函数首先调用 siliqs_heltec_esp32_setup() 函数来初始化 ESP32 主板。
  */
 
-#ifdef USE_BLE
+#ifdef USE_NIMBLE
 // 创建 BLEATCommandService 实例
 BLEATCommandService BLEatService;
 #endif
@@ -18,25 +18,25 @@ void setup()
 {
   siliqs_heltec_esp32_setup(SQ_INFO);
   Serial.println("AT Command Service is starting...");
-#ifdef USE_BLE
-  console.log(sqINFO, "Start BLE service");
-  // 初始化 BLE 服务
-  SQ_BLEService.init(30000, "SQ-"); // your could name the prefix of your device, it should looks like "SQ-xxxx"
-  // 创建 BLE 服务的 FreeRTOS 任务
-  xTaskCreate(SQ_BLEServiceClass::bleTaskWrapper, "bleTask", 4096, NULL, 1, NULL);
+#ifdef USE_NIMBLE
+  // console.log(sqINFO, "Start BLE service");
+  // // 初始化 BLE 服务
+  // SQ_BLEService.init(30000, "SQ-"); // your could name the prefix of your device, it should looks like "SQ-xxxx"
+  // // 创建 BLE 服务的 FreeRTOS 任务
+  // xTaskCreate(SQ_BLEServiceClass::bleTaskWrapper, "bleTask", 4096, NULL, 1, NULL);
   // 注册带参数的 "AT+TEMP" 命令
-  BLEatService.registerCommand("AT+TEMP", [](String cmd, String param)
-                               {
-        if (param.length() > 0)
-        {
-            // 解析参数为浮点数，并发送回响应
-            float temp = param.toFloat();
-            BLEatService.sendResponse("Temperature set to " + String(temp) + " degrees.\r\n");
-        }
-        else
-        {
-          BLEatService.sendResponse("ERROR: Missing parameter for AT+TEMP\r\n");
-        } });
+  // BLEatService.registerCommand("AT+TEMP", [](String cmd, String param)
+  //                              {
+  //       if (param.length() > 0)
+  //       {
+  //           // 解析参数为浮点数，并发送回响应
+  //           float temp = param.toFloat();
+  //           BLEatService.sendResponse("Temperature set to " + String(temp) + " degrees.\r\n");
+  //       }
+  //       else
+  //       {
+  //         BLEatService.sendResponse("ERROR: Missing parameter for AT+TEMP\r\n");
+  //       } });
   // 启动后台任务处理 AT 命令
   BLEatService.startTask();
 #endif

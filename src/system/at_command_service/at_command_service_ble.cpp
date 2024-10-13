@@ -1,6 +1,6 @@
 #include "bsp.h"
 #ifdef USE_AT_COMMAND_SERVICE
-#ifdef USE_BLE
+#ifdef USE_NIMBLE
 #include "at_command_service.h"
 #include "siliqs_heltec_esp32.h"
 
@@ -38,13 +38,13 @@ void BLEATCommandService::taskFunction(void *pvParameters)
 
   while (true)
   {
-    if (SQ_BLEService.deviceConnected)
+    if (nimbleService.deviceConnected)
     {
-      String data = SQ_BLEService.getReceivedData();
+      String data = nimbleService.getReceivedData();
 
       if (data.length() > 0)
       {
-        SQ_BLEService.setReceivedData(""); // Clear buffer after processing
+        nimbleService.setReceivedData(""); // Clear buffer after processing
         console.log(sqINFO, "[BLE] Received data: " + data);
         data = data + "\r\n";
         service->handleIncomingData(data); // Process the AT command
@@ -59,7 +59,7 @@ void BLEATCommandService::sendResponse(const String &response)
 {
   String response_Data = ">" + response;
   console.log(sqINFO, response_Data);
-  SQ_BLEService.sendData(response_Data.c_str());
+  nimbleService.sendData(response_Data.c_str());
 }
 
 // 实现 sendEchoCommand 函数，通过 BLE 回显命令
@@ -69,7 +69,7 @@ void BLEATCommandService::sendEchoCommand(const String &response)
   {
     String response_Data = "<" + response;
     console.log(sqINFO, response_Data);
-    SQ_BLEService.sendData(response_Data.c_str());
+    nimbleService.sendData(response_Data.c_str());
   }
 }
 #endif

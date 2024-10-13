@@ -14,6 +14,24 @@ void setupFileSystem()
   }
 }
 
+#ifdef USE_NIMBLE
+void start_nimble_service(void)
+{
+  Serial.println("初始化 NimBLE 服务...");
+  nimbleService.init();
+
+  // 创建一个 FreeRTOS 任务来处理 BLE 扫描
+  xTaskCreate(
+      SQNimBLEService::bleTaskWrapper, // 任务函数包装器
+      "NimBLE Scan Task",              // 任务名称
+      4096,                            // 堆栈大小（字节）
+      &nimbleService,                  // 传递给任务的参数（NimBLE 服务实例）
+      1,                               // 任务优先级
+      NULL                             // 任务句柄（可以为 NULL）
+  );
+  Serial.println("NimBLE 服务初始化完成");
+}
+#endif
 void siliqs_heltec_esp32_setup(int print_level)
 {
   Serial.begin(115200);
@@ -23,6 +41,9 @@ void siliqs_heltec_esp32_setup(int print_level)
   setupFileSystem();
 
   fileSystem.writeFile("/test.txt", "Hello, SiliQ!");
+#ifdef USE_NIMBLE
+  start_nimble_service();
+#endif
 }
 
 esp_sleep_wakeup_cause_t print_wakeup_reason()

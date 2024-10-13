@@ -100,7 +100,7 @@ public:
   void begin(int baudRate);
 };
 
-#ifdef USE_BLE
+#ifdef USE_NIMBLE
 class BLEATCommandService : public ATCommandService
 {
 private:
