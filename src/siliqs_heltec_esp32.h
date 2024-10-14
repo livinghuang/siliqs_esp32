@@ -15,8 +15,8 @@
 #include "system/wifi_client/wifi_client.h"
 #endif
 
-#ifdef USE_WEB_SERVER
-#include "system/web_server/web_server.h"
+#ifdef USE_WEB_OTA_SERVER
+#include "system/web_ota_server/web_ota_server.h"
 #endif
 
 #ifdef USE_AT_COMMAND_SERVICE

@@ -49,7 +49,10 @@ protected:
   void readFile(const String &param);
 
   // 处理 ATWF 命令，用于写入文件信息
-  void writeFile(const String &param);
+  void writeFile(const String &param); // under construction
+
+  // 处理 ATWOTA 命令，start web ota server
+  void startWebOTAServer(const String &param);
 
 public:
   // 构造函数

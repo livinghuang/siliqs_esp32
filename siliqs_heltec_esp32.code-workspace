@@ -116,7 +116,9 @@
 			"streambuf": "cpp",
 			"thread": "cpp",
 			"cinttypes": "cpp",
-			"coroutine": "cpp"
+			"coroutine": "cpp",
+			"forward_list": "cpp",
+			"list": "cpp"
 		}
 	}
 }

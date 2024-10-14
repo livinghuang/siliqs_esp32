@@ -172,34 +172,82 @@ if param = file_param, if index =1 , got content , means to write the file. writ
 */
 void ATCommandService::writeFile(const String &param)
 {
-  union file_param fileData;
-  // 假設 param 是經過轉換得到的 file_param 結構
-  memcpy(&fileData, param.c_str(), sizeof(file_param));
+  // union file_param fileData;
+  // // 假設 param 是經過轉換得到的 file_param 結構
+  // memcpy(&fileData, param.c_str(), sizeof(file_param));
 
-  if (fileData.header.index == 0)
+  // if (fileData.header.index == 0)
+  // {
+  //   // 寫入文件頭
+  //   File file = LittleFS.open(fileData.header.file_name, "w");
+  //   if (!file)
+  //   {
+  //     this->sendResponse("Failed to open file for writing");
+  //     return;
+  //   }
+  //   this->sendResponse("Writing file header: " + String(fileData.header.file_name) + ", size: " + String(fileData.header.file_size) + "\n");
+  //   file.close();
+  // }
+  // else
+  // {
+  //   // 寫入文件內容
+  //   File file = LittleFS.open(fileData.header.file_name, "a");
+  //   if (file)
+  //   {
+  //     file.seek((fileData.content.index - 1) * sizeof(fileData.content.raw_data));
+  //     file.write((const uint8_t *)fileData.content.raw_data, sizeof(fileData.content.raw_data));
+  //     this->sendResponse("Writing content, index:" + String(fileData.content.index) + "\n");
+  //     file.close();
+  //   }
+  // }
+}
+
+#ifdef USE_WEB_OTA_SERVER
+void ATCommandService::startWebOTAServer(const String &param)
+{
+  const char *defaultPassword = "siliqs.net"; // Default password (at least 8 characters)
+  char *wifiPassword = nullptr;
+
+  if (param.length() < 8)
   {
-    // 寫入文件頭
-    File file = LittleFS.open(fileData.header.file_name, "w");
-    if (!file)
-    {
-      this->sendResponse("Failed to open file for writing");
-      return;
-    }
-    this->sendResponse("Writing file header: " + String(fileData.header.file_name) + ", size: " + String(fileData.header.file_size) + "\n");
-    file.close();
+    this->sendResponse("Password is short, must be at least 8 characters, set to default");
+    console.log(sqINFO, "Password is short, must be at least 8 characters, set to default");
+    // Use the default password (no need for dynamic allocation here)
+    wifiPassword = const_cast<char *>(defaultPassword); // Casting to char* for compatibility
   }
   else
   {
-    // 寫入文件內容
-    File file = LittleFS.open(fileData.header.file_name, "a");
-    if (file)
-    {
-      file.seek((fileData.content.index - 1) * sizeof(fileData.content.raw_data));
-      file.write((const uint8_t *)fileData.content.raw_data, sizeof(fileData.content.raw_data));
-      this->sendResponse("Writing content, index:" + String(fileData.content.index) + "\n");
-      file.close();
-    }
+    // Dynamically allocate memory for the password if it's valid
+    wifiPassword = new char[param.length() + 1];              // Allocate memory for the password
+    strncpy(wifiPassword, param.c_str(), param.length() + 1); // Copy the password
   }
-}
 
+  static char ssid[20];
+  // Seed the random number generator with the ESP's MAC address
+  randomSeed(ESP.getEfuseMac() + millis());
+
+  // Generate a random number between 100000 and 999999 for the SSID
+  unsigned long randomNum = random(100000, 999999);
+
+  // Format the SSID using the random number
+  snprintf(ssid, sizeof(ssid), "SQ-%06lu", randomNum);
+
+  // Create a structure to hold both SSID and password
+  WebOTATaskParams *taskParams = new WebOTATaskParams;
+  taskParams->ssid = ssid;
+  taskParams->password = wifiPassword;
+
+  this->sendResponse("Web OTA Server started...");
+  this->sendResponse("SSID:" + String(ssid) + " Password:" + String(wifiPassword));
+  // Create a FreeRTOS task to run the web server in the background
+  xTaskCreate(
+      WebOTAServerTask,       // Task function
+      "WebOTAServerTask",     // Name of the task
+      10000,                  // Stack size (in bytes)
+      (void *)taskParams,     // Task input parameter (the password)
+      1,                      // Task priority
+      &webOTAServerTaskHandle // Task handle
+  );
+}
+#endif
 #endif

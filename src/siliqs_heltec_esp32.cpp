@@ -32,6 +32,7 @@ void start_nimble_service(void)
   Serial.println("NimBLE 服务初始化完成");
 }
 #endif
+
 void siliqs_heltec_esp32_setup(int print_level)
 {
   Serial.begin(115200);
