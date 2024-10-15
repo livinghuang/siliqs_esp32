@@ -50,10 +50,10 @@ protected:
 
   // 处理 ATWF 命令，用于写入文件信息
   void writeFile(const String &param); // under construction
-
+#ifdef USE_WEB_OTA_SERVER
   // 处理 ATWOTA 命令，start web ota server
   void startWebOTAServer(const String &param);
-
+#endif
 public:
   // 构造函数
   ATCommandService();

@@ -17,11 +17,26 @@ public:
   void startTask();
   void stopTask();
 
+  String devEuiString();
+  String appEuiString();
+  String appKeyString();
+
+  String nwkSKeyString();
+  String appSKeyString();
+  String devAddrString();
+
+  String loraWanRegionString();
+  String loraWanClassString();
+  String appTxDutyCycleString();
+  String otaaString();
+  String loraWanAdrString();
+  String loraWanTxConfirmedString();
+
 private:
   TaskHandle_t loraTaskHandle = nullptr; // Handle for the FreeRTOS task
 
   // Task function that will be run as a FreeRTOS task
   static void LoRaWanTaskFunction(void *pvParameters);
 };
-
+extern SQ_LoRaWanService loraWanService;
 #endif // USE_LORAWAN

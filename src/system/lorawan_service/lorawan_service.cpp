@@ -32,7 +32,7 @@ uint16_t userChannelsMask[6] = {0x00FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
 LoRaMacRegion_t loraWanRegion = LORAMAC_REGION_AS923_AS2;
 
 /*LoraWan Class, Class A and Class C are supported*/
-DeviceClass_t loraWanClass = CLASS_A;
+DeviceClass_t loraWanClass = CLASS_C;
 
 /*the application data transmission duty cycle.  value in [ms].*/
 uint32_t appTxDutyCycle = 15000;
@@ -190,6 +190,8 @@ void SQ_LoRaWanService::LoRaWanTaskFunction(void *pvParameters)
       break;
     }
     }
+
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -219,4 +221,143 @@ void SQ_LoRaWanService::stopTask()
   }
 }
 
+String bytes_to_string(uint8_t *data, int length)
+{
+  String result = "";
+  for (int i = 0; i < length; i++)
+  {
+    if (data[i] < 0x10)
+    {
+      result += "0";
+    }
+    result += String(data[i], HEX) + " ";
+  }
+  return result;
+}
+
+String SQ_LoRaWanService::devEuiString()
+{
+  return "devEui:" + bytes_to_string((uint8_t *)&devEui, sizeof(devEui));
+}
+
+String SQ_LoRaWanService::appEuiString()
+{
+  return "appEui:" + bytes_to_string((uint8_t *)&appEui, sizeof(appEui));
+}
+String SQ_LoRaWanService::appKeyString()
+{
+  return "appKey:" + bytes_to_string((uint8_t *)&appKey, sizeof(appKey));
+}
+
+String SQ_LoRaWanService::nwkSKeyString()
+{
+  return "nwkSKey:" + bytes_to_string((uint8_t *)&nwkSKey, sizeof(nwkSKey));
+}
+
+String SQ_LoRaWanService::appSKeyString()
+{
+  return "appSKey:" + bytes_to_string((uint8_t *)&appSKey, sizeof(appSKey));
+}
+
+String SQ_LoRaWanService::devAddrString()
+{
+  String result = "";
+  char *data = (char *)&devAddr;
+  int length = sizeof(devAddr);
+  for (int i = length - 1; i >= 0; i--)
+  {
+    if (data[i] < 0x10)
+    {
+      result += ("0");
+    }
+    result += String(data[i], HEX);
+    result += String(" ");
+  }
+  return "devAddr:" + result;
+}
+
+String SQ_LoRaWanService::loraWanRegionString()
+{
+  switch (loraWanRegion)
+  {
+  case LORAMAC_REGION_AS923:
+    return "loraWanRegion:AS923";
+  case LORAMAC_REGION_AU915:
+    return "loraWanRegion:AU915";
+  case LORAMAC_REGION_CN470:
+    return "loraWanRegion:CN470";
+  case LORAMAC_REGION_CN779:
+    return "loraWanRegion:CN779";
+  case LORAMAC_REGION_EU433:
+    return "loraWanRegion:EU433";
+  case LORAMAC_REGION_IN865:
+    return "loraWanRegion:IN865";
+  case LORAMAC_REGION_KR920:
+    return "loraWanRegion:KR920";
+  case LORAMAC_REGION_US915:
+    return "loraWanRegion:US915";
+  case LORAMAC_REGION_US915_HYBRID:
+    return "loraWanRegion:US915_HYBRID";
+  case LORAMAC_REGION_AS923_AS1:
+    return "loraWanRegion:AS923_AS1";
+  case LORAMAC_REGION_AS923_AS2:
+    return "loraWanRegion:AS923_AS2";
+  default:
+    return "loraWanRegion:Unknown";
+  }
+}
+String SQ_LoRaWanService::loraWanClassString()
+{
+  switch (loraWanClass)
+  {
+  case CLASS_A:
+    return "loraWanClass:A";
+  case CLASS_B:
+    return "loraWanClass:B";
+  case CLASS_C:
+    return "loraWanClass:C";
+  default:
+    return "loraWanClass:Unknown";
+  }
+}
+String SQ_LoRaWanService::appTxDutyCycleString()
+{
+  return "appTxDutyCycle:" + String(appTxDutyCycle);
+}
+String SQ_LoRaWanService::otaaString()
+{
+  if (overTheAirActivation)
+  {
+    return "OTAA mode";
+  }
+  else
+  {
+    return "ABP mode";
+  }
+}
+String SQ_LoRaWanService::loraWanAdrString()
+{
+  if (loraWanAdr)
+  {
+    return "loraWanAdr:On";
+  }
+  else
+  {
+    return "loraWanAdr:Off";
+  }
+}
+String SQ_LoRaWanService::loraWanTxConfirmedString()
+{
+  if (isTxConfirmed)
+  {
+    return "loraWanTxConfirmed:On";
+  }
+  else
+  {
+    return "loraWanTxConfirmed:Off";
+  }
+}
+
+// Create an instance of the LoRaWAN service class
+SQ_LoRaWanService loraWanService;
 #endif // USE_LORAWAN

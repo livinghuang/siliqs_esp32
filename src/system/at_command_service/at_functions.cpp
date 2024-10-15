@@ -14,15 +14,22 @@ void ATCommandService::showInfo()
   this->sendResponse("CHIP ID: " + String(get_chip_id()));
 
 #ifdef USE_LORAWAN
-  this->sendResponse("LoRaWAN Information:");
-  this->sendResponse("devEUI: ");
-  this->sendResponse("devAddr: ");
-  this->sendResponse("OTAA: ");
-  this->sendResponse("appKey: ");
-  this->sendResponse("nwkSKey: ");
-  this->sendResponse("appSKey: ");
-  this->sendResponse("LoRaWAN Class: ");
-  this->sendResponse("LoRaWAN Region: ");
+  this->sendResponse("LoRaWAN Information");
+  this->sendResponse("devEUI: " + loraWanService.devEuiString());
+  this->sendResponse("appEUI: " + loraWanService.appEuiString());
+  this->sendResponse("appKey: " + loraWanService.appKeyString());
+
+  this->sendResponse("nwkSKey: " + loraWanService.nwkSKeyString());
+  this->sendResponse("appSKey: " + loraWanService.appSKeyString());
+  this->sendResponse("devAddr: " + loraWanService.devAddrString());
+
+  this->sendResponse("LoRaWAN Region: " + loraWanService.loraWanRegionString());
+  this->sendResponse("LoRaWAN Class: " + loraWanService.loraWanClassString());
+  this->sendResponse("appTxDutyCycle: " + loraWanService.appTxDutyCycleString());
+  this->sendResponse("OTAA: " + loraWanService.otaaString());
+  this->sendResponse("LoRaWAN Adr: " + loraWanService.loraWanAdrString());
+  this->sendResponse("LoRaWAN Tx Confirmed : " + loraWanService.loraWanTxConfirmedString());
+
 #else
   this->sendResponse("No LoRaWAN support");
 #endif

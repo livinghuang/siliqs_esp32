@@ -7,9 +7,6 @@
  * 该函数首先调用 siliqs_heltec_esp32_setup() 函数来初始化 ESP32 主板。 \
  */
 
-// Create an instance of the LoRaWAN service class
-SQ_LoRaWanService loraService;
-
 // The setup function runs once when the ESP32 starts
 void setup()
 {
