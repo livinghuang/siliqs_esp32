@@ -1,32 +1,69 @@
 #include "sensor_measurement.h"
 
-// 构造函数，初始化电源引脚
-Sensor::Sensor(int powerPin) : powerPin(powerPin) {}
-
-// 初始化方法，子类可以调用它
-void Sensor::begin()
+void Sensor::start(int delayMs, SemaphoreHandle_t *busMutex)
 {
-  if (powerPin != -1)
+  taskDelayMs = delayMs; // store delay value in ms
+  sensorBusMutex = busMutex;
+  if (taskHandle == nullptr)
   {
-    pinMode(powerPin, OUTPUT); // 设置电源引脚为输出模式
-    powerOn();                 // 默认在初始化时开启电源
+    xTaskCreate(sensorTask, "SensorTask", 4096, this, 1, &taskHandle);
   }
 }
 
-// 开启电源的方法
-void Sensor::powerOn()
+void Sensor::stop()
 {
-  if (powerPin != -1)
+  if (taskHandle != nullptr)
   {
-    digitalWrite(powerPin, LOW); // 设置引脚为高电平，开启电源
+    vTaskDelete(taskHandle);
+    taskHandle = nullptr;
   }
 }
 
-// 关闭电源的方法
-void Sensor::powerOff()
+void Sensor::sensorTask(void *parameter)
 {
-  if (powerPin != -1)
+  Sensor *sensor = static_cast<Sensor *>(parameter);
+  sensor->begin(); // Initialize the sensor
+
+  for (;;)
   {
-    digitalWrite(powerPin, HIGH); // 设置引脚为低电平，关闭电源
+    xSemaphoreTake(sensor->messageMutex, portMAX_DELAY); // Protect shared data
+
+    // 锁定 sensor bus 互斥锁以安全访问  sensor bus 总线
+    if (xSemaphoreTake(*sensor->sensorBusMutex, portMAX_DELAY) == pdTRUE)
+    {
+      sensor->getMeasurement();                // 从传感器读取数据
+      xSemaphoreGive(*sensor->sensorBusMutex); // 释放 sensor bus 互斥锁
+    }
+    xSemaphoreGive(sensor->messageMutex);
+    vTaskDelay(pdMS_TO_TICKS(sensor->taskDelayMs)); // Adjust delay as needed
   }
+}
+
+void swap_bytes(uint16_t *value)
+{
+  *value = (*value << 8) | (*value >> 8);
+}
+void print_bytes(const uint8_t *data, int length)
+{
+  for (int i = 0; i < length; i++)
+  {
+    // Print each byte in hexadecimal format with leading zeros
+    if (data[i] < 0x10)
+    {
+      Serial.print("0");
+    }
+    Serial.print(data[i], HEX);
+    Serial.print(" ");
+  }
+  Serial.println(); // Print a newline character at the end
+}
+
+uint16_t raw_sum(uint8_t *buffer, int len)
+{
+  uint16_t sum = 0;
+  for (int i = 0; i < len - 2; i++)
+  {
+    sum += buffer[i];
+  }
+  return sum;
 }

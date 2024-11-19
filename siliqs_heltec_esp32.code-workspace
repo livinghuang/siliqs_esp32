@@ -32,6 +32,9 @@
 		},
 		{
 			"path": "../.."
+		},
+		{
+			"path": "../../../../code/github/anhuan"
 		}
 	],
 	"settings": {

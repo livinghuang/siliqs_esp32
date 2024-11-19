@@ -2,7 +2,7 @@
 #include "siliqs_heltec_esp32.h"
 #include "communication/rs485_communication.h"
 #include "communication/modbus_communication.h"
-ModbusCommunication modbusComm;
+ModbusCommunication modbusComm(Serial1, 4800, pRS485_RO, pRS485_DI, pRS485_DE, pVext);
 
 /**
  * @brief setup 函数，用于初始化系统
@@ -12,8 +12,7 @@ ModbusCommunication modbusComm;
 void setup()
 {
   siliqs_heltec_esp32_setup(SQ_INFO);
-  RS485Communication rs485Comm(Serial1, 9600, pRS485_RO, pRS485_DI, pRS485_DE, pVext);
-  rs485Comm.begin();
+  modbusComm.begin();
 }
 
 void loop()

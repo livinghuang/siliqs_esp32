@@ -3,7 +3,19 @@
 #include "communication/rs485_communication.h"
 
 RS485Communication rs485Comm;
-
+void print_bytes(uint8_t *data, int length)
+{
+  for (int i = 0; i < length; i++)
+  {
+    if (data[i] < 0x10)
+    {
+      Serial.print("0");
+    }
+    Serial.print(data[i], HEX);
+    // Serial.print(" ");
+  }
+  Serial.println();
+}
 /**
  * @brief setup 函数，用于初始化系统
  *
@@ -11,7 +23,7 @@ RS485Communication rs485Comm;
  */
 void setup()
 {
-  siliqs_heltec_esp32_setup();
+  siliqs_heltec_esp32_setup(SQ_INFO);
   RS485Communication rs485Comm(Serial1, 9600, pRS485_RO, pRS485_DI, pRS485_DE, pVext);
   rs485Comm.begin();
 }

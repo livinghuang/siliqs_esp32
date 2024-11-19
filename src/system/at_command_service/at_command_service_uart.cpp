@@ -3,14 +3,8 @@
 
 #include "at_command_service.h"
 // 构造函数，传入 HardwareSerial 对象
-UARTATCommandService::UARTATCommandService(HardwareSerial &serial) : serial(serial)
+UARTATCommandService::UARTATCommandService()
 {
-}
-
-// 初始化 UART，指定波特率
-void UARTATCommandService::begin(int baudRate)
-{
-  serial.begin(baudRate);
 }
 
 // 启动 AT 命令处理任务
@@ -35,17 +29,17 @@ void UARTATCommandService::stopTask()
 // FreeRTOS 任务函数，用于处理 UART 数据
 void UARTATCommandService::taskFunction(void *pvParameters)
 {
+  // 将传入的 pvParameters 转换为 UARTATCommandService 对象指针
   UARTATCommandService *service = static_cast<UARTATCommandService *>(pvParameters);
-
   while (true)
   {
-    service->serial.setTimeout(1000);
+    Serial.setTimeout(1000);
     // 检查 UART 中是否有可读取的数据
-    if (service->serial.available())
+    if (Serial.available())
     {
       // 读取 UART 接收到的数据
-      String data = service->serial.readString();
-      // 处理接收到的 AT 命令
+      String data = Serial.readString();
+      // 使用类实例调用非静态成员函数处理数据
       service->handleIncomingData(data);
     }
 
@@ -57,9 +51,9 @@ void UARTATCommandService::taskFunction(void *pvParameters)
 // 实现 sendResponse 函数，通过 UART 发送响应
 void UARTATCommandService::sendResponse(const String &response)
 {
-  serial.print("[CMD>] ");
-  serial.println(response);
-  serial.flush();
+  Serial.print("[CMD>] ");
+  Serial.println(response);
+  Serial.flush();
 }
 
 // 实现 sendEchoCommand 函数，通过 UART 回显命令
@@ -67,9 +61,9 @@ void UARTATCommandService::sendEchoCommand(const String &response)
 {
   if (echoEnabled)
   {
-    serial.print("[CMD<] ");
-    serial.println(response);
-    serial.flush();
+    Serial.print("[CMD<] ");
+    Serial.println(response);
+    Serial.flush();
   }
 }
 #endif

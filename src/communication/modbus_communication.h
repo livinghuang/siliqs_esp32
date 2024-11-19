@@ -26,10 +26,11 @@ public:
 
   // 接收 Modbus 数据帧
   size_t receive_modbus(modbus_data_t *modbusData, size_t length = MODBUS_MAX_DATA_LENGTH, int timeout = -1);
+  size_t receive_modbus(modbus_data_t *modbusData, char start_char, size_t length = MODBUS_MAX_DATA_LENGTH, int timeout = -1);
 
   // 打印 Modbus 数据
   void print_data(modbus_data_t *modbusData);
-  // 私有方法：计算整个 Modbus 帧的 CRC
+
 private:
   // 计算 Modbus 数据帧的 CRC 校验
   uint16_t calculateCRC(const modbus_data_t *modbusData);

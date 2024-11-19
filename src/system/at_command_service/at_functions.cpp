@@ -3,7 +3,7 @@
 
 #include "at_command_service.h"
 #include <LittleFS.h> // Include the LittleFS library
-
+#include "lorawan_util.h"
 // 重启设备的功能
 void ATCommandService::showInfo()
 {
@@ -13,23 +13,22 @@ void ATCommandService::showInfo()
   this->sendResponse("CHIP Information:");
   this->sendResponse("CHIP ID: " + String(get_chip_id()));
 
-#ifdef USE_LORAWAN
+#if defined(USE_LORAWAN) || defined(USE_CUSTOM_LORAWAN)
   this->sendResponse("LoRaWAN Information");
-  this->sendResponse("devEUI: " + loraWanService.devEuiString());
-  this->sendResponse("appEUI: " + loraWanService.appEuiString());
-  this->sendResponse("appKey: " + loraWanService.appKeyString());
+  this->sendResponse("devEUI: " + devEuiString());
+  this->sendResponse("appEUI: " + appEuiString());
+  this->sendResponse("appKey: " + appKeyString());
 
-  this->sendResponse("nwkSKey: " + loraWanService.nwkSKeyString());
-  this->sendResponse("appSKey: " + loraWanService.appSKeyString());
-  this->sendResponse("devAddr: " + loraWanService.devAddrString());
+  this->sendResponse("nwkSKey: " + nwkSKeyString());
+  this->sendResponse("appSKey: " + appSKeyString());
+  this->sendResponse("devAddr: " + devAddrString());
 
-  this->sendResponse("LoRaWAN Region: " + loraWanService.loraWanRegionString());
-  this->sendResponse("LoRaWAN Class: " + loraWanService.loraWanClassString());
-  this->sendResponse("appTxDutyCycle: " + loraWanService.appTxDutyCycleString());
-  this->sendResponse("OTAA: " + loraWanService.otaaString());
-  this->sendResponse("LoRaWAN Adr: " + loraWanService.loraWanAdrString());
-  this->sendResponse("LoRaWAN Tx Confirmed : " + loraWanService.loraWanTxConfirmedString());
-
+  this->sendResponse("LoRaWAN Region: " + loraWanRegionString());
+  this->sendResponse("LoRaWAN Class: " + loraWanClassString());
+  this->sendResponse("appTxDutyCycle: " + appTxDutyCycleString());
+  this->sendResponse("OTAA: " + otaaString());
+  this->sendResponse("LoRaWAN Adr: " + loraWanAdrString());
+  this->sendResponse("LoRaWAN Tx Confirmed : " + loraWanTxConfirmedString());
 #else
   this->sendResponse("No LoRaWAN support");
 #endif
@@ -150,7 +149,7 @@ void ATCommandService::readFile(const String &param)
   this->sendResponse("Reading file: " + file_name + ", Size: " + String(fileSize) + " bytes\n");
 
   // 逐步读取文件内容并发送
-  const size_t bufferSize = BLE_MESSAGE_MAX_SIZE; // 每次读取的字节数
+  const size_t bufferSize = AT_COMMAND_MESSAGE_MAX_SIZE; // 每次读取的字节数
   char buffer[bufferSize];
 
   while (file.available())

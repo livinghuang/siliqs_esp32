@@ -11,11 +11,11 @@
 void setup()
 {
   // Initialize serial for debugging purposes
-  siliqs_heltec_esp32_setup();
+  siliqs_heltec_esp32_setup(SQ_INFO);
 
   // Start the LoRaWAN task
   Serial.println("Starting LoRaWAN service...");
-  loraService.startTask(); // Start the FreeRTOS task for LoRaWAN processing
+  loraWanService.startTask(); // Start the FreeRTOS task for LoRaWAN processing
 }
 
 // The loop function runs over and over again

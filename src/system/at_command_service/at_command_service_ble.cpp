@@ -8,10 +8,6 @@ BLEATCommandService::BLEATCommandService()
 {
 }
 
-void BLEATCommandService::begin()
-{
-}
-
 // 启动 AT 命令处理任务
 void BLEATCommandService::startTask(int taskPriority, int stackSize)
 {

@@ -32,7 +32,7 @@ void start_nimble_service(void)
   Serial.println("NimBLE 服务初始化完成");
 }
 #endif
-
+SemaphoreHandle_t i2cMutex = nullptr;
 void siliqs_heltec_esp32_setup(int print_level)
 {
   Serial.begin(115200);
@@ -45,6 +45,11 @@ void siliqs_heltec_esp32_setup(int print_level)
 #ifdef USE_NIMBLE
   start_nimble_service();
 #endif
+  i2cMutex = xSemaphoreCreateMutex();
+  if (i2cMutex == nullptr)
+  {
+    Serial.println("创建 i2cMutex 互斥锁失败！");
+  }
 }
 
 esp_sleep_wakeup_cause_t print_wakeup_reason()

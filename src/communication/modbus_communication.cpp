@@ -74,9 +74,65 @@ size_t ModbusCommunication::receive_modbus(modbus_data_t *modbusData, size_t len
   console.log(sqDEBUG, "\n Calculated CRC: ");
   console.log(sqDEBUG, (uint8_t *)&calculated_crc, 2);
   // 计算 CRC 并验证
-  return (calculated_crc == received_crc); // 返回是否 CRC 校验通过
+  if (calculated_crc == received_crc) // 返回是否 CRC 校验通过
+  {
+    console.log(sqINFO, "CRC check passed.");
+    return length;
+  }
+  else
+  {
+    console.log(sqINFO, "CRC check failed.");
+    return 0;
+  }
 }
+size_t ModbusCommunication::receive_modbus(modbus_data_t *modbusData, char start_char, size_t length, int timeout)
+{
+  console.log(sqDEBUG, "receive_modbus start_char: " + String(start_char));
+  enableReceive(); // 启用接收模式
 
+  // Modbus 帧的总大小：地址(1字节) + 功能码(1字节) + 数据长度 + CRC(2字节)
+  uint8_t buffer[MODBUS_MAX_DATA_LENGTH + 4];
+
+  length = readFromChar((char *)buffer, start_char, length, timeout);
+
+  // 调用父类的 receive 函数接收整个 Modbus 帧
+  if (length < 4)
+  {
+    // 如果接收失败，返回 false
+    console.log(sqINFO, "No data received from Modbus.");
+    return 0;
+  }
+  console.log(sqINFO, "Received Modbus length:" + String(length));
+  console.log(sqINFO, "Received Modbus Frame:");
+  // 调试输出：打印接收的数据
+  console.log(sqINFO, buffer, length);
+  // 将接收到的数据解析为 modbus_data_t 结构
+  modbusData->address = buffer[0];
+  modbusData->function = buffer[1];
+  modbusData->length = length - 4;
+
+  memcpy(modbusData->data, &buffer[2], modbusData->length);
+
+  // 解析接收的 CRC
+  uint16_t received_crc = buffer[length - 2] | (buffer[length - 1] << 8);
+
+  console.log(sqDEBUG, "Received CRC: ");
+  console.log(sqDEBUG, (uint8_t *)&received_crc, 2);
+  uint16_t calculated_crc = calculateCRC(modbusData);
+  console.log(sqDEBUG, "\n Calculated CRC: ");
+  console.log(sqDEBUG, (uint8_t *)&calculated_crc, 2);
+  // 计算 CRC 并验证
+  if (calculated_crc == received_crc) // 返回是否 CRC 校验通过
+  {
+    console.log(sqINFO, "CRC check passed.");
+    return length;
+  }
+  else
+  {
+    console.log(sqINFO, "CRC check failed.");
+    return 0;
+  }
+}
 // 私有方法：计算整个 Modbus 帧的 CRC
 uint16_t ModbusCommunication::calculateCRC(const modbus_data_t *modbusData)
 {

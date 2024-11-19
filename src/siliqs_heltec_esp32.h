@@ -1,8 +1,6 @@
-#ifndef _SILIQS_HELTEC_ESP32_H_
-#define _SILIQS_HELTEC_ESP32_H_
+#pragma once
 
 #include <Arduino.h>
-#include "heltec.h"
 #include "pins_defined.h"
 #include "system/serial_console/serial_console.h"
 #include "system/file_system/file_system.h"
@@ -27,7 +25,19 @@
 #include "system/lorawan_service/lorawan_service.h"
 #endif
 
+#ifdef USE_LORA
+#include "system/lora_service/lora_service.h"
+#endif
+
+#ifdef USE_GPS
+#include "system/gps_service/gps_service.h"
+#endif
+
+#ifdef USE_RGB_LED
+#include "system/rgb_led_service/rgb_led_service.h"
+#endif
+
+extern SemaphoreHandle_t i2cMutex;
 void siliqs_heltec_esp32_setup(int print_level = SQ_NONE);
 uint64_t get_chip_id();
 esp_sleep_wakeup_cause_t print_wakeup_reason(void);
-#endif

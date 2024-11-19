@@ -12,7 +12,7 @@
 BLEATCommandService BLEatService;
 #endif
 // 创建 UARTATCommandService 实例，使用 Serial 作为通信接口
-UARTATCommandService UARTatService(Serial);
+UARTATCommandService UARTatService;
 
 void setup()
 {

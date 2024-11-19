@@ -10,6 +10,8 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+#define AT_COMMAND_MESSAGE_MAX_SIZE 192
+
 class ATCommandService
 {
 protected:
@@ -77,15 +79,13 @@ public:
 class UARTATCommandService : public ATCommandService
 {
 private:
-  HardwareSerial &serial;
   TaskHandle_t taskHandle = NULL; // FreeRTOS 任务句柄
 
   // FreeRTOS 任务函数，用于处理 UART 数据
   static void taskFunction(void *pvParameters);
 
 public:
-  // 构造函数，传入 HardwareSerial 对象（例如 Serial1, Serial2）
-  UARTATCommandService(HardwareSerial &serial);
+  UARTATCommandService();
 
   // 启动 AT 命令任务
   void startTask(int taskPriority = 1, int stackSize = 4096);
@@ -98,9 +98,6 @@ public:
 
   // 实现 sendEchoCommand 函数，用于通过 UART 回显命令
   void sendEchoCommand(const String &response) override;
-
-  // 初始化 UART，指定波特率
-  void begin(int baudRate);
 };
 
 #ifdef USE_NIMBLE
@@ -125,8 +122,6 @@ public:
 
   // 实现 sendEchoCommand 函数，用于通过 UART 回显命令
   void sendEchoCommand(const String &response) override;
-
-  void begin();
 };
 #endif
 #endif // AT_COMMAND_SERVICE_H

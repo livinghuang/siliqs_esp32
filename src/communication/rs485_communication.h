@@ -17,9 +17,10 @@ public:
   RS485Communication(HardwareSerial &serial = Serial1, int baudRate = DEFAULT_RS485_BAUD_RATE, int RO = pRS485_RO, int DI = pRS485_DI, int directionPin = pRS485_DE, int powerPin = -1);
 
   // 重写基类方法
-  void begin() override;                                                                          // 初始化 RS485 通信
-  void send(const char *data, int length) override;                                               // 发送 RS485 数据
-  size_t receive(char *buffer, size_t length = RS485_MAX_DATA_LENGTH, int timeout = -1) override; // 接收 RS485 数据
+  void begin() override;                                                                                       // 初始化 RS485 通信
+  void send(const char *data, int length) override;                                                            // 发送 RS485 数据
+  size_t receive(char *buffer, size_t length = RS485_MAX_DATA_LENGTH, int timeout = -1) override;              // 接收 RS485 数据
+  size_t readFromChar(char *buffer, char start_char, size_t length = RS485_MAX_DATA_LENGTH, int timeout = -1); // 接收 RS485 数据
   void print(const String &data);
   void println(const String &data);
   String readStringUntil(char end);

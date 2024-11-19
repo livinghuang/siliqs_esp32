@@ -8,17 +8,12 @@ RS485Communication::RS485Communication(HardwareSerial &serial, int baudRate, int
 {
   this->powerPin = powerPin;
   _serial.setTimeout(1000); // 默认超时1秒
+  console.log(sqDEBUG, "RS485 Start baud rate: %d", _baudRate);
 }
 
 void RS485Communication::begin()
 {
-  if (powerPin != -1)
-  {
-    powerOn(); // Power on if powerPin is set
-  }
-  pinMode(pVext, OUTPUT);
-  digitalWrite(pVext, HIGH); // Power on
-
+  powerOn(); // Power on if powerPin is set
   pinMode(_RO, INPUT);
   pinMode(_DI, OUTPUT);
   pinMode(_directionPin, OUTPUT);
@@ -28,9 +23,7 @@ void RS485Communication::begin()
 
 void RS485Communication::send(const char *data, int length)
 {
-  pinMode(pVext, OUTPUT);
-  digitalWrite(pVext, HIGH); // Power on
-
+  powerOn(); // Power on if powerPin is set
   // Serial.println("rs485 send");
   // print_bytes((uint8_t *)data, length);
   enableTransmit(); // Enable transmission
@@ -41,7 +34,7 @@ void RS485Communication::send(const char *data, int length)
 
 int get_reasonable_timeout(int baudRate, int length)
 {
-  int timeout = (int)((length * 8 + 10) * (1000.0 / baudRate));
+  int timeout = (int)((length * 8 + 10) * (1000.0 / baudRate)) * 2;
   if (timeout < 1000)
   {
     timeout = 1000;
@@ -51,6 +44,55 @@ int get_reasonable_timeout(int baudRate, int length)
     timeout = 10000;
   }
   return timeout;
+}
+
+size_t RS485Communication::readFromChar(char *buffer, char start_char, size_t length, int timeout)
+{
+  console.log(sqDEBUG, "RS485 readFromChar start_char: %x", start_char);
+  console.log(sqDEBUG, "RS485 readFromChar target length: %d", length);
+  // If timeout is -1, calculate a reasonable timeout based on baud rate and length
+  timeout = (timeout == -1) ? get_reasonable_timeout(_baudRate, length) : timeout;
+  enableReceive(); // Switch to receive mode
+
+  // Clear buffer before receiving new data
+  memset(buffer, 0, length);
+
+  // Read data from _serial
+  size_t lengthReceived = 0;
+
+  uint32_t start = millis();
+  while (1)
+  {
+    if (_serial.available())
+    {
+      buffer[lengthReceived] = _serial.read();
+      if (buffer[0] == start_char)
+      {
+        lengthReceived++;
+      }
+    }
+    if (lengthReceived == length)
+    {
+      break;
+    }
+    if (millis() - start > timeout)
+    {
+      console.log(sqDEBUG, "Timeout occurred! timeout: %d, lengthReceived: %d", timeout, lengthReceived);
+      break;
+    }
+  }
+
+  if (lengthReceived > 0)
+  {
+    console.log(sqDEBUG, "RS485 Received: ");
+    console.log(sqDEBUG, (uint8_t *)buffer, lengthReceived); // Print received data in bytes
+    return lengthReceived;
+  }
+  else
+  {
+    console.log(sqDEBUG, "no data received from rs485");
+    return 0;
+  }
 }
 
 size_t RS485Communication::receive(char *buffer, size_t length, int timeout)

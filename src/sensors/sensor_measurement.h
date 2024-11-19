@@ -1,30 +1,37 @@
-#ifndef SENSOR_H
-#define SENSOR_H
+#pragma once
 #include "siliqs_heltec_esp32.h"
 #include "Arduino.h"
-
-// 基类：带电源控制的通用传感器类
 class Sensor
 {
-protected:
-  int powerPin; // 电源引脚
-
 public:
-  // 构造函数，带可选电源引脚
-  Sensor(int powerPin = -1);
+  Sensor() : taskHandle(nullptr), messageMutex(xSemaphoreCreateMutex()) {}
 
-  // 初始化传感器的通用方法
-  virtual void begin();
+  virtual void begin() = 0;          // Initialize the sensor
+  virtual void getMeasurement() = 0; // Get the measurement once
 
-  // 获取测量值的统一接口，由子类实现
-  virtual void getMeasurement() = 0;
+  virtual void start(int delayMs = 1000, SemaphoreHandle_t *sensorBusMutex = nullptr); // Start the task for the sensor
+  virtual void stop();                                                                 // Stop the task for the sensor
 
-  // 电源控制方法
-  virtual void powerOn();
-  virtual void powerOff();
+  virtual ~Sensor()
+  {
+    if (taskHandle != nullptr)
+    {
+      vTaskDelete(taskHandle); // Ensure the task is deleted
+    }
+    if (messageMutex != nullptr)
+    {
+      vSemaphoreDelete(messageMutex); // Delete the mutex
+    }
+  }
 
-  // 虚析构函数
-  virtual ~Sensor() {}
+protected:
+  int taskDelayMs;
+  TaskHandle_t taskHandle;        // FreeRTOS task handle
+  SemaphoreHandle_t messageMutex; // Mutex for thread safety
+  SemaphoreHandle_t *sensorBusMutex;
+  static void sensorTask(void *parameter);
 };
 
-#endif
+void print_bytes(const uint8_t *data, int length);
+void swap_bytes(uint16_t *value);
+uint16_t raw_sum(uint8_t *buffer, int len);

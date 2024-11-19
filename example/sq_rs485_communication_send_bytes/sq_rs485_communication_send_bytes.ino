@@ -11,7 +11,7 @@ RS485Communication rs485Comm;
  */
 void setup()
 {
-  siliqs_heltec_esp32_setup();
+  siliqs_heltec_esp32_setup(SQ_INFO);
   RS485Communication rs485Comm(Serial1, 9600, pRS485_RO, pRS485_DI, pRS485_DE, pVext);
   rs485Comm.begin();
 }

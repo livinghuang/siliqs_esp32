@@ -13,6 +13,8 @@ void setup()
 {
   siliqs_heltec_esp32_setup();
   // 初始化湿度测量系统
+  pinMode(pVext, OUTPUT);
+  digitalWrite(pVext, LOW); // Power on
   humiditySensor.begin();
 }
 

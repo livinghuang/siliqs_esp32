@@ -12,7 +12,7 @@ BatteryMeasurement battery;
  */
 void setup()
 {
-  siliqs_heltec_esp32_setup();
+  siliqs_heltec_esp32_setup(SQ_INFO);
   // 初始化电池测量系统
   battery.begin();
 }

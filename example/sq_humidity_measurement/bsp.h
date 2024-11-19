@@ -1,6 +1,14 @@
-#ifndef BSP_H
-#define BSP_H
+#pragma once
 #define USE_HUMIDITY
+#ifdef USE_HUMIDITY
+#define USE_HDC1080_I2C
+#define USE_2_WIRE_SENSOR_BUS
+#define HDC1080_I2C_ADDRESS 0x40 // 假设使用 HDC1080 传感器的 I2C 地址
+#define pHDC1080_I2C_SCL 19
+#define pHDC1080_I2C_SDA 18
+#define HDC1080_HEATER_ON_SEC 5
+#endif
+
 // if you want to use custom pins, please define CUSTOM_PINS in here, otherwise, it will use pins defined in pins_defined.h
 /*
 below is the example:
@@ -25,5 +33,3 @@ below is the example:
 // // 24 POWER
 // #define pSDN 3
 */
-
-#endif

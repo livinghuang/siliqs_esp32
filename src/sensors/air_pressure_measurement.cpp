@@ -1,28 +1,20 @@
 #include "bsp.h"
-#ifdef USE_AIR_PRESSURE
+#ifdef USE_DSP310_I2C
 #include "air_pressure_measurement.h"
-
-AirPressureMeasurement::AirPressureMeasurement(int i2cAddress, int sdaPin, int sclPin, int powerPin)
-    : Sensor(powerPin), i2cAddress(i2cAddress), sdaPin(sdaPin), sclPin(sclPin), pressure(0) {}
 
 // 初始化传感器
 void AirPressureMeasurement::begin()
 {
-  Sensor::begin();
-  Wire.setPins(pSDA, pSCL);
-  Dps310PressureSensor.begin(Wire, 0x77);
+  Wire.setPins(pDSP310_I2C_SDA, pDSP310_I2C_SCL);
+  Dps310PressureSensor.begin(Wire, DSP310_I2C_ADDRESS);
 }
 
 // 获取气压测量值
 void AirPressureMeasurement::getMeasurement()
 {
-  if (powerPin != -1)
-  {
-    powerOn(); // 确保传感器通电
-  }
-
   uint8_t oversampling = 7;
   int16_t ret = Dps310PressureSensor.measurePressureOnce(pressure, oversampling);
+  float altitude = 44330.0 * (1.0 - pow(pressure / 101325, 0.1903));
   if (ret != 0)
   {
     // Something went wrong.
@@ -30,12 +22,6 @@ void AirPressureMeasurement::getMeasurement()
     Serial.print("FAIL! ret = ");
     Serial.println(ret);
   }
-  // else
-  // {
-  //   Serial.print("Pressure: ");
-  //   Serial.print(pressure);
-  //   Serial.println(" Pascal");
-  // }
 
   ret = Dps310PressureSensor.measureTempOnce(temperature, oversampling);
 
@@ -46,17 +32,5 @@ void AirPressureMeasurement::getMeasurement()
     Serial.print("FAIL! ret = ");
     Serial.println(ret);
   }
-  // else
-  // {
-  //   Serial.print("Temperature: ");
-  //   Serial.print(temperature);
-  //   Serial.println(" degrees of Celsius");
-  // }
-
-  if (powerPin != -1)
-  {
-    powerOff(); // 读取后关闭电源以节约电力
-  }
 }
-
 #endif
