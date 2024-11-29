@@ -516,12 +516,13 @@ int16_t LoRaWANNode::setBufferSession(const uint8_t *persistentBuffer)
   if (this->isActivated())
   {
     RADIOLIB_DEBUG_PROTOCOL_PRINTLN("Did not update buffer: session already active");
+    Serial.println("Did not update buffer: session already active");
+
     return (RADIOLIB_ERR_NONE);
   }
 
   int16_t state = LoRaWANNode::checkBufferCommon(persistentBuffer, RADIOLIB_LORAWAN_SESSION_BUF_SIZE);
   RADIOLIB_ASSERT(state);
-
   // the Nonces buffer holds a checksum signature - compare this to the signature that is in the session buffer
   uint16_t signatureNonces = LoRaWANNode::ntoh<uint16_t>(&this->bufferNonces[RADIOLIB_LORAWAN_NONCES_SIGNATURE]);
   uint16_t signatureInSession = LoRaWANNode::ntoh<uint16_t>(&persistentBuffer[RADIOLIB_LORAWAN_SESSION_NONCES_SIGNATURE]);
@@ -529,6 +530,21 @@ int16_t LoRaWANNode::setBufferSession(const uint8_t *persistentBuffer)
   {
     RADIOLIB_DEBUG_PROTOCOL_PRINTLN("The Session buffer (%04x) does not match the Nonces buffer (%04x)",
                                     signatureInSession, signatureNonces);
+    Serial.println("RADIOLIB_LORAWAN_SESSION_BUF:");
+    for (int i = 0; i < RADIOLIB_LORAWAN_SESSION_BUF_SIZE; i++)
+    {
+      Serial.print(persistentBuffer[i], HEX);
+      Serial.print(" ");
+    }
+    Serial.println();
+    Serial.println("RADIOLIB_LORAWAN_NONCES_BUF:");
+    for (int i = 0; i < RADIOLIB_LORAWAN_NONCES_BUF_SIZE; i++)
+    {
+      Serial.print(this->bufferNonces[i], HEX);
+      Serial.print(" ");
+    }
+    Serial.printf("The Session buffer (%04x) does not match the Nonces buffer (%04x)",
+                  signatureInSession, signatureNonces);
     return (RADIOLIB_ERR_SESSION_DISCARDED);
   }
 
@@ -551,6 +567,7 @@ int16_t LoRaWANNode::setBufferSession(const uint8_t *persistentBuffer)
   // restore session parameters
   this->rev = LoRaWANNode::ntoh<uint8_t>(&this->bufferSession[RADIOLIB_LORAWAN_SESSION_VERSION]);
   RADIOLIB_DEBUG_PROTOCOL_PRINTLN("LoRaWAN session: v1.%d", this->rev);
+  Serial.printf("LoRaWAN session: v1.%d", this->rev);
   this->homeNetId = LoRaWANNode::ntoh<uint32_t>(&this->bufferSession[RADIOLIB_LORAWAN_SESSION_HOMENET_ID]);
   this->aFCntDown = LoRaWANNode::ntoh<uint32_t>(&this->bufferSession[RADIOLIB_LORAWAN_SESSION_A_FCNT_DOWN]);
   this->nFCntDown = LoRaWANNode::ntoh<uint32_t>(&this->bufferSession[RADIOLIB_LORAWAN_SESSION_N_FCNT_DOWN]);
@@ -641,7 +658,6 @@ int16_t LoRaWANNode::setBufferSession(const uint8_t *persistentBuffer)
 
   // as both the Nonces and session are restored, revert to active session
   this->bufferNonces[RADIOLIB_LORAWAN_NONCES_ACTIVE] = (uint8_t) true;
-
   return (state);
 }
 

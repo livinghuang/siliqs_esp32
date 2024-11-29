@@ -48,6 +48,11 @@ public:
 
 private:
   lorawan_params_settings *params;
+  void autoGenKeys();
+  int begin_node();
+  int active_node();
+  void setParams();
+  int recall_nonces();
 };
 
 void arrayDump(uint8_t *buffer, uint16_t len);
