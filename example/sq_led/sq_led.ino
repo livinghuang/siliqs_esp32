@@ -5,9 +5,7 @@ RGBLedService led(pRGB_LED, 1);
 void setup()
 {
   // Initialize system and LED peripherals
-  siliqs_heltec_esp32_setup();
-
-  Serial.begin(115200);
+  siliqs_heltec_esp32_setup(SQ_INFO);
 
   led.begin(); // Initialize the service
 

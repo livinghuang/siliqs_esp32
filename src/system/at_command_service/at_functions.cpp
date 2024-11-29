@@ -3,7 +3,6 @@
 
 #include "at_command_service.h"
 #include <LittleFS.h> // Include the LittleFS library
-#include "lorawan_util.h"
 // 重启设备的功能
 void ATCommandService::showInfo()
 {
@@ -13,25 +12,25 @@ void ATCommandService::showInfo()
   this->sendResponse("CHIP Information:");
   this->sendResponse("CHIP ID: " + String(get_chip_id()));
 
-#if defined(USE_LORAWAN) || defined(USE_CUSTOM_LORAWAN)
-  this->sendResponse("LoRaWAN Information");
-  this->sendResponse("devEUI: " + devEuiString());
-  this->sendResponse("appEUI: " + appEuiString());
-  this->sendResponse("appKey: " + appKeyString());
+  // #if defined(USE_LORAWAN) || defined(USE_CUSTOM_LORAWAN)
+  //   this->sendResponse("LoRaWAN Information");
+  //   this->sendResponse("devEUI: " + devEuiString());
+  //   this->sendResponse("appEUI: " + appEuiString());
+  //   this->sendResponse("appKey: " + appKeyString());
 
-  this->sendResponse("nwkSKey: " + nwkSKeyString());
-  this->sendResponse("appSKey: " + appSKeyString());
-  this->sendResponse("devAddr: " + devAddrString());
+  //   this->sendResponse("nwkSKey: " + nwkSKeyString());
+  //   this->sendResponse("appSKey: " + appSKeyString());
+  //   this->sendResponse("devAddr: " + devAddrString());
 
-  this->sendResponse("LoRaWAN Region: " + loraWanRegionString());
-  this->sendResponse("LoRaWAN Class: " + loraWanClassString());
-  this->sendResponse("appTxDutyCycle: " + appTxDutyCycleString());
-  this->sendResponse("OTAA: " + otaaString());
-  this->sendResponse("LoRaWAN Adr: " + loraWanAdrString());
-  this->sendResponse("LoRaWAN Tx Confirmed : " + loraWanTxConfirmedString());
-#else
-  this->sendResponse("No LoRaWAN support");
-#endif
+  //   this->sendResponse("LoRaWAN Region: " + loraWanRegionString());
+  //   this->sendResponse("LoRaWAN Class: " + loraWanClassString());
+  //   this->sendResponse("appTxDutyCycle: " + appTxDutyCycleString());
+  //   this->sendResponse("OTAA: " + otaaString());
+  //   this->sendResponse("LoRaWAN Adr: " + loraWanAdrString());
+  //   this->sendResponse("LoRaWAN Tx Confirmed : " + loraWanTxConfirmedString());
+  // #else
+  //   this->sendResponse("No LoRaWAN support");
+  // #endif
 
 #ifdef USE_WIFI_CLIENT
   this->sendResponse("WIFI Information:");
@@ -171,6 +170,34 @@ void ATCommandService::readFile(const String &param)
   // 关闭文件
   file.close();
 }
+
+/*
+处理 ATDF 命令，用于删除文件
+param = file_name
+*/
+void ATCommandService::deleteFile(const String &param)
+{
+  String file_name = param;
+  Serial.println("Deleting file: " + file_name);
+
+  // 检查文件是否存在
+  if (!LittleFS.exists(file_name))
+  {
+    this->sendResponse("File does not exist: " + file_name);
+    return;
+  }
+
+  // 删除文件
+  if (LittleFS.remove(file_name))
+  {
+    this->sendResponse("File deleted successfully: " + file_name);
+  }
+  else
+  {
+    this->sendResponse("Failed to delete file: " + file_name);
+  }
+}
+
 /*
 处理 ATWF 命令，用于写入文件信息
 if param = file_param, if index =0 , got header , means to open the file. write header into LittleFS

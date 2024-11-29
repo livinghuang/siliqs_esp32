@@ -29,6 +29,9 @@ ATCommandService::ATCommandService()
   // 注册 ATRF 命令，用于获取文件信息
   registerCommand("ATRF", [this](String cmd, String param)
                   { this->readFile(param); });
+  // 注册 ATDF 命令，用于删除文件信息
+  registerCommand("ATDF", [this](String cmd, String param)
+                  { this->deleteFile(param); });
   // 注册 ATWF 命令，用于写入文件信息
   registerCommand("ATWF", [this](String cmd, String param)
                   { this->writeFile(param); });

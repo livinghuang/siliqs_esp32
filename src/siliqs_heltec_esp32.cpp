@@ -17,7 +17,7 @@ void setupFileSystem()
 #ifdef USE_NIMBLE
 void start_nimble_service(void)
 {
-  Serial.println("初始化 NimBLE 服务...");
+  console.log(sqINFO, "初始化 NimBLE 服务...");
   nimbleService.init();
 
   // 创建一个 FreeRTOS 任务来处理 BLE 扫描
@@ -29,9 +29,66 @@ void start_nimble_service(void)
       1,                               // 任务优先级
       NULL                             // 任务句柄（可以为 NULL）
   );
-  Serial.println("NimBLE 服务初始化完成");
+  console.log(sqINFO, "NimBLE 服务初始化完成");
 }
 #endif
+
+#ifdef USE_EXTERNAL_XTAL
+RTC_DATA_ATTR uint32_t cal_32k = 0;
+void external_32k_setup()
+{
+  console.log(sqINFO, "Testing External 32.768 kHz Crystal...");
+
+  if (cal_32k == 0)
+  {
+    // First boot or calibration missing, initialize and calibrate the crystal
+    rtc_clk_32k_bootstrap(512);
+    rtc_clk_32k_enable(true);
+
+    if (!rtc_clk_32k_enabled())
+    {
+      console.log(sqINFO, "Error: 32.768 kHz crystal not enabled. Falling back to internal clock.");
+      return;
+    }
+
+    console.log(sqINFO, "32.768 kHz crystal enabled successfully.");
+
+    // Perform calibration
+    cal_32k = rtc_clk_cal(RTC_CAL_32K_XTAL, 1000);
+    if (cal_32k == 0)
+    {
+      console.log(sqINFO, "Calibration failed: 32.768 kHz crystal is not stable.");
+    }
+    else
+    {
+      console.log(sqINFO, "Calibration successful.");
+      float frequency = (1 << 19) * 1000.0f / cal_32k;
+      console.log(sqINFO, "Calibrated frequency: %.3f kHz\n", frequency);
+    }
+  }
+  else
+  {
+    // Use the saved calibration value
+    console.log(sqINFO, "Using saved calibration value.");
+    float frequency = (1 << 19) * 1000.0f / cal_32k;
+    console.log(sqINFO, "Calibrated frequency (saved): %.3f kHz\n", frequency);
+  }
+
+  // Set the RTC slow clock source to the external crystal
+  rtc_clk_slow_freq_set(RTC_SLOW_FREQ_32K_XTAL);
+  rtc_slow_freq_t slow_clk = rtc_clk_slow_freq_get();
+
+  if (slow_clk == RTC_SLOW_FREQ_32K_XTAL)
+  {
+    console.log(sqINFO, "RTC slow clock source set to external 32.768 kHz crystal.");
+  }
+  else
+  {
+    console.log(sqINFO, "Failed to set RTC slow clock source to external crystal.");
+  }
+}
+#endif
+
 SemaphoreHandle_t i2cMutex = nullptr;
 void siliqs_heltec_esp32_setup(int print_level)
 {
@@ -45,10 +102,15 @@ void siliqs_heltec_esp32_setup(int print_level)
 #ifdef USE_NIMBLE
   start_nimble_service();
 #endif
+
+#ifdef USE_EXTERNAL_XTAL
+  external_32k_setup();
+#endif
+
   i2cMutex = xSemaphoreCreateMutex();
   if (i2cMutex == nullptr)
   {
-    Serial.println("创建 i2cMutex 互斥锁失败！");
+    console.log(sqINFO, "创建 i2cMutex 互斥锁失败！");
   }
 }
 
@@ -61,22 +123,22 @@ esp_sleep_wakeup_cause_t print_wakeup_reason()
   switch (wakeup_reason)
   {
   case ESP_SLEEP_WAKEUP_EXT0:
-    Serial.println("Wakeup caused by external signal using RTC_IO");
+    console.log(sqINFO, "Wakeup caused by external signal using RTC_IO");
     break;
   case ESP_SLEEP_WAKEUP_EXT1:
-    Serial.println("Wakeup caused by external signal using RTC_CNTL");
+    console.log(sqINFO, "Wakeup caused by external signal using RTC_CNTL");
     break;
   case ESP_SLEEP_WAKEUP_TIMER:
-    Serial.println("Wakeup caused by timer");
+    console.log(sqINFO, "Wakeup caused by timer");
     break;
   case ESP_SLEEP_WAKEUP_TOUCHPAD:
-    Serial.println("Wakeup caused by touchpad");
+    console.log(sqINFO, "Wakeup caused by touchpad");
     break;
   case ESP_SLEEP_WAKEUP_ULP:
-    Serial.println("Wakeup caused by ULP program");
+    console.log(sqINFO, "Wakeup caused by ULP program");
     break;
   default:
-    Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason);
+    console.log(sqINFO, "Wakeup was not caused by deep sleep: %d\n", wakeup_reason);
     break;
   }
 
@@ -87,4 +149,57 @@ uint64_t get_chip_id()
 {
   uint64_t chipid = ESP.getEfuseMac();
   return chipid;
+}
+
+// Function to store system data as a Base64 string in a file
+bool storageSystemData(void *global_system_data, size_t dataSize)
+{
+  // Convert struct to a byte array
+  uint8_t *data = (uint8_t *)global_system_data;
+
+  // Base64 encode the byte array
+  size_t encodedLength = Base64::encodedLength(dataSize);
+  char encodedData[encodedLength + 1]; // +1 for null terminator
+  Base64::encode(encodedData, (char *)data, dataSize);
+
+  // Write the encoded data to the file
+  if (fileSystem.writeFile("/system.txt", encodedData))
+  {
+    console.log(sqINFO, "System data saved successfully");
+    return true;
+  }
+  else
+  {
+    console.log(sqERROR, "Failed to save system data");
+    return false;
+  }
+}
+
+// Function to read system data from a file and decode it
+bool readSystemData(void *global_system_data, size_t dataSize)
+{
+  // Read the encoded Base64 string from the file
+  String systemDataString = fileSystem.readFile("/system.txt");
+  if (systemDataString.isEmpty())
+  {
+    console.log(sqERROR, "Failed to read system data");
+    return false;
+  }
+
+  // Base64 decode the string back to the byte array
+  size_t decodedLength = Base64::decodedLength(systemDataString.c_str());
+  if (decodedLength != dataSize)
+  {
+    console.log(sqERROR, "Decoded data size mismatch");
+    return false;
+  }
+
+  uint8_t decodedData[decodedLength];
+  Base64::decode((char *)decodedData, systemDataString.c_str(), systemDataString.length());
+
+  // Copy the decoded data back into the global_system_data struct
+  memcpy(global_system_data, decodedData, dataSize);
+
+  console.log(sqINFO, "System data loaded successfully");
+  return true;
 }

@@ -2,7 +2,7 @@
 #include "siliqs_heltec_esp32.h"
 #include "communication/rs485_communication.h"
 
-RS485Communication rs485Comm;
+RS485Communication rs485Comm(Serial1, 9600, pRS485_RO, pRS485_DI, pRS485_DE, pVext, false);
 void print_bytes(uint8_t *data, int length)
 {
   for (int i = 0; i < length; i++)
@@ -12,7 +12,7 @@ void print_bytes(uint8_t *data, int length)
       Serial.print("0");
     }
     Serial.print(data[i], HEX);
-    // Serial.print(" ");
+    Serial.print(" ");
   }
   Serial.println();
 }
@@ -24,7 +24,6 @@ void print_bytes(uint8_t *data, int length)
 void setup()
 {
   siliqs_heltec_esp32_setup(SQ_INFO);
-  RS485Communication rs485Comm(Serial1, 9600, pRS485_RO, pRS485_DI, pRS485_DE, pVext);
   rs485Comm.begin();
 }
 void loop()
@@ -33,14 +32,10 @@ void loop()
   char buf[6];
   int length = rs485Comm.receive(buf, sizeof(buf));
 
-  if (length == 0)
+  if (length > 0)
   {
-    Serial.println("No data received.");
-    Serial.flush();
-    return;
+    // 打印接收到的数据
+    Serial.print("Received: ");
+    print_bytes((uint8_t *)buf, sizeof(buf));
   }
-  // 打印接收到的数据
-  Serial.print("Received: ");
-  print_bytes((uint8_t *)buf, sizeof(buf));
-  Serial.println();
 }

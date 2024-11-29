@@ -1,3 +1,4 @@
+#include "bsp.h"
 #ifdef USE_LORA // Only compile when USE_LORA is enabled
 #include "lora_service.h"
 #include "freertos/FreeRTOS.h"

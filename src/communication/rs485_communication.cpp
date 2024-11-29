@@ -3,10 +3,9 @@
 #include "siliqs_heltec_esp32.h"
 #include "rs485_communication.h"
 
-RS485Communication::RS485Communication(HardwareSerial &serial, int baudRate, int RO, int DI, int directionPin, int powerPin)
-    : _serial(serial), _baudRate(baudRate), _RO(RO), _DI(DI), _directionPin(directionPin)
+RS485Communication::RS485Communication(HardwareSerial &serial, int baudRate, int RO, int DI, int directionPin, int powerPin, bool highActive)
+    : _serial(serial), _baudRate(baudRate), _RO(RO), _DI(DI), _directionPin(directionPin), _powerPin(powerPin), _powerPinHighActive(highActive)
 {
-  this->powerPin = powerPin;
   _serial.setTimeout(1000); // 默认超时1秒
   console.log(sqDEBUG, "RS485 Start baud rate: %d", _baudRate);
 }
@@ -23,9 +22,7 @@ void RS485Communication::begin()
 
 void RS485Communication::send(const char *data, int length)
 {
-  powerOn(); // Power on if powerPin is set
-  // Serial.println("rs485 send");
-  // print_bytes((uint8_t *)data, length);
+  powerOn();        // Power on if powerPin is set
   enableTransmit(); // Enable transmission
   delay(1);
   _serial.write(data, length); // Use _serial
@@ -152,32 +149,45 @@ void RS485Communication::setReceiveTimeout(int timeout)
 
 void RS485Communication::enableTransmit()
 {
+  pinMode(_directionPin, OUTPUT);
   digitalWrite(_directionPin, HIGH); // Switch to transmit mode using _directionPin
 }
 
 void RS485Communication::enableReceive()
 {
+  pinMode(_directionPin, OUTPUT);
   digitalWrite(_directionPin, LOW); // Switch to receive mode using _directionPin
 }
 
 void RS485Communication::powerOn()
 {
-  if (powerPin != -1)
+  if (_powerPin != -1)
   {
-    // Serial.println("powerOn");
-    pinMode(powerPin, OUTPUT);
-    digitalWrite(powerPin, HIGH); // Power on
+    pinMode(_powerPin, OUTPUT);
+    if (_powerPinHighActive)
+    {
+      digitalWrite(_powerPin, HIGH); // 打开电源
+    }
+    else
+    {
+      digitalWrite(_powerPin, LOW); // 打开电源
+    }
   }
 }
-
 void RS485Communication::powerOff()
 {
-  if (powerPin != -1)
+  if (_powerPin != -1)
   {
-    digitalWrite(powerPin, LOW); // Power off
+    if (_powerPinHighActive)
+    {
+      digitalWrite(_powerPin, LOW); // 關閉电源
+    }
+    else
+    {
+      digitalWrite(_powerPin, HIGH); // 關閉电源
+    }
   }
 }
-
 RS485Communication::~RS485Communication()
 {
   powerOff(); // Power off when the object is destroyed

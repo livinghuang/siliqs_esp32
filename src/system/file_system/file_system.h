@@ -15,6 +15,9 @@ public:
   // Initialize the file system
   bool begin(bool formatOnFail = true);
 
+  // Append data to a file
+  bool appendFile(const char *path, const String &data);
+
   // Write data to a file
   bool writeFile(const char *path, const String &data);
 

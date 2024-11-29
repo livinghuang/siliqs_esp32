@@ -34,10 +34,50 @@ bool FileSystem::begin(bool formatOnFail)
 
   return true;
 }
+// Append data to a file
+bool FileSystem::appendFile(const char *path, const String &data)
+{
+  // Check if the file path is valid
+  if (path == nullptr || strlen(path) == 0)
+  {
+    console.log(sqERROR, "Invalid file path");
+    return false;
+  }
+
+  // Attempt to open the file in append mode
+  File file = LittleFS.open(path, FILE_APPEND);
+  if (!file)
+  {
+    console.log(sqERROR, "Failed to open file: " + String(path) + ", cannot append data");
+    return false;
+  }
+
+  // Append data to the file
+  if (file.print(data))
+  {
+    file.flush(); // Ensure data is written to storage
+    console.log(sqINFO, "Data successfully appended to file: " + String(path));
+    file.close();
+    return true;
+  }
+  else
+  {
+    console.log(sqERROR, "Failed to append data to file: " + String(path));
+    file.close();
+    return false;
+  }
+}
 
 // Write data to a file
 bool FileSystem::writeFile(const char *path, const String &data)
 {
+  // Check if the file path is valid
+  if (path == nullptr || strlen(path) == 0)
+  {
+    console.log(sqERROR, "Invalid file path");
+    return false;
+  }
+
   File file = LittleFS.open(path, FILE_WRITE);
   if (!file)
   {
@@ -62,6 +102,13 @@ bool FileSystem::writeFile(const char *path, const String &data)
 // Read data from a file
 String FileSystem::readFile(const char *path)
 {
+  // Check if the file path is valid
+  if (path == nullptr || strlen(path) == 0)
+  {
+    console.log(sqERROR, "Invalid file path");
+    return "";
+  }
+
   File file = LittleFS.open(path, FILE_READ);
   if (!file)
   {
@@ -83,6 +130,13 @@ String FileSystem::readFile(const char *path)
 // Delete a file
 bool FileSystem::deleteFile(const char *path)
 {
+  // Check if the file path is valid
+  if (path == nullptr || strlen(path) == 0)
+  {
+    console.log(sqERROR, "Invalid file path");
+    return false;
+  }
+
   if (LittleFS.remove(path))
   {
     console.log(sqINFO, "File " + String(path) + " deleted successfully");

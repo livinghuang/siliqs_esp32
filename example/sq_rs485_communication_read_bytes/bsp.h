@@ -29,13 +29,9 @@ below is the example:
 
 #define CUSTOM_PINS
 #define pVext 2
-#define pADC_BAT 1
-#define pSDA 18
-#define pSCL 19
-
 // RS485
-#define pRS485_RO 18 // Receiver Output (RO) connected to pin 19
-#define pRS485_DI 19 // Driver Input (DI) connected to pin 18
-#define pRS485_DE 0  // Data Enable (DE) connected to pin 4
+#define pRS485_RO 19 // Receiver Output (RO) connected to pin 19
+#define pRS485_DI 18 // Driver Input (DI) connected to pin 18
+#define pRS485_DE 9  // Data Enable (DE) connected to pin 4
 
 #endif

@@ -4,8 +4,8 @@
 #include <string.h> // 用于 memcpy 函数
 
 // 构造函数
-ModbusCommunication::ModbusCommunication(HardwareSerial &serial, int baudRate, int RO, int DI, int directionPin, int powerPin)
-    : RS485Communication(serial, baudRate, RO, DI, directionPin, powerPin) {}
+ModbusCommunication::ModbusCommunication(HardwareSerial &serial, int baudRate, int RO, int DI, int directionPin, int powerPin, bool highActive)
+    : RS485Communication(serial, baudRate, RO, DI, directionPin, powerPin, highActive) {}
 
 // 发送 Modbus 数据帧
 void ModbusCommunication::send_modbus(const modbus_data_t *modbusData)

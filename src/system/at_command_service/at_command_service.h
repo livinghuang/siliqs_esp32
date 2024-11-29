@@ -50,6 +50,9 @@ protected:
   // 处理 ATRF 命令，用于获取文件信息
   void readFile(const String &param);
 
+  // 处理 ATDF 命令，用于删除文件信息
+  void deleteFile(const String &param);
+
   // 处理 ATWF 命令，用于写入文件信息
   void writeFile(const String &param); // under construction
 #ifdef USE_WEB_OTA_SERVER

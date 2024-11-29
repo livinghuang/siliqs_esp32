@@ -10,25 +10,24 @@
 #define DEFAULT_RS485_BAUD_RATE 9600
 #define RS485_MAX_DATA_LENGTH 255
 
-class RS485Communication : public Communication
+class RS485Communication
 {
 public:
   // 构造函数，允许指定硬件串口，默认使用 Serial1
-  RS485Communication(HardwareSerial &serial = Serial1, int baudRate = DEFAULT_RS485_BAUD_RATE, int RO = pRS485_RO, int DI = pRS485_DI, int directionPin = pRS485_DE, int powerPin = -1);
+  RS485Communication(HardwareSerial &serial = Serial1, int baudRate = DEFAULT_RS485_BAUD_RATE, int RO = pRS485_RO, int DI = pRS485_DI, int directionPin = pRS485_DE, int powerPin = -1, bool highActive = true);
 
   // 重写基类方法
-  void begin() override;                                                                                       // 初始化 RS485 通信
-  void send(const char *data, int length) override;                                                            // 发送 RS485 数据
-  size_t receive(char *buffer, size_t length = RS485_MAX_DATA_LENGTH, int timeout = -1) override;              // 接收 RS485 数据
+  void begin();                                                                                                // 初始化 RS485 通信
+  void send(const char *data, int length);                                                                     // 发送 RS485 数据
+  size_t receive(char *buffer, size_t length = RS485_MAX_DATA_LENGTH, int timeout = -1);                       // 接收 RS485 数据
   size_t readFromChar(char *buffer, char start_char, size_t length = RS485_MAX_DATA_LENGTH, int timeout = -1); // 接收 RS485 数据
   void print(const String &data);
   void println(const String &data);
   String readStringUntil(char end);
 
   void setReceiveTimeout(int timeout);
-  // 覆写 powerOn 和 powerOff 方法
-  void powerOn() override;
-  void powerOff() override;
+  void powerOn();
+  void powerOff();
 
   // 析构函数，释放资源
   ~RS485Communication();
@@ -39,6 +38,8 @@ protected:
   int _DI;                 // 发送数据引脚
   int _directionPin;       // 控制发送/接收模式的引脚
   int _baudRate;           // 串口波特率
+  int _powerPin;
+  bool _powerPinHighActive;
 
   void enableTransmit(); // 切换到发送模式
   void enableReceive();  // 切换到接收模式

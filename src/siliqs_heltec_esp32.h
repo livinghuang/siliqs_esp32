@@ -4,7 +4,7 @@
 #include "pins_defined.h"
 #include "system/serial_console/serial_console.h"
 #include "system/file_system/file_system.h"
-
+#include "system/base64/base64.h"
 #ifdef USE_NIMBLE
 #include "system/nimble_service/nimble_service.h"
 #endif
@@ -37,7 +37,14 @@
 #include "system/rgb_led_service/rgb_led_service.h"
 #endif
 
+#ifdef USE_EXTERNAL_XTAL
+#include "soc/rtc.h"
+#include "esp_sleep.h"
+extern RTC_DATA_ATTR uint32_t cal_32k;
+#endif
 extern SemaphoreHandle_t i2cMutex;
 void siliqs_heltec_esp32_setup(int print_level = SQ_NONE);
 uint64_t get_chip_id();
 esp_sleep_wakeup_cause_t print_wakeup_reason(void);
+bool readSystemData(void *global_system_data, size_t dataSize);
+bool storageSystemData(void *global_system_data, size_t dataSize);

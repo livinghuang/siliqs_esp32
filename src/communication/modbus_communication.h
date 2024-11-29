@@ -19,7 +19,7 @@ class ModbusCommunication : public RS485Communication
 {
 public:
   // 构造函数
-  ModbusCommunication(HardwareSerial &serial = Serial1, int baudRate = DEFAULT_RS485_BAUD_RATE, int RO = pRS485_RO, int DI = pRS485_DI, int directionPin = pRS485_DE, int powerPin = -1);
+  ModbusCommunication(HardwareSerial &serial = Serial1, int baudRate = DEFAULT_RS485_BAUD_RATE, int RO = pRS485_RO, int DI = pRS485_DI, int directionPin = pRS485_DE, int powerPin = -1, bool highActive = true);
 
   // 发送 Modbus 数据帧
   void send_modbus(const modbus_data_t *modbusData);

@@ -1,74 +1,270 @@
 #include "bsp.h"
-#include "lorawan_service.h"
-
 #ifdef USE_LORAWAN // Only compile when USE_LORAWAN is enabled
-#include "LoRaWan_APP.h"
-/* OTAA para*/
-uint8_t devEui[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88};
-uint8_t appEui[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-uint8_t appKey[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88};
+#include "lorawan_service.h"
+#include "radiolab/src/RadioLib.h"
+const LoRaWANBand_t Region = REGION;
+const uint8_t subBand = SUB_BAND; // For US915, change this to 2, otherwise leave on 0
 
-/* ABP para*/
-uint8_t nwkSKey[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x02, 0x02};
-uint8_t appSKey[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x02, 0x02};
-uint32_t devAddr = (uint32_t)0x88888888;
-/*LoraWan channelsmask, default channels 0-7*/
-uint16_t userChannelsMask[6] = {0x00FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
-/*LoraWan region,
-    LORAMAC_REGION_AS923        //  AS band on 923MHz
-    LORAMAC_REGION_AU915        //  Australian band on 915MHz
-    LORAMAC_REGION_CN470        //  Chinese band on 470MHz
-    LORAMAC_REGION_CN779        //  Chinese band on 779MHz
-    LORAMAC_REGION_EU433        //  European band on 433MHz
-    LORAMAC_REGION_EU868        //  European band on 868MHz
-    LORAMAC_REGION_KR920        //  South korean band on 920MHz
-    LORAMAC_REGION_IN865        //  India band on 865MHz
-    LORAMAC_REGION_US915        //  North american band on 915MHz
-    LORAMAC_REGION_US915_HYBRID //  North american band on 915MHz with a maximum of 16 channels
-    LORAMAC_REGION_AU915_SB2    //  Australian band on 915MHz Subband 2
-    LORAMAC_REGION_AS923_AS1    //  AS band on 922.0-923.4MHz
-    LORAMAC_REGION_AS923_AS2    //  AS band on 923.2-924.6MHz
-*/
-LoRaMacRegion_t loraWanRegion = LORAMAC_REGION_AS923_AS2;
+SX1262 radio = new Module(LORA_NSS, LORA_DIO1, LORA_NRST, LORA_BUSY);
+LoRaWANNode node(&radio, &Region, subBand);
+void print_bytes_reverse(uint8_t *data, int length);
+void print_bytes(uint8_t *data, int length);
+// Constructor
+LoRaWanService::LoRaWanService(lorawan_params_settings *params)
+{
+  this->params = params;
+}
 
-/*LoraWan Class, Class A and Class C are supported*/
-DeviceClass_t loraWanClass = CLASS_C;
+// Destructor
+LoRaWanService::~LoRaWanService()
+{
+  stop(); // Ensure the service is stopped and resources are released
+}
 
-/*the application data transmission duty cycle.  value in [ms].*/
-uint32_t appTxDutyCycle = 15000;
+// Begin method: Initializes the LoRaWAN service
+bool LoRaWanService::begin(bool autogen)
+{
+  SPI.begin(params->SCK, params->MISO, params->MOSI, params->NSS); // Initialize SPI
+  int16_t state = radio.begin();
+  debug(state != RADIOLIB_ERR_NONE, F("Initialise radio failed"), state, true);
 
-/*OTAA or ABP*/
-bool overTheAirActivation = false;
+  console.log(sqINFO, F("Initialise LoRaWAN Network credentials"));
 
-/*ADR enable*/
-bool loraWanAdr = true;
+  if (autogen)
+  {
+    console.log(sqINFO, F("Auto generate keys"));
+    uint64_t chipid = ESP.getEfuseMac();
+    Serial.printf("ESP32ChipID=%04X%08X\n", (uint16_t)(chipid >> 32), (uint32_t)chipid);
 
-/* Indicates if the node is sending confirmed or unconfirmed messages */
-bool isTxConfirmed = true;
+    params->DEVADDR = (uint32_t)(chipid >> 32) * (uint32_t)chipid;
+    Serial.print("DEVADDR:");
+    print_bytes_reverse((uint8_t *)&params->DEVADDR, sizeof(params->DEVADDR));
+    char chipidStr[17];
+    snprintf(chipidStr, sizeof(chipidStr), "%016llx", chipid);
+    memcpy(&params->DEVEUI, &chipid, sizeof(params->DEVEUI));
+    Serial.print("DEVEUI:");
+    print_bytes((uint8_t *)&params->DEVEUI, sizeof(params->DEVEUI));
+    memcpy(&params->APPxKEY, chipidStr, 16);
+    Serial.print("APPxKEY:");
+    print_bytes((uint8_t *)&params->APPxKEY, sizeof(params->APPxKEY));
+    memcpy(&params->NWKxKEY, chipidStr, 16);
+    Serial.print("NWKxKEY:");
+    print_bytes((uint8_t *)&params->NWKxKEY, sizeof(params->NWKxKEY));
+    memcpy(&params->FNWKSINT, chipidStr, 16);
+    Serial.print("FNWKSINT:");
+    print_bytes((uint8_t *)&params->FNWKSINT, sizeof(params->FNWKSINT));
+    memcpy(&params->SNWKSINT, chipidStr, 16);
+    Serial.print("SNWKSINT:");
+    print_bytes((uint8_t *)&params->SNWKSINT, sizeof(params->SNWKSINT));
+  }
 
-/* Application port */
-uint8_t appPort = 2;
-/*!
- * Number of trials to transmit the frame, if the LoRaMAC layer did not
- * receive an acknowledgment. The MAC performs a datarate adaptation,
- * according to the LoRaWAN Specification V1.0.2, chapter 18.4, according
- * to the following table:
- *
- * Transmission nb | Data Rate
- * ----------------|-----------
- * 1 (first)       | DR
- * 2               | DR
- * 3               | max(DR-1,0)
- * 4               | max(DR-1,0)
- * 5               | max(DR-2,0)
- * 6               | max(DR-2,0)
- * 7               | max(DR-3,0)
- * 8               | max(DR-3,0)
- *
- * Note, that if NbTrials is set to 1 or 2, the MAC will not decrease
- * the datarate, in case the LoRaMAC layer did not receive an acknowledgment
- */
-uint8_t confirmedNbTrials = 4;
+  /*
+  To activate a LoRaWAN 1.1 session, supply all the required keys:
+
+  node.beginOTAA(joinEUI, devEUI, nwkKey, appKey);
+  node.beginABP(devAddr, fNwkSIntKey, sNwkSIntKey, nwkSEncKey, appSKey);
+  To activate a LoRaWAN 1.0.4 session, set the keys that are not available to NULL:
+
+  node.beginOTAA(joinEUI, devEUI, NULL, appKey);
+  node.beginABP(devAddr, NULL, NULL, nwkSEncKey, appSKey);
+  */
+  if (params->OTAA)
+  {
+    if (params->LORAWAN_1_1 == true)
+    {
+      console.log(sqINFO, "LoRaWAN 1.1");
+      node.beginOTAA(params->JOINEUI, params->DEVEUI, params->NWKxKEY, params->APPxKEY);
+    }
+    else
+    {
+      console.log(sqINFO, "LoRaWAN 1.0.4");
+      node.beginOTAA(params->JOINEUI, params->DEVEUI, NULL, params->APPxKEY);
+    }
+    uint8_t joinDR = 4;
+    state = node.activateOTAA(joinDR);
+    debug(state != RADIOLIB_LORAWAN_NEW_SESSION, F("Join failed"), state, true);
+  }
+  else
+  {
+    if (params->LORAWAN_1_1 == true)
+    {
+      node.beginABP(params->DEVADDR, params->FNWKSINT, params->SNWKSINT, params->NWKxKEY, params->APPxKEY);
+    }
+    else
+    {
+      node.beginABP(params->DEVADDR, NULL, NULL, params->NWKxKEY, params->APPxKEY);
+    }
+    node.activateABP();
+    debug(state != RADIOLIB_ERR_NONE, F("Activate ABP failed"), state, true);
+  }
+
+  if (state != RADIOLIB_ERR_NONE)
+  {
+    Serial.println(F("Initialise LoRaWAN Network credentials failed"));
+    return false;
+  }
+  // Print the DevAddr
+  Serial.print("[LoRaWAN] DevAddr: ");
+  Serial.println((unsigned long)node.getDevAddr(), HEX);
+
+  // Enable the ADR algorithm (on by default which is preferable)
+  node.setADR(params->ADR);
+
+  // Set a datarate to start off with
+  node.setDatarate(params->DR);
+
+  // / Duty Cycle = 1 / (DutyCycleFactor) , if 0, disable. In EU law, Duty Cycle should under 1%
+  node.setDutyCycle(params->DutyCycleFactor ? true : false, params->DutyCycleFactor);
+
+  // Unit: ms, Dwell Time to limit signal airtime in single channel, In US/AU law,Dwell Time under 400ms
+  node.setDwellTime(params->DwellTime ? true : false, params->DwellTime);
+
+  return true;
+}
+
+// Stop method: Stops the LoRaWAN service
+void LoRaWanService::stop()
+{
+  // Logic to stop the radio
+}
+
+void LoRaWanService::sleep()
+{
+  radio.sleep();
+  SPI.end();
+}
+
+// Set battery level (for use in uplink messages or ADR)
+void LoRaWanService::set_battery_level(int level)
+{
+  node.setDeviceStatus(level);
+}
+
+// Publish a message
+void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPort, uint8_t *dataDown, size_t *lenDown, bool isConfirmed)
+{
+  console.log(sqINFO, "send process start");
+
+  // you can also retrieve additional information about an uplink or
+  // downlink by passing a reference to LoRaWANEvent_t structure
+  LoRaWANEvent_t uplinkDetails;
+  LoRaWANEvent_t downlinkDetails;
+
+  // Retrieve the last uplink frame counter
+  uint32_t fCntUp = node.getFCntUp();
+  // Send a confirmed uplink on the second uplink
+  // and also request the LinkCheck and DeviceTime MAC commands
+  console.log(sqINFO, F("Sending uplink"));
+  uint16_t state = 0;
+  if (fCntUp == 1)
+  {
+    console.log(sqINFO, F("and requesting LinkCheck and DeviceTime"));
+    node.sendMacCommandReq(RADIOLIB_LORAWAN_MAC_LINK_CHECK);
+    node.sendMacCommandReq(RADIOLIB_LORAWAN_MAC_DEVICE_TIME);
+    state = node.sendReceive(dataUp, lenUp, fPort, dataDown, lenDown, true, &uplinkDetails, &downlinkDetails);
+  }
+  else
+  {
+    state = node.sendReceive(dataUp, lenUp, fPort, dataDown, lenDown, true, &uplinkDetails, &downlinkDetails);
+  }
+
+  // Check if a downlink was received
+  // (state 0 = no downlink, state 1/2 = downlink in window Rx1/Rx2)
+  if (state > 0)
+  {
+    console.log(sqINFO, F("Received a downlink"));
+  }
+  else
+  {
+    console.log(sqINFO, F("No downlink received"));
+  }
+}
+
+// result code to text - these are error codes that can be raised when using LoRaWAN
+// however, RadioLib has many more - see https://jgromes.github.io/RadioLib/group__status__codes.html for a complete list
+String stateDecode(const int16_t result)
+{
+  switch (result)
+  {
+  case RADIOLIB_ERR_NONE:
+    return "ERR_NONE";
+  case RADIOLIB_ERR_CHIP_NOT_FOUND:
+    return "ERR_CHIP_NOT_FOUND";
+  case RADIOLIB_ERR_PACKET_TOO_LONG:
+    return "ERR_PACKET_TOO_LONG";
+  case RADIOLIB_ERR_RX_TIMEOUT:
+    return "ERR_RX_TIMEOUT";
+  case RADIOLIB_ERR_CRC_MISMATCH:
+    return "ERR_CRC_MISMATCH";
+  case RADIOLIB_ERR_INVALID_BANDWIDTH:
+    return "ERR_INVALID_BANDWIDTH";
+  case RADIOLIB_ERR_INVALID_SPREADING_FACTOR:
+    return "ERR_INVALID_SPREADING_FACTOR";
+  case RADIOLIB_ERR_INVALID_CODING_RATE:
+    return "ERR_INVALID_CODING_RATE";
+  case RADIOLIB_ERR_INVALID_FREQUENCY:
+    return "ERR_INVALID_FREQUENCY";
+  case RADIOLIB_ERR_INVALID_OUTPUT_POWER:
+    return "ERR_INVALID_OUTPUT_POWER";
+  case RADIOLIB_ERR_NETWORK_NOT_JOINED:
+    return "RADIOLIB_ERR_NETWORK_NOT_JOINED";
+  case RADIOLIB_ERR_DOWNLINK_MALFORMED:
+    return "RADIOLIB_ERR_DOWNLINK_MALFORMED";
+  case RADIOLIB_ERR_INVALID_REVISION:
+    return "RADIOLIB_ERR_INVALID_REVISION";
+  case RADIOLIB_ERR_INVALID_PORT:
+    return "RADIOLIB_ERR_INVALID_PORT";
+  case RADIOLIB_ERR_NO_RX_WINDOW:
+    return "RADIOLIB_ERR_NO_RX_WINDOW";
+  case RADIOLIB_ERR_INVALID_CID:
+    return "RADIOLIB_ERR_INVALID_CID";
+  case RADIOLIB_ERR_UPLINK_UNAVAILABLE:
+    return "RADIOLIB_ERR_UPLINK_UNAVAILABLE";
+  case RADIOLIB_ERR_COMMAND_QUEUE_FULL:
+    return "RADIOLIB_ERR_COMMAND_QUEUE_FULL";
+  case RADIOLIB_ERR_COMMAND_QUEUE_ITEM_NOT_FOUND:
+    return "RADIOLIB_ERR_COMMAND_QUEUE_ITEM_NOT_FOUND";
+  case RADIOLIB_ERR_JOIN_NONCE_INVALID:
+    return "RADIOLIB_ERR_JOIN_NONCE_INVALID";
+  case RADIOLIB_ERR_N_FCNT_DOWN_INVALID:
+    return "RADIOLIB_ERR_N_FCNT_DOWN_INVALID";
+  case RADIOLIB_ERR_A_FCNT_DOWN_INVALID:
+    return "RADIOLIB_ERR_A_FCNT_DOWN_INVALID";
+  case RADIOLIB_ERR_DWELL_TIME_EXCEEDED:
+    return "RADIOLIB_ERR_DWELL_TIME_EXCEEDED";
+  case RADIOLIB_ERR_CHECKSUM_MISMATCH:
+    return "RADIOLIB_ERR_CHECKSUM_MISMATCH";
+  case RADIOLIB_ERR_NO_JOIN_ACCEPT:
+    return "RADIOLIB_ERR_NO_JOIN_ACCEPT";
+  case RADIOLIB_LORAWAN_SESSION_RESTORED:
+    return "RADIOLIB_LORAWAN_SESSION_RESTORED";
+  case RADIOLIB_LORAWAN_NEW_SESSION:
+    return "RADIOLIB_LORAWAN_NEW_SESSION";
+  case RADIOLIB_ERR_NONCES_DISCARDED:
+    return "RADIOLIB_ERR_NONCES_DISCARDED";
+  case RADIOLIB_ERR_SESSION_DISCARDED:
+    return "RADIOLIB_ERR_SESSION_DISCARDED";
+  }
+  return "See https://jgromes.github.io/RadioLib/group__status__codes.html";
+}
+
+// helper function to display any issues
+void debug(bool failed, const __FlashStringHelper *message, int state, bool halt)
+{
+  if (failed)
+  {
+    Serial.print(message);
+    Serial.print(" - ");
+    Serial.print(stateDecode(state));
+    Serial.print(" (");
+    Serial.print(state);
+    Serial.println(")");
+    while (halt)
+    {
+      delay(1);
+    }
+  }
+}
 
 void print_bytes(uint8_t *data, int length)
 {
@@ -98,129 +294,4 @@ void print_bytes_reverse(uint8_t *data, int length)
   Serial.println();
 }
 
-void generate_lorawan_settings_by_chip_id()
-{
-  uint64_t chipid = ESP.getEfuseMac();
-  Serial.printf("ESP32ChipID=%04X%08X\n", (uint16_t)(chipid >> 32), (uint32_t)chipid);
-
-  devAddr = (uint32_t)(chipid >> 32) * (uint32_t)chipid;
-  // 将MAC地址转换为字符串形式
-  char chipidStr[17];
-  snprintf(chipidStr, sizeof(chipidStr), "%016llx", chipid);
-
-  Serial.print("devEUI:");
-  memcpy(&devEui[2], &chipid, sizeof(devEui) - 2);
-  print_bytes((uint8_t *)&devEui, sizeof(devEui));
-  Serial.print("devAddr:");
-  print_bytes_reverse((uint8_t *)&devAddr, sizeof(devAddr));
-  memcpy(appKey, chipidStr, 16);
-  memcpy(appSKey, chipidStr, 16);
-  memcpy(nwkSKey, chipidStr, 16);
-  Serial.print("appKey:");
-  print_bytes((uint8_t *)&appKey, sizeof(appKey));
-  Serial.print("nwkSKey:");
-  print_bytes((uint8_t *)&nwkSKey, sizeof(nwkSKey));
-  Serial.print("appSKey:");
-  print_bytes((uint8_t *)&appSKey, sizeof(appSKey));
-}
-
-// Constructor
-SQ_LoRaWanService::SQ_LoRaWanService()
-{
-  // Initially, no task is running
-  loraTaskHandle = nullptr;
-  generate_lorawan_settings_by_chip_id();
-}
-
-// Destructor
-SQ_LoRaWanService::~SQ_LoRaWanService()
-{
-  // Ensure the task is stopped and deleted before destruction
-  stopTask();
-}
-
-// Task function
-void SQ_LoRaWanService::LoRaWanTaskFunction(void *pvParameters)
-{
-  // Cast the parameter to an instance of SQ_LoRaWanService
-  SQ_LoRaWanService *loraService = static_cast<SQ_LoRaWanService *>(pvParameters);
-  deviceState = DEVICE_STATE_INIT;
-  // Task loop
-  while (true)
-  {
-    // Add your LoRaWAN processing code here
-    switch (deviceState)
-    {
-    case DEVICE_STATE_INIT:
-    {
-      LoRaWAN.init(loraWanClass, loraWanRegion);
-      // both set join DR and DR when ADR off
-      if (!loraWanAdr)
-      {
-        LoRaWAN.setDefaultDR(3);
-      }
-      break;
-    }
-    case DEVICE_STATE_JOIN:
-    {
-      LoRaWAN.join();
-      break;
-    }
-    case DEVICE_STATE_SEND:
-    {
-      LoRaWAN.send();
-      deviceState = DEVICE_STATE_CYCLE;
-      break;
-    }
-    case DEVICE_STATE_CYCLE:
-    {
-      txDutyCycleTime = appTxDutyCycle + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
-      LoRaWAN.cycle(txDutyCycleTime);
-      deviceState = DEVICE_STATE_SLEEP;
-      break;
-    }
-    case DEVICE_STATE_SLEEP:
-    {
-      LoRaWAN.sleep(loraWanClass);
-      break;
-    }
-    default:
-    {
-      deviceState = DEVICE_STATE_INIT;
-      break;
-    }
-    }
-
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-  }
-}
-
-// Method to start the task
-void SQ_LoRaWanService::startTask()
-{
-  if (loraTaskHandle == nullptr)
-  { // Ensure the task is not already running
-    xTaskCreate(
-        LoRaWanTaskFunction, // Task function
-        "LoRaWAN Task",      // Task name
-        4096,                // Stack size (in words)
-        this,                // Pass the instance of the class as the parameter
-        5,                   // Task priority
-        &loraTaskHandle      // Task handle
-    );
-  }
-}
-
-// Method to stop the task
-void SQ_LoRaWanService::stopTask()
-{
-  if (loraTaskHandle != nullptr)
-  {
-    vTaskDelete(loraTaskHandle); // Delete the task
-    loraTaskHandle = nullptr;    // Reset the task handle to indicate the task is stopped
-  }
-}
-
-// Create an instance of the LoRaWAN service class
-SQ_LoRaWanService loraWanService;
-#endif // USE_LORAWAN
+#endif

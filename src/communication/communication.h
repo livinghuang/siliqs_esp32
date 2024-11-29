@@ -4,31 +4,50 @@
 class Communication
 {
 protected:
-  int powerPin; // 电源引脚
+  int _powerPin; // 电源引脚
+  bool _powerPinHighActive = true;
 
 public:
   // 构造函数，允许初始化电源引脚
-  Communication(int pin = -1) : powerPin(pin) {}
+  Communication(int pin = -1, bool highActive = true) : _powerPin(pin), _powerPinHighActive(highActive) {}
 
   virtual void begin() = 0;                                                    // 声明虚拟 begin 方法
   virtual void send(const char *data, int length) = 0;                         // 声明虚拟 send 方法
   virtual size_t receive(char *buffer, size_t length, int timeout = 1000) = 0; // 声明虚拟 receive 方法
 
   // 电源控制方法
-  virtual void powerOn()
+  void powerOn()
   {
-    if (powerPin != -1)
+    if (_powerPin != -1)
     {
-      pinMode(powerPin, OUTPUT);
-      digitalWrite(powerPin, HIGH); // 打开电源
+      pinMode(_powerPin, OUTPUT);
+      if (_powerPinHighActive)
+      {
+        digitalWrite(_powerPin, HIGH); // 打开电源
+      }
+      else
+      {
+        digitalWrite(_powerPin, LOW); // 打开电源
+      }
+      while (1)
+      {
+        Serial.println("waiting for power");
+        delay(1000);
+      }
     }
   }
-
-  virtual void powerOff()
+  void powerOff()
   {
-    if (powerPin != -1)
+    if (_powerPin != -1)
     {
-      digitalWrite(powerPin, LOW); // 关闭电源
+      if (_powerPinHighActive)
+      {
+        digitalWrite(_powerPin, LOW); // 關閉电源
+      }
+      else
+      {
+        digitalWrite(_powerPin, HIGH); // 關閉电源
+      }
     }
   }
 
@@ -53,5 +72,4 @@ protected:
     Serial.println(); // Print a newline character at the end
   }
 };
-
 #endif // COMMUNICATION_H
