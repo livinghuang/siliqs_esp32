@@ -215,7 +215,11 @@ bool LoRaWanService::begin(bool autogen)
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_NSS);
   state = radio.begin();
   debug(state != RADIOLIB_ERR_NONE, F("Initalise radio failed"), state, true);
-
+  if (autogen == true)
+  {
+    console.log(sqINFO, F("Generating keys"));
+    autoGenKeys();
+  }
   // activate node by restoring session or otherwise joining the network
   state = lwActivate();
   // state is one of RADIOLIB_LORAWAN_NEW_SESSION or RADIOLIB_LORAWAN_SESSION_RESTORED
@@ -228,19 +232,31 @@ void LoRaWanService::stop()
   // Logic to stop the radio
 }
 
-void LoRaWanService::sleep(bool TTN_FUP)
+void LoRaWanService::sleep(enum LORAWAN_SLEEP_TYPE sleep_type)
 {
   uint32_t delayMs = params->uplinkIntervalSeconds * 1000;
-  if (TTN_FUP)
+  switch (sleep_type)
   {
+  case LORAWAN_SLEEP_NONE:
+    SPI.end();
+    break;
+  case LORAWAN_SLEEP_IN_RADIO_OFF:
+    radio.sleep();
+    break;
+  case LORAWAN_SLEEP_IN_DEEP:
+    radio.sleep();
+    SPI.end();
+    gotoSleep(delayMs / 1000);
+    break;
+  case LORAWAN_SLEEP_IN_DEEP_WITH_TTN_LAW:
+    radio.sleep();
+    SPI.end();
     uint32_t minimumDelay = delayMs;
     uint32_t interval = node.timeUntilUplink(); // calculate minimum duty cycle delay (per FUP & law!)
     delayMs = max(interval, minimumDelay);      // cannot send faster than duty cycle allows
+    gotoSleep(delayMs / 1000);
+    break;
   }
-  console.log(sqINFO, "[LoRaWAN] Next uplink in %d seconds", delayMs / 1000);
-  radio.sleep();
-  SPI.end();
-  gotoSleep(delayMs / 1000);
 }
 
 // Set battery level (for use in uplink messages or ADR)
@@ -281,20 +297,16 @@ void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8
   uint8_t *persist = node.getBufferSession();
   memcpy(LWsession, persist, RADIOLIB_LORAWAN_SESSION_BUF_SIZE);
 
-  // // now save session to RTC memory
-  // uint8_t *persist = node.getBufferSession();
-  // memcpy(LWsession, persist, RADIOLIB_LORAWAN_SESSION_BUF_SIZE);
-
-  // // Check if a downlink was received
-  // // (state 0 = no downlink, state 1/2 = downlink in window Rx1/Rx2)
-  // if (state > 0)
-  // {
-  //   console.log(sqINFO, F("Received a downlink"));
-  // }
-  // else
-  // {
-  //   console.log(sqINFO, F("No downlink received"));
-  // }
+  // Check if a downlink was received
+  // (state 0 = no downlink, state 1/2 = downlink in window Rx1/Rx2)
+  if (state > 0)
+  {
+    console.log(sqINFO, F("Received a downlink"));
+  }
+  else
+  {
+    console.log(sqINFO, F("No downlink received"));
+  }
 }
 
 // result code to text - these are error codes that can be raised when using LoRaWAN

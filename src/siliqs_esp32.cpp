@@ -206,13 +206,13 @@ bool readSystemData(void *global_system_data, size_t dataSize)
 void gotoSleep(uint32_t seconds)
 {
   esp_sleep_enable_timer_wakeup(seconds * 1000000); // function uses uS
-  Serial.println(F("Sleeping\n"));
+  console.log(sqINFO, "Sleeping... will wake in " + String(seconds) + " seconds");
   Serial.flush();
 
   esp_deep_sleep_start();
   // if this appears in the serial debug, we didn't go to sleep!
   // so take defensive action
-  Serial.println(F("\n\n### Sleep failed, delay of 5 minutes & then restart ###\n"));
+  Serial.println(F("\n\n### Sleep failed, delay of 15 seconds & then restart ###\n"));
   delay(15000);
   ESP.restart();
 }

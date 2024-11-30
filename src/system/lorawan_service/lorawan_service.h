@@ -7,7 +7,13 @@
 #include "freertos/task.h"
 // #include <RadioLib.h>
 #include "radiolab/src/RadioLib.h"
-
+enum LORAWAN_SLEEP_TYPE
+{
+  LORAWAN_SLEEP_NONE = 0,                 // no sleeping, no radio off, spi ended
+  LORAWAN_SLEEP_IN_RADIO_OFF = 1,         // use radio off
+  LORAWAN_SLEEP_IN_DEEP = 2,              // use radio off and system deep sleep
+  LORAWAN_SLEEP_IN_DEEP_WITH_TTN_LAW = 3, // use system deep sleep calculate minimum duty cycle delay (per FUP & law!)
+};
 typedef struct lorawan_params_settings
 {
   int DIO1;                       // DIO1
@@ -42,7 +48,7 @@ public:
 
   bool begin(bool autogen = true);
   void stop();
-  void sleep(bool TTN_FUP = false);
+  void sleep(enum LORAWAN_SLEEP_TYPE sleep_type = LORAWAN_SLEEP_IN_DEEP_WITH_TTN_LAW);
   void set_battery_level(int level);
   void send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPort, uint8_t *dataDown, size_t *lenDown, bool isConfirmed);
 
