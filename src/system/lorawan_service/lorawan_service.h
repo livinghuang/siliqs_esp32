@@ -2,7 +2,7 @@
 #pragma once
 #ifdef USE_LORAWAN
 
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 // #include <RadioLib.h>

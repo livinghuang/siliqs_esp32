@@ -2,7 +2,7 @@
 #pragma once
 #ifdef USE_LORA // Only compile when USE_LORA is enabled
 
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <RadioLib.h>

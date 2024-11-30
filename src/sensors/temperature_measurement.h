@@ -1,7 +1,7 @@
 #pragma once
 #include "bsp.h"
 #ifdef USE_TEMPERATURE
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "sensor_measurement.h"
 #ifdef USE_HDC1080_I2C
 #include <Wire.h>

@@ -1,7 +1,7 @@
 #pragma once
 #include "bsp.h"
 #ifdef USE_HUMIDITY
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "sensor_measurement.h"
 #include "sensors/hdc1080/HDC1080.h"
 #include <Wire.h>

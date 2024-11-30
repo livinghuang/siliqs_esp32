@@ -1,9 +1,9 @@
 #include "bsp.h"
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 
 void setup()
 {
-  siliqs_heltec_esp32_setup(SQ_INFO);
+  siliqs_esp32_setup(SQ_INFO);
   // 初始化串口通信
   Serial.begin(115200);
   while (!Serial)

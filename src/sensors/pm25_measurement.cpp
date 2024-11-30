@@ -1,7 +1,7 @@
 #pragma once
 #include "bsp.h"
 #ifdef USE_PM25
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "sensor_measurement.h"
 #ifdef USE_G5T_UART
 #include "SoftwareSerial.h"

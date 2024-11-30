@@ -4,7 +4,7 @@
 #ifndef RGB_LED_SERVICE_H
 #define RGB_LED_SERVICE_H
 
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp32-hal-rgb-led.h"

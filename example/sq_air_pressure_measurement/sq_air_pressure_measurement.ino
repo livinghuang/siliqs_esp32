@@ -1,5 +1,5 @@
 #include "bsp.h"
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "sensors/air_pressure_measurement.h"
 
 AirPressureMeasurement airPressureSensor;
@@ -7,11 +7,11 @@ AirPressureMeasurement airPressureSensor;
 /**
  * @brief setup 函数，用于初始化系统
  *
- * 该函数首先调用 siliqs_heltec_esp32_setup() 函数来初始化 ESP32 主板。
+ * 该函数首先调用 siliqs_esp32_setup() 函数来初始化 ESP32 主板。
  */
 void setup()
 {
-  siliqs_heltec_esp32_setup();
+  siliqs_esp32_setup();
   // 初始化气压
   pinMode(pVext, OUTPUT);
   digitalWrite(pVext, LOW); // Power on

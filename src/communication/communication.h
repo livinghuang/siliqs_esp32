@@ -1,6 +1,6 @@
 #ifndef COMMUNICATION_H
 #define COMMUNICATION_H
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 class Communication
 {
 protected:

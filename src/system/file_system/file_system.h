@@ -1,7 +1,7 @@
 #include "bsp.h" // 如果你需要该头文件用于板子的配置
 #ifndef FILE_SYSTEM_H
 #define FILE_SYSTEM_H
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include <Arduino.h>
 #include <LittleFS.h> // Include the LittleFS library
 

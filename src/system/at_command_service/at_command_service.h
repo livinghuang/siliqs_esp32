@@ -2,7 +2,7 @@
 #ifdef USE_AT_COMMAND_SERVICE
 #ifndef AT_COMMAND_SERVICE_H
 #define AT_COMMAND_SERVICE_H
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include <Arduino.h>
 #include <functional>
 #include <map>

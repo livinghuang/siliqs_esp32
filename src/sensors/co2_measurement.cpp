@@ -1,7 +1,7 @@
 #pragma once
 #include "bsp.h"
 #ifdef USE_CO2
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "sensor_measurement.h"
 #ifdef USE_DSCO2_UART
 #include "SoftwareSerial.h"

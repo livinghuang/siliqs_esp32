@@ -1,5 +1,5 @@
 #include "bsp.h"
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "communication/rs485_communication.h"
 #include "communication/modbus_communication.h"
 
@@ -8,11 +8,11 @@ ModbusCommunication modbusComm(Serial1, 4800, pRS485_RO, pRS485_DI, pRS485_DE, p
 /**
  * @brief setup 函数，用于初始化系统
  *
- * 该函数首先调用 siliqs_heltec_esp32_setup() 函数来初始化 ESP32 主板。
+ * 该函数首先调用 siliqs_esp32_setup() 函数来初始化 ESP32 主板。
  */
 void setup()
 {
-  siliqs_heltec_esp32_setup(SQ_DEBUG);
+  siliqs_esp32_setup(SQ_DEBUG);
   modbusComm.begin();
 }
 

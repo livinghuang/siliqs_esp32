@@ -1,5 +1,5 @@
 #include "bsp.h"
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 
 lora_params_settings params = {
     .DIO1 = 3,
@@ -24,7 +24,7 @@ String message = "Hello :0";
 void setup()
 {
     Serial.begin(115200);
-    siliqs_heltec_esp32_setup(SQ_INFO);
+    siliqs_esp32_setup(SQ_INFO);
     // Initialize LoRa service
     if (!loraService.begin())
     {

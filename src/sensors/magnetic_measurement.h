@@ -2,7 +2,7 @@
 #include "bsp.h"
 
 #ifdef USE_MAGNETOMETER
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "sensor_measurement.h"
 #include <Wire.h>
 #include "sensors/mqc5883/MechaQMC5883.h"

@@ -2,7 +2,7 @@
 #ifdef USE_AT_COMMAND_SERVICE
 #ifdef USE_NIMBLE
 #include "at_command_service.h"
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 
 BLEATCommandService::BLEATCommandService()
 {

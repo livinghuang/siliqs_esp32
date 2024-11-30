@@ -1,10 +1,10 @@
 #include "bsp.h"
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "esp_sleep.h"
 /**                                                                                     \
  * @brief setup 函数，用于初始化系统                                          \
  *                                                                                      \
- * 该函数首先调用 siliqs_heltec_esp32_setup() 函数来初始化 ESP32 主板。 \
+ * 该函数首先调用 siliqs_esp32_setup() 函数来初始化 ESP32 主板。 \
  */
 #define RADIOLIB_DEBUG
 #define LORA_DIO1 3
@@ -42,7 +42,7 @@ LoRaWanService lorawan(&params);
 
 void setup()
 {
-  siliqs_heltec_esp32_setup(SQ_INFO);
+  siliqs_esp32_setup(SQ_INFO);
   lorawan.begin();
 }
 

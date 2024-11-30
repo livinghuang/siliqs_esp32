@@ -2,7 +2,7 @@
 #ifdef USE_RS485
 #ifndef RS485_COMMUNICATION_H
 #define RS485_COMMUNICATION_H
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "communication.h"
 #include <HardwareSerial.h> // 用于 RS485 通信的硬件串口
 #include "pins_defined.h"   // 包含引脚定义

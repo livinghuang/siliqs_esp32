@@ -1,5 +1,5 @@
 #pragma once
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "Arduino.h"
 class Sensor
 {

@@ -2,7 +2,7 @@
 #include "bsp.h"
 
 #ifdef USE_NIMBLE
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "NimBLEDevice.h"
 #include <vector>
 #include <freertos/queue.h>

@@ -2,7 +2,7 @@
 #include "bsp.h"
 
 #ifdef USE_MOTION
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "sensor_measurement.h"
 #include <Wire.h>
 #include "sensors/mpu6050/Mpu6050.h"

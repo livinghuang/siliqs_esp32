@@ -1,6 +1,6 @@
 #include "bsp.h"
 #ifdef USE_RS485
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "rs485_communication.h"
 
 RS485Communication::RS485Communication(HardwareSerial &serial, int baudRate, int RO, int DI, int directionPin, int powerPin, bool highActive)

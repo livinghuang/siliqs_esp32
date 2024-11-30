@@ -4,7 +4,7 @@
 #include "sensor_measurement.h"
 
 #ifdef USE_PTC
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 
 #ifdef USE_MAX31865
 #include "sensors/max31865/Adafruit_MAX31865.h"

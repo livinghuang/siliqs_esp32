@@ -1,11 +1,11 @@
 #include "bsp.h"
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 
 RGBLedService led(pRGB_LED, 1);
 void setup()
 {
   // Initialize system and LED peripherals
-  siliqs_heltec_esp32_setup(SQ_INFO);
+  siliqs_esp32_setup(SQ_INFO);
 
   led.begin(); // Initialize the service
 

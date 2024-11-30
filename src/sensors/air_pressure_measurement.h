@@ -1,7 +1,7 @@
 #pragma once
 #include "bsp.h"
 #ifdef USE_AIR_PRESSURE
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include "sensor_measurement.h"
 #ifdef USE_DSP310_I2C
 #include <Wire.h>

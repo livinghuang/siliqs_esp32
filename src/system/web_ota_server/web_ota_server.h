@@ -1,7 +1,7 @@
 #pragma once
 #include "bsp.h"
 #ifdef USE_WEB_OTA_SERVER
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 #include <WiFi.h>
 #include <WebServer.h>
 #include <Update.h>

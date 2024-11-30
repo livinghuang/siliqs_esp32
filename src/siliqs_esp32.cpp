@@ -1,4 +1,4 @@
-#include "siliqs_heltec_esp32.h"
+#include "siliqs_esp32.h"
 
 FileSystem fileSystem; // Create an instance of FileSystem
 RTC_DATA_ATTR uint32_t bootCount = 0;
@@ -90,7 +90,7 @@ void external_32k_setup()
 #endif
 
 SemaphoreHandle_t i2cMutex = nullptr;
-void siliqs_heltec_esp32_setup(int print_level)
+void siliqs_esp32_setup(int print_level)
 {
   Serial.begin(115200);
   console.begin(print_level);
