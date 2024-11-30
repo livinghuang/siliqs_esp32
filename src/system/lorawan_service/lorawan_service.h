@@ -42,7 +42,7 @@ public:
 
   bool begin(bool autogen = true);
   void stop();
-  void sleep();
+  void sleep(bool TTN_FUP = false);
   void set_battery_level(int level);
   void send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPort, uint8_t *dataDown, size_t *lenDown, bool isConfirmed);
 
@@ -52,7 +52,7 @@ private:
   int begin_node();
   int active_node();
   void setParams();
-  int recall_nonces();
+  int16_t lwActivate();
 };
 
 void arrayDump(uint8_t *buffer, uint16_t len);

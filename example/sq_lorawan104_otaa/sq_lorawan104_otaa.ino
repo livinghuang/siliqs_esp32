@@ -23,20 +23,20 @@ lorawan_params_settings params = {
     .MOSI = LORA_MOSI,                                                                                            // MOSI
     .SCK = LORA_SCK,                                                                                              // SCK
     .NSS = LORA_NSS,                                                                                              // NSS
-    .uplinkIntervalSeconds = 60,                                                                                  // Unit: second, upline interval time
+    .uplinkIntervalSeconds = 15,                                                                                  // Unit: second, upline interval time
     .ADR = true,                                                                                                  // use ADR or not
     .DR = 5,                                                                                                      // Data Rate when start, if ADR is true, this will be tuned automatically
     .DutyCycleFactor = 1250,                                                                                      // Duty Cycle = 1 / (DutyCycleFactor) , if 0, disable. In EU law, Duty Cycle should under 1%
     .DwellTime = 400,                                                                                             // Unit: ms, Dwell Time to limit signal airtime in single channel, In US/AU law,Dwell Time under 400ms
-    .OTAA = true,                                                                                                // OTAA or ABP
+    .OTAA = true,                                                                                                 // OTAA or ABP
     .LORAWAN_1_1 = false,                                                                                         // LORAWAN 1.1 or 1.0
     .JOINEUI = 0x0000000000000000,                                                                                // Join EUI
-    .DEVEUI = 0x5588888888888888,                                                                                 // DEVEUI, if OTAA, DEVEUI will used. if ABP, DEVEUI will be ignored
-    .APPxKEY = {0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55},  // if OTAA, APPxKEY = APPKEY, if ABP, APPxKEY = APPSKEY
-    .NWKxKEY = {0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55},  // if OTAA, NWKxKEY = NULL use lorawan v1.0.x, if ABP, APPxKEY = NWKSKEY
-    .DEVADDR = 0x55555555,                                                                                        // if ABP, DEVADDR, if OTAA, DEVADDR will be ignored
-    .FNWKSINT = {0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55}, // FNWKSINT, if lorawan v1.0.x, set as NULL, if lorawan v1.1.x
-    .SNWKSINT = {0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55}, // SNWKSINT, if lorawan v1.0.x, set as NULL, if lorawan v1.1.x
+    .DEVEUI = 0x104aa88888888888,                                                                                 // DEVEUI, if OTAA, DEVEUI will used. if ABP, DEVEUI will be ignored
+    .APPxKEY = {0xaa, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55},  // if OTAA, APPxKEY = APPKEY, if ABP, APPxKEY = APPSKEY
+    .NWKxKEY = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},  // if OTAA, NWKxKEY = NULL use lorawan v1.0.x, if ABP, APPxKEY = NWKSKEY
+    .DEVADDR = 0xffffffff,                                                                                        // if ABP, DEVADDR, if OTAA, DEVADDR will be ignored
+    .FNWKSINT = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // FNWKSINT, if lorawan v1.0.x, set as NULL, if lorawan v1.1.x
+    .SNWKSINT = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}  // SNWKSINT, if lorawan v1.0.x, set as NULL, if lorawan v1.1.x
 };
 LoRaWanService lorawan(&params);
 
@@ -70,9 +70,5 @@ void loop()
     }
     Serial.println();
   }
-  lorawan.sleep();
-  esp_sleep_enable_timer_wakeup(15 * 1000000); // Wake up after 15 seconds
-  Serial.println("Entering deep sleep...");
-  esp_deep_sleep_start();
-  // delay(15000);
+  lorawan.sleep(false); // sleep interval time base on params.uplinkIntervalSeconds, if you use TTN law,set it true and then it will calculate minimum duty cycle delay
 }

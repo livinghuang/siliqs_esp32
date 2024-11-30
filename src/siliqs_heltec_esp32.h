@@ -1,7 +1,5 @@
 #pragma once
-
 #include <Arduino.h>
-#include "pins_defined.h"
 #include "system/serial_console/serial_console.h"
 #include "system/file_system/file_system.h"
 #include "system/base64/base64.h"
@@ -42,7 +40,7 @@
 #include "esp_sleep.h"
 extern RTC_DATA_ATTR uint32_t cal_32k;
 #endif
-extern RTC_DATA_ATTR uint32_t bootCounter;
+extern RTC_DATA_ATTR uint32_t bootCount;
 extern SemaphoreHandle_t i2cMutex;
 void siliqs_heltec_esp32_setup(int print_level = SQ_NONE);
 uint64_t get_chip_id();
