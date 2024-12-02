@@ -192,9 +192,9 @@ int16_t LoRaWanService::lwActivate()
       // implementation of TS001 LoRaWAN Specification section #7 - this doc applies to v1.0.4 & v1.1
       // it sleeps for longer & longer durations to give time for any gateway issues to resolve
       // or whatever is interfering with the device <-> gateway airwaves.
-      uint32_t sleepForSeconds = min((bootCountSinceUnsuccessfulJoin++ + 1UL) * 60UL, 3UL * 60UL);
-      console.log(sqERROR, "Boots since unsuccessful join: %d Retrying join in %d seconds", bootCountSinceUnsuccessfulJoin, sleepForSeconds);
-      gotoSleep(sleepForSeconds);
+      uint32_t sleepMs = min((bootCountSinceUnsuccessfulJoin++ + 1UL) * 60UL, 3UL * 60UL * 1000UL);
+      console.log(sqERROR, "Boots since unsuccessful join: %d Retrying join in %ld milliseconds", bootCountSinceUnsuccessfulJoin, sleepMs);
+      gotoSleep(sleepMs);
     }
   } // while join
   console.log(sqINFO, F("Joined"));
@@ -246,7 +246,7 @@ void LoRaWanService::sleep(enum LORAWAN_SLEEP_TYPE sleep_type)
   case LORAWAN_SLEEP_IN_DEEP:
     radio.sleep();
     SPI.end();
-    gotoSleep(delayMs / 1000);
+    gotoSleep(delayMs);
     break;
   case LORAWAN_SLEEP_IN_DEEP_WITH_TTN_LAW:
     radio.sleep();
@@ -254,7 +254,7 @@ void LoRaWanService::sleep(enum LORAWAN_SLEEP_TYPE sleep_type)
     uint32_t minimumDelay = delayMs;
     uint32_t interval = node.timeUntilUplink(); // calculate minimum duty cycle delay (per FUP & law!)
     delayMs = max(interval, minimumDelay);      // cannot send faster than duty cycle allows
-    gotoSleep(delayMs / 1000);
+    gotoSleep(delayMs);
     break;
   }
 }

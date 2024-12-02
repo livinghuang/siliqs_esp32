@@ -3,7 +3,8 @@
 
 #ifdef USE_NIMBLE
 #include "siliqs_esp32.h"
-#include "NimBLEDevice.h"
+#include "nimble_src/NimBLEDevice.h"
+
 #include <vector>
 #include <freertos/queue.h>
 // 定义缓冲队列大小

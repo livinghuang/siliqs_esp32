@@ -203,10 +203,10 @@ bool readSystemData(void *global_system_data, size_t dataSize)
   console.log(sqINFO, "System data loaded successfully");
   return true;
 }
-void gotoSleep(uint32_t seconds)
+void gotoSleep(uint32_t ms)
 {
-  esp_sleep_enable_timer_wakeup(seconds * 1000000); // function uses uS
-  console.log(sqINFO, "Sleeping... will wake in " + String(seconds) + " seconds");
+  esp_sleep_enable_timer_wakeup(ms * 1000); // function uses uS
+  console.log(sqINFO, "Sleeping... will wake in " + String(ms) + " milliseconds");
   Serial.flush();
 
   esp_deep_sleep_start();

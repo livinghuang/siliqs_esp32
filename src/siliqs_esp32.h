@@ -47,4 +47,4 @@ uint64_t get_chip_id();
 esp_sleep_wakeup_cause_t print_wakeup_reason(void);
 bool readSystemData(void *global_system_data, size_t dataSize);
 bool storageSystemData(void *global_system_data, size_t dataSize);
-void gotoSleep(uint32_t seconds);
+void gotoSleep(uint32_t ms);
