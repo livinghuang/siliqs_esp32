@@ -4,7 +4,6 @@
 #include "siliqs_esp32.h"
 #include "sensor_measurement.h"
 #ifdef USE_DSCO2_UART
-#include "SoftwareSerial.h"
 #include "co2_measurement.h"
 
 // 构造函数，使用指定的 RX 和 TX 引脚初始化 SoftwareSerial

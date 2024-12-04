@@ -1,196 +1,175 @@
-#include "bsp.h"
-#ifdef USE_GPS // Only compile when USE_GPS is enabled
-#include "gps_service.h"
+// #include "bsp.h"
+// #ifdef USE_GPS // Only compile when USE_GPS is enabled
+// #include "gps_service.h"
 
-// 初始化静态成员变量
-TaskHandle_t GPSService::taskHandle = nullptr;
-String GPSService::gpsBuffer = "";
-GPSData GPSService::gpsData = {0.0, 0.0, 0.0, 0.0, 0.0, 0, "", false};
-SemaphoreHandle_t GPSService::dataMutex = nullptr;
+// // Static member initialization
+// TaskHandle_t GPSService::taskHandle = nullptr;
+// String GPSService::gpsBuffer = "";
+// GPSData GPSService::gpsData = {0.0, 0.0, 0.0, 0.0, 0.0, 0, "", false};
+// SemaphoreHandle_t GPSService::dataMutex = nullptr;
 
-bool GPSService::begin(long baudRate, int rxPin, int txPin)
-{
-  // 初始化GPS串口
-  Serial1.begin(baudRate, SERIAL_8N1, rxPin, txPin);
-  Serial.println("GPS module initialized.");
+// GPSService::GPSService(HardwareSerial &serialPort, long baudRate, int rxPin, int txPin, int powerPin)
+//     : serial(serialPort), baudRate(baudRate), rxPin(rxPin), txPin(txPin), powerPin(powerPin) {}
 
-  // 创建互斥锁
-  dataMutex = xSemaphoreCreateMutex();
-  if (dataMutex == nullptr)
-  {
-    Serial.println("Failed to create mutex.");
-    return false;
-  }
+// bool GPSService::begin()
+// {
+//   if (powerPin != -1)
+//   {
+//     pinMode(powerPin, OUTPUT);
+//     digitalWrite(powerPin, LOW); // Power on GPS module
+//   }
 
-  // 创建并启动GPS后台任务
-  if (xTaskCreate(gpsTask, "GPSTask", 4096, nullptr, 1, &taskHandle) != pdPASS)
-  {
-    Serial.println("Failed to create GPS task.");
-    return false;
-  }
+//   serial.begin(baudRate, SERIAL_8N1, rxPin, txPin);
 
-  return true;
-}
+//   // Create mutex
+//   dataMutex = xSemaphoreCreateMutex();
+//   if (dataMutex == nullptr)
+//   {
+//     return false;
+//   }
 
-void GPSService::stop()
-{
-  if (taskHandle != nullptr)
-  {
-    vTaskDelete(taskHandle);
-    taskHandle = nullptr;
-  }
+//   // Create FreeRTOS task
+//   if (taskHandle == nullptr)
+//   {
+//     xTaskCreatePinnedToCore(gpsTask, "GPS Task", 4096, this, 1, &taskHandle, 1);
+//   }
 
-  if (dataMutex != nullptr)
-  {
-    vSemaphoreDelete(dataMutex);
-    dataMutex = nullptr;
-  }
+//   return true;
+// }
 
-  Serial.println("GPS service stopped.");
-}
+// void GPSService::stop()
+// {
+//   if (taskHandle != nullptr)
+//   {
+//     vTaskDelete(taskHandle);
+//     taskHandle = nullptr;
+//   }
 
-GPSData GPSService::getGPSData()
-{
-  GPSData dataCopy;
+//   if (powerPin != -1)
+//   {
+//     digitalWrite(powerPin, LOW); // Power off GPS module
+//   }
 
-  // 获取互斥锁并复制数据
-  if (xSemaphoreTake(dataMutex, portMAX_DELAY) == pdTRUE)
-  {
-    dataCopy = gpsData;
-    xSemaphoreGive(dataMutex);
-  }
+//   serial.end();
 
-  return dataCopy;
-}
+//   if (dataMutex != nullptr)
+//   {
+//     vSemaphoreDelete(dataMutex);
+//     dataMutex = nullptr;
+//   }
+// }
 
-void GPSService::gpsTask(void *parameter)
-{
-  while (true)
-  {
-    while (Serial1.available() > 0)
-    {
-      char c = Serial1.read();
-      if (c == '\n') // 完整NMEA语句结束
-      {
-        parseGPSData(gpsBuffer);
-        gpsBuffer = ""; // 清空缓冲区
-      }
-      else if (c != '\r')
-      {
-        gpsBuffer += c; // 追加字符到缓冲区
-      }
-    }
+// GPSData GPSService::getGPSData()
+// {
+//   xSemaphoreTake(dataMutex, portMAX_DELAY);
+//   GPSData dataCopy = gpsData; // Create a copy of the data
+//   xSemaphoreGive(dataMutex);
+//   return dataCopy;
+// }
 
-    // 延迟以减少CPU占用
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-  }
-}
+// void GPSService::gpsTask(void *parameter)
+// {
+//   GPSService *instance = static_cast<GPSService *>(parameter);
 
-void GPSService::parseGPSData(String nmeaSentence)
-{
-  if (nmeaSentence.startsWith("$GNGGA"))
-  {
-    parseGGA(nmeaSentence);
-  }
-  else if (nmeaSentence.startsWith("$GNRMC"))
-  {
-    parseRMC(nmeaSentence);
-  }
-}
+//   while (true)
+//   {
+//     while (instance->serial.available())
+//     {
+//       char c = instance->serial.read();
+//       if (c == '\n')
+//       {
+//         xSemaphoreTake(dataMutex, portMAX_DELAY);
+//         parseGPSData(gpsBuffer);
+//         gpsBuffer = "";
+//         xSemaphoreGive(dataMutex);
+//       }
+//       else
+//       {
+//         gpsBuffer += c;
+//       }
+//     }
+//     vTaskDelay(10 / portTICK_PERIOD_MS);
+//   }
+// }
 
-void GPSService::parseGGA(String nmeaSentence)
-{
-  String parts[15];
-  splitNMEA(nmeaSentence, parts);
+// void GPSService::parseGPSData(const String &nmeaSentence)
+// {
+//   if (nmeaSentence.startsWith("$GPGGA"))
+//   {
+//     parseGGA(nmeaSentence);
+//   }
+//   else if (nmeaSentence.startsWith("$GPRMC"))
+//   {
+//     parseRMC(nmeaSentence);
+//   }
+// }
 
-  if (parts[6].toInt() > 0) // 检查是否有有效定位
-  {
-    double lat = convertToDecimal(parts[2], parts[3]);
-    double lon = convertToDecimal(parts[4], parts[5]);
-    double alt = parts[9].toDouble();
-    uint8_t sats = parts[7].toInt();
+// void GPSService::parseGGA(const String &nmeaSentence)
+// {
+//   String parts[15];
+//   splitNMEA(nmeaSentence, parts, 15);
 
-    // 更新数据
-    if (xSemaphoreTake(dataMutex, portMAX_DELAY) == pdTRUE)
-    {
-      gpsData.latitude = lat;
-      gpsData.longitude = lon;
-      gpsData.altitude = alt;
-      gpsData.satellites = sats;
-      gpsData.valid = true;
-      xSemaphoreGive(dataMutex);
-    }
+//   gpsData.utcTime = formatUTCTime(parts[1]);
+//   gpsData.latitude = convertToDecimal(parts[2], parts[3]);
+//   gpsData.longitude = convertToDecimal(parts[4], parts[5]);
+//   gpsData.altitude = parts[9].toDouble();
+//   gpsData.satellites = parts[7].toInt();
+//   gpsData.valid = !parts[6].isEmpty() && parts[6] != "0";
+// }
 
-    Serial.println("GGA Data Updated.");
-  }
-}
+// void GPSService::parseRMC(const String &nmeaSentence)
+// {
+//   String parts[15];
+//   splitNMEA(nmeaSentence, parts, 15);
 
-void GPSService::parseRMC(String nmeaSentence)
-{
-  String parts[15];
-  splitNMEA(nmeaSentence, parts);
+//   gpsData.utcTime = formatUTCTime(parts[1]);
+//   gpsData.latitude = convertToDecimal(parts[3], parts[4]);
+//   gpsData.longitude = convertToDecimal(parts[5], parts[6]);
+//   gpsData.speed = parts[7].toDouble() * 1.852; // Convert knots to km/h
+//   gpsData.course = parts[8].toDouble();
+//   gpsData.valid = parts[2] == "A";
+// }
 
-  if (parts[2] == "A") // 检查是否有有效定位
-  {
-    double lat = convertToDecimal(parts[3], parts[4]);
-    double lon = convertToDecimal(parts[5], parts[6]);
-    double speed = parts[7].toDouble() * 1.852; // 转换为km/h
-    double course = parts[8].toDouble();
-    String utcTime = formatUTCTime(parts[1]);
+// void GPSService::splitNMEA(const String &nmeaSentence, String *parts, int maxParts)
+// {
+//   int index = 0, start = 0;
+//   for (int i = 0; i < nmeaSentence.length() && index < maxParts; ++i)
+//   {
+//     if (nmeaSentence[i] == ',' || nmeaSentence[i] == '*')
+//     {
+//       parts[index++] = nmeaSentence.substring(start, i);
+//       start = i + 1;
+//     }
+//   }
+// }
 
-    // 更新数据
-    if (xSemaphoreTake(dataMutex, portMAX_DELAY) == pdTRUE)
-    {
-      gpsData.latitude = lat;
-      gpsData.longitude = lon;
-      gpsData.speed = speed;
-      gpsData.course = course;
-      gpsData.utcTime = utcTime;
-      gpsData.valid = true;
-      xSemaphoreGive(dataMutex);
-    }
+// double GPSService::convertToDecimal(const String &raw, const String &direction)
+// {
+//   if (raw.isEmpty())
+//     return 0.0;
 
-    Serial.println("RMC Data Updated.");
-  }
-}
+//   double rawValue = raw.toDouble();
+//   int degrees = int(rawValue / 100);
+//   double minutes = rawValue - (degrees * 100);
+//   double decimal = degrees + (minutes / 60.0);
 
-void GPSService::splitNMEA(String nmeaSentence, String *parts)
-{
-  int index = 0;
-  int lastIndex = 0;
+//   if (direction == "S" || direction == "W")
+//   {
+//     decimal = -decimal;
+//   }
 
-  for (int i = 0; i < nmeaSentence.length(); i++)
-  {
-    if (nmeaSentence.charAt(i) == ',' || i == nmeaSentence.length() - 1)
-    {
-      parts[index] = nmeaSentence.substring(lastIndex, i);
-      lastIndex = i + 1;
-      index++;
-    }
-  }
-}
+//   return decimal;
+// }
 
-double GPSService::convertToDecimal(String raw, String direction)
-{
-  double degrees = raw.substring(0, raw.indexOf('.') - 2).toDouble();
-  double minutes = raw.substring(raw.indexOf('.') - 2).toDouble();
-  double decimal = degrees + (minutes / 60.0);
+// String GPSService::formatUTCTime(const String &rawTime)
+// {
+//   if (rawTime.length() < 6)
+//     return "";
 
-  if (direction == "S" || direction == "W")
-    decimal = -decimal;
+//   String hours = rawTime.substring(0, 2);
+//   String minutes = rawTime.substring(2, 4);
+//   String seconds = rawTime.substring(4, 6);
 
-  return decimal;
-}
-
-String GPSService::formatUTCTime(String rawTime)
-{
-  if (rawTime.length() < 6)
-    return "";
-
-  String hours = rawTime.substring(0, 2);
-  String minutes = rawTime.substring(2, 4);
-  String seconds = rawTime.substring(4, 6);
-
-  return hours + ":" + minutes + ":" + seconds;
-}
-#endif
+//   return hours + ":" + minutes + ":" + seconds;
+// }
+// #endif

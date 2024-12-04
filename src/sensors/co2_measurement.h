@@ -2,7 +2,7 @@
 #include "bsp.h"
 #include "siliqs_esp32.h"
 #include "sensor_measurement.h"
-#include "SoftwareSerial.h"
+#include "software_serial/SoftwareSerial.h"
 
 #ifdef USE_CO2
 #ifdef USE_DSCO2_UART

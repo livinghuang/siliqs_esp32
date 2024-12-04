@@ -1,6 +1,6 @@
 #pragma once
 #define USE_WEB_OTA_SERVER
-// if you want to use custom pins, please define CUSTOM_PINS in here, otherwise, it will use pins defined in pins_defined.h
+
 /*
 below is the example:
 // #define CUSTOM_PINS

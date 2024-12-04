@@ -1,68 +1,68 @@
-#include "bsp.h"
-#pragma once
-#ifdef USE_GPS // Only compile when USE_GPS is enabled
+// #pragma once
+// #ifdef USE_GPS // Only compile when USE_GPS is enabled
 
-#ifndef GPS_SERVICE_H
-#define GPS_SERVICE_H
+// #ifndef GPS_SERVICE_H
+// #define GPS_SERVICE_H
 
-#include "siliqs_esp32.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include <Arduino.h>
+// #include "freertos/FreeRTOS.h"
+// #include "freertos/task.h"
+// #include "freertos/semphr.h"
+// #include <Arduino.h>
 
-// 定义结构体以存储解析后的GPS数据
-typedef struct GPSData
-{
-  double latitude;    // 纬度
-  double longitude;   // 经度
-  double altitude;    // 海拔高度
-  double speed;       // 速度（km/h）
-  double course;      // 航向（度）
-  uint8_t satellites; // 捕获的卫星数量
-  String utcTime;     // UTC时间 (hh:mm:ss)
-  bool valid;         // 数据是否有效
-} GPSData;
+// // Struct to store parsed GPS data
+// typedef struct GPSData
+// {
+//   double latitude;    // Latitude
+//   double longitude;   // Longitude
+//   double altitude;    // Altitude in meters
+//   double speed;       // Speed in km/h
+//   double course;      // Course in degrees
+//   uint8_t satellites; // Number of satellites
+//   String utcTime;     // UTC Time (hh:mm:ss)
+//   uint32_t timestamp; // Timestamp
+//   bool valid;         // Data validity flag
+// } GPSData;
 
-class GPSService
-{
-public:
-  // 初始化GPS服务，并启动后台任务
-  static bool begin(long baudRate = 9600, int rxPin = GPS_RX, int txPin = GPS_TX);
+// class GPSService
+// {
+// public:
+//   GPSService(HardwareSerial &serialPort = Serial1, long baudRate = 9600, int rxPin = -1, int txPin = -1, int powerPin = -1);
 
-  // 停止后台任务
-  static void stop();
+//   // Initialize GPS service and start background task
+//   bool begin();
 
-  // 获取最新的GPS数据
-  static GPSData getGPSData();
+//   // Stop background task and clean up
+//   void stop();
 
-private:
-  // FreeRTOS任务句柄
-  static TaskHandle_t taskHandle;
+//   // Retrieve the latest GPS data
+//   GPSData getGPSData();
 
-  // NMEA数据缓冲区
-  static String gpsBuffer;
+// private:
+//   HardwareSerial &serial; // Reference to the HardwareSerial object
+//   long baudRate;          // UART baud rate
+//   int rxPin, txPin;       // UART pins
+//   int powerPin;           // Power pin to enable/disable GPS module
 
-  // 存储解析后的GPS数据
-  static GPSData gpsData;
+//   static TaskHandle_t taskHandle;     // FreeRTOS task handle
+//   static String gpsBuffer;            // Buffer for raw NMEA data
+//   static GPSData gpsData;             // Parsed GPS data
+//   static SemaphoreHandle_t dataMutex; // Mutex for data access
 
-  // GPS数据互斥锁
-  static SemaphoreHandle_t dataMutex;
+//   // Background task to read and parse GPS data
+//   static void gpsTask(void *parameter);
 
-  // GPS后台任务函数
-  static void gpsTask(void *parameter);
+//   // Parse incoming NMEA sentences
+//   static void parseGPSData(const String &nmeaSentence);
 
-  // 解析NMEA语句
-  static void parseGPSData(String nmeaSentence);
+//   // Specific NMEA parsers
+//   static void parseGGA(const String &nmeaSentence);
+//   static void parseRMC(const String &nmeaSentence);
 
-  // 解析具体NMEA语句
-  static void parseGGA(String nmeaSentence);
-  static void parseRMC(String nmeaSentence);
+//   // Helper functions for parsing
+//   static void splitNMEA(const String &nmeaSentence, String *parts, int maxParts);
+//   static double convertToDecimal(const String &raw, const String &direction);
+//   static String formatUTCTime(const String &rawTime);
+// };
 
-  // 辅助函数
-  static void splitNMEA(String nmeaSentence, String *parts);
-  static double convertToDecimal(String raw, String direction);
-  static String formatUTCTime(String rawTime); // 格式化UTC时间
-};
-
-#endif // GPS_SERVICE_H
-#endif
+// #endif // GPS_SERVICE_H
+// #endif

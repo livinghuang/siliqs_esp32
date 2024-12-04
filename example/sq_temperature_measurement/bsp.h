@@ -8,7 +8,6 @@
 #define pHDC1080_I2C_SDA 18
 #endif
 
-// if you want to use custom pins, please define CUSTOM_PINS in here, otherwise, it will use pins defined in pins_defined.h
 /*
 below is the example:
 // #define CUSTOM_PINS

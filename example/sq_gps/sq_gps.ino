@@ -1,56 +1,24 @@
 #include "bsp.h"
 #include "siliqs_esp32.h"
+#include "sensors/gps_measurement.h"
 
+SemaphoreHandle_t serial1Mutex = xSemaphoreCreateMutex();
+GPSMeasurement gps(GPS_RX_PIN, GPS_TX_PIN);
 void setup()
 {
-  // 初始化串口监视器
-  Serial.begin(115200);
-  Serial.println("Starting GPS Service Example...");
+  siliqs_esp32_setup();
+  pinMode(GPS_VCTRL_PIN, OUTPUT);
+  digitalWrite(GPS_VCTRL_PIN, LOW);
 
-  // 启动GPS服务
-  if (GPSService::begin(9600, GPS_RX, GPS_TX))
-  {
-    Serial.println("GPS Service started successfully.");
-  }
-  else
-  {
-    Serial.println("Failed to start GPS Service.");
-  }
+  gps.start(1000, &serial1Mutex);
 }
 
 void loop()
 {
-  // 获取最新的GPS数据
-  GPSData data = GPSService::getGPSData();
-
-  // 打印GPS数据
-  if (data.valid)
+  if (gps.gpsData.valid)
   {
-    Serial.println("----- GPS Data -----");
-    Serial.print("Latitude: ");
-    Serial.println(data.latitude, 6);
-    Serial.print("Longitude: ");
-    Serial.println(data.longitude, 6);
-    Serial.print("Altitude: ");
-    Serial.print(data.altitude);
-    Serial.println(" m");
-    Serial.print("Speed: ");
-    Serial.print(data.speed);
-    Serial.println(" km/h");
-    Serial.print("Course: ");
-    Serial.print(data.course);
-    Serial.println(" degrees");
-    Serial.print("Satellites: ");
-    Serial.println(data.satellites);
-    Serial.print("UTC Time: ");
-    Serial.println(data.utcTime);
-    Serial.println("---------------------");
+    Serial.printf("Lat: %.2f Lon: %.2f Alt: %.2f\n", gps.gpsData.latitude, gps.gpsData.longitude, gps.gpsData.altitude);
+    Serial.printf("%02d/%02d/%02dT%02d:%02d:%02d+%02d:%02d\n", gps.gpsData.time.yy, gps.gpsData.time.mm, gps.gpsData.time.dd, gps.gpsData.time.hr, gps.gpsData.time.min, gps.gpsData.time.sec, gps.gpsData.time.utcOffset_hours, gps.gpsData.time.utcOffset_minutes);
   }
-  else
-  {
-    Serial.println("No valid GPS data available.");
-  }
-
-  // 每隔1秒更新一次
   delay(1000);
 }

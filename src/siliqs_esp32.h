@@ -27,10 +27,6 @@
 #include "system/lora_service/lora_service.h"
 #endif
 
-#ifdef USE_GPS
-#include "system/gps_service/gps_service.h"
-#endif
-
 #ifdef USE_RGB_LED
 #include "system/rgb_led_service/rgb_led_service.h"
 #endif

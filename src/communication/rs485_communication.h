@@ -5,7 +5,6 @@
 #include "siliqs_esp32.h"
 #include "communication.h"
 #include <HardwareSerial.h> // 用于 RS485 通信的硬件串口
-#include "pins_defined.h"   // 包含引脚定义
 
 #define DEFAULT_RS485_BAUD_RATE 9600
 #define RS485_MAX_DATA_LENGTH 255

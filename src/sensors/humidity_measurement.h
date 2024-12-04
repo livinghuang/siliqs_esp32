@@ -5,7 +5,6 @@
 #include "sensor_measurement.h"
 #include "sensors/hdc1080/HDC1080.h"
 #include <Wire.h>
-#include "pins_defined.h"
 #define HUMIDITY_I2C_ADDRESS 0x40 // 假设使用 HDC1080 传感器的 I2C 地址
 
 class HumidityMeasurement : public Sensor

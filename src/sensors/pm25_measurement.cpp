@@ -4,7 +4,6 @@
 #include "siliqs_esp32.h"
 #include "sensor_measurement.h"
 #ifdef USE_G5T_UART
-#include "SoftwareSerial.h"
 #include "pm25_measurement.h"
 // 构造函数，使用指定的 RX 和 TX 引脚初始化 SoftwareSerial
 PM25Measurement::PM25Measurement(uint8_t rxPin, uint8_t txPin) : softSerial(rxPin, txPin)

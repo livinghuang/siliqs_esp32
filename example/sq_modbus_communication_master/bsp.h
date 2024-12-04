@@ -2,7 +2,7 @@
 #define BSP_H
 #define USE_RS485
 #define USE_MODBUS
-// if you want to use custom pins, please define CUSTOM_PINS in here, otherwise, it will use pins defined in pins_defined.h
+
 /*
 below is the example:
 // #define CUSTOM_PINS
