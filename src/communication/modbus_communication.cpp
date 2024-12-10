@@ -199,4 +199,97 @@ void ModbusCommunication::print_data(modbus_data_t *modbusData)
   print_bytes((uint8_t *)&calculated_crc, 2);
 }
 
+bool ModbusCommunication::startSlaveTask(std::function<void(const modbus_data_t *, modbus_data_t *&)> callback)
+{
+  if (modbusSlaveTaskHandle != nullptr)
+  {
+    // Task is already running
+    return false;
+  }
+
+  if (!callback)
+  {
+    callback = [](const modbus_data_t *request, modbus_data_t *response)
+    {
+      console.log(sqWARNING, "Default callback: No processing performed.");
+      response = nullptr;
+    };
+    return false;
+  }
+
+  // Store the user-provided callback
+  requestCallback = callback;
+
+  // Create the Modbus slave task
+  BaseType_t result = xTaskCreate(
+      modbusSlaveTask,       // Task function
+      "ModbusSlaveTask",     // Task name
+      4096,                  // Stack size
+      this,                  // Task parameter (pass the instance)
+      1,                     // Task priority
+      &modbusSlaveTaskHandle // Task handle
+  );
+
+  return result == pdPASS;
+}
+
+void ModbusCommunication::modbusSlaveTask(void *parameters)
+{
+  // Retrieve the instance of ModbusCommunication
+  ModbusCommunication *modbus = static_cast<ModbusCommunication *>(parameters);
+
+  modbus_data_t request;
+
+  for (;;)
+  {
+    // Receive a Modbus request
+    if (modbus->receive_modbus(&request) > 0)
+    {
+      console.log(sqINFO, "Processing Modbus request...");
+      console.log(sqINFO, "Received Modbus Address: " + String(request.address));
+      console.log(sqINFO, "Received Function Code: " + String(request.function));
+
+      // Dynamically allocate a response object
+      modbus_data_t *response = new modbus_data_t;
+      if (response == nullptr)
+      {
+        console.log(sqERROR, "Memory allocation failed for response object!");
+        vTaskDelete(nullptr); // Safely terminate the task
+        return;               // Should not reach here
+      }
+
+      // Call the user-defined callback function to process the request
+      if (modbus->requestCallback)
+      {
+        modbus->requestCallback(&request, response);
+      }
+      else
+      {
+        console.log(sqERROR, "No request callback set!");
+        delete response; // Ensure allocated memory is released
+        continue;
+      }
+
+      // Check if a valid response was generated
+      if (response->length > 0)
+      {
+        modbus->send_modbus(response);
+      }
+      else
+      {
+        console.log(sqINFO, "No response generated for the request.");
+      }
+
+      // Release the dynamically allocated response object
+      delete response;
+    }
+
+    // Add a small delay to prevent task starvation
+    vTaskDelay(pdMS_TO_TICKS(10));
+  }
+
+  // Should never reach here
+  vTaskDelete(nullptr);
+}
+
 #endif
