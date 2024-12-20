@@ -58,9 +58,9 @@ Follow these steps to set up the **Siliq_ESP32** library for use in your Arduino
 1. Visit the [Siliq_ESP32 GitHub Repository](https://github.com/your-repo-url).
 2. Click on the **Code** button and choose **Download ZIP**.
 3. Extract the downloaded ZIP file to your Arduino libraries folder:
-   - On **Windows**: `Documents\Arduino\libraries`
-   - On **macOS**: `~/Documents/Arduino/libraries`
-   - On **Linux**: `~/Arduino/libraries`
+   - **Windows**: `Documents\Arduino\libraries`
+   - **macOS**: `~/Documents/Arduino/libraries`
+   - **Linux**: `~/Arduino/libraries`
 
 ### 2. Locate the `libraries` Folder
 Ensure that the `Siliq_ESP32` folder inside the extracted content is correctly placed in the `libraries` folder of your Arduino setup.
@@ -70,20 +70,11 @@ Ensure that the `Siliq_ESP32` folder inside the extracted content is correctly p
 2. Navigate to **File > Examples > Siliq_ESP32**.
 3. Select an example to begin experimenting.
 
-### 4. Install Required Dependencies
-Some features of the project rely on additional libraries. Use the Arduino Library Manager to install these:
-- **Adafruit Unified Sensor**
-- **Adafruit GFX Library**
-- **LoRa Library**
-- **ModbusMaster**
-
-You can find these libraries by navigating to **Tools > Manage Libraries** in the Arduino IDE.
-
-### 5. Connect Your Hardware
+### 4. Connect Your Hardware
 1. Plug your ESP32-based board into your computer via USB.
 2. Select the appropriate board and port from **Tools > Board** and **Tools > Port** in the Arduino IDE.
 
-### 6. Upload the Example Code
+### 5. Upload the Example Code
 1. Open an example from **File > Examples > Siliq_ESP32**.
 2. Click the **Upload** button to upload the code to your ESP32 board.
 
@@ -163,20 +154,11 @@ You can find these libraries by navigating to **Tools > Manage Libraries** in th
 2. 移至 **File > Examples > Siliq_ESP32**。
 3. 選擇一個示例進行測試。
 
-### 4. 安裝所需的相依庫
-某些功能依賴額外的庫，可通過 Arduino 庫管理器安裝以下庫：
-- **Adafruit Unified Sensor**
-- **Adafruit GFX Library**
-- **LoRa Library**
-- **ModbusMaster**
-
-可在 Arduino IDE 中通過 **Tools > Manage Libraries** 搜尋並安裝。
-
-### 5. 連接硬體
+### 4. 連接硬體
 1. 通過 USB 將 ESP32 開發板連接到電腦。
 2. 在 **Tools > Board** 和 **Tools > Port** 中選擇正確的開發板和連接埠。
 
-### 6. 上傳示例程式碼
+### 5. 上傳示例程式碼
 1. 在 **File > Examples > Siliq_ESP32** 中開啟示例程式碼。
 2. 點擊 **Upload** 按鈕將程式碼上傳到 ESP32 開發板。
 

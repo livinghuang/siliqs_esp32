@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SILIQ Web BLE</title>
+</head>
+<style>
+    #statusWindow {
+        width: 100%;
+        height: 400px;
+        overflow-y: auto;
+        border: 1px solid #000;
+        background-color: #f9f9f9;
+        padding: 10px;
+        margin-top: 10px;
+        box-sizing: border-box;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+    }
+
+    th,
+    td {
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    #title {
+        text-align: center;
+    }
+</style>
+
+<body>
+    <div id="title">
+        <h1>SILIQ Web BLE Console</h1>
+    </div>
+    <button id="connect">Connect to BLE Device</button>
+    <button id="disconnect">Disconnect</button>
+
+    <div id="statusWindow">
+        <div id="status"></div>
+    </div>
+
+    <input id="writeValue"
+           type="text"
+           placeholder="Enter command here"
+           style="display:none;">
+    <button id="write"
+            style="display:none;">Write to Characteristic</button>
+    <div id="help">
+        <h2>Default Commands List</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Command</th>
+                    <th>Response</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody id="commands">
+                <tr>
+                    <td>AT</td>
+                    <td>OK</td>
+                    <td>check the connection</td>
+                </tr>
+                <!-- <tr>
+                    <td>ATE[=0|1]</td>
+                    <td>OK</td>
+                    <td>set echo, no support for ble console</td>
+                </tr> -->
+                <tr>
+                    <td>ATR</td>
+                    <td>reset then and disconnect</td>
+                    <td>reset the device</td>
+                </tr>
+                <tr>
+                    <td>ATH</td>
+                    <td>command list</td>
+                    <td>help to show the supported commands</td>
+                </tr>
+                <tr>
+                    <td>ATI</td>
+                    <td>device information</td>
+                    <td>show the device information</td>
+                </tr>
+                <tr>
+                    <td>ATLF</td>
+                    <td>get file List</td>
+                    <td>List all files in LittleFS</td>
+                </tr>
+                <tr>
+                    <td>ATRF[=filename]</td>
+                    <td>get file content</td>
+                    <td>get file content, example:ATRF=/test.txt</td>
+                </tr>
+                <tr>
+                    <td>ATWOTA[=password]</td>
+                    <td>start OTA web server</td>
+                    <td>AP: ssid:SQ-xxxx,default password:siliqs.net,
+                        IP:192.168.4.1,example1:ATWOTA,example2:ATWOTA=12345678</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        let bluetoothDevice = null;
+        let writeCharacteristic = null;
+        let notifyCharacteristic = null;
+
+        document.getElementById('connect').addEventListener('click', function () {
+            if (!navigator.bluetooth) {
+                updateStatus('Web Bluetooth is not available in this browser!');
+                return;
+            }
+
+            updateStatus('Requesting Bluetooth Device...');
+            navigator.bluetooth.requestDevice({
+                filters: [{ namePrefix: 'SQ-' }],
+                optionalServices: ['83940000-5273-9374-2109-847320948571'] // Adjust based on your application's needs
+            })
+                .then(device => {
+                    bluetoothDevice = device;
+                    bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+                    const deviceId = device.name.substring(4).toLowerCase();
+                    updateStatus(`> Found ${device.name}<br>Connecting to GATT Server...`);
+
+                    const serviceUUID = `83940000-5273-9374-2109-847320948571`;
+                    const uart_notifyUUID = `83940001-5273-9374-2109-847320948571`;
+                    const uart_writeUUID = `83940002-5273-9374-2109-847320948571`;
+
+                    updateStatus(`Connecting with Service UUID: ${serviceUUID}`);
+
+                    return device.gatt.connect().then(server => {
+                        updateStatus(`Connected. Discovering service: ${serviceUUID}`);
+                        return server.getPrimaryService(serviceUUID);
+                    })
+                        .then(service => {
+                            updateStatus(`Service discovered. Discovering characteristics...`);
+                            return Promise.all([
+                                service.getCharacteristic(uart_writeUUID),
+                                service.getCharacteristic(uart_notifyUUID)
+                            ]);
+                        })
+                        .then(characteristics => {
+                            writeCharacteristic = characteristics[0];
+                            notifyCharacteristic = characteristics[1];
+                            document.getElementById('write').style.display = 'inline';
+                            document.getElementById('writeValue').style.display = 'inline';
+                            updateStatus('Characteristics discovered. Ready to interact.');
+
+                            notifyCharacteristic.startNotifications().then(() => {
+                                notifyCharacteristic.addEventListener('characteristicvaluechanged', handleNotifications);
+                                updateStatus('Subscribed to notifications.');
+                            }).catch(error => {
+                                updateStatus(`Subscribe error: ${error}`);
+                            });
+                        })
+                        .catch(error => {
+                            updateStatus(`Error: ${error}`);
+                        });
+                });
+        });
+
+        document.getElementById('disconnect').addEventListener('click', function () {
+            if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+                bluetoothDevice.gatt.disconnect();
+                updateStatus('Disconnected.');
+                document.getElementById('write').style.display = 'none';
+                document.getElementById('writeValue').style.display = 'none';
+            } else {
+                updateStatus('Device is not connected.');
+            }
+        });
+
+        document.getElementById('write').addEventListener('click', function () {
+            let inputValue = document.getElementById('writeValue').value;
+            if (!inputValue) {
+                updateStatus('Please enter a command to write.');
+                return;
+            }
+            let encoder = new TextEncoder('utf-8');
+            let data = encoder.encode(inputValue);
+            writeCharacteristic.writeValue(data).then(() => {
+                // updateStatus('Write successful.');
+            }).catch(error => {
+                updateStatus(`Write error: ${error}`);
+            });
+        });
+
+        function onDisconnected() {
+            updateStatus('Device got disconnected.');
+            document.getElementById('write').style.display = 'none';
+            document.getElementById('writeValue').style.display = 'none';
+        }
+
+        function handleNotifications(event) {
+            let value = event.target.value;
+            let decoder = new TextDecoder('utf-8');
+            let decodedValue = decoder.decode(value);
+            updateStatus(`${decodedValue}`);
+        }
+
+        function updateStatus(message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML += message + '<br>';
+            const statusWindow = document.getElementById('statusWindow');
+            statusWindow.scrollTop = statusWindow.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>
