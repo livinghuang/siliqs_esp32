@@ -26,7 +26,8 @@ void setup()
   // xTaskCreate(SQ_BLEServiceClass::bleTaskWrapper, "bleTask", 4096, NULL, 1, NULL);
   // 注册带参数的 "AT+TEMP" 命令
   // BLEatService.registerCommand("AT+TEMP", [](String cmd, String param)
-  //                              {
+  //
+  //  {
   //       if (param.length() > 0)
   //       {
   //           // 解析参数为浮点数，并发送回响应
