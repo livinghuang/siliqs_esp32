@@ -6,7 +6,7 @@ void setup()
 {
   // Initialize system and LED peripherals
   siliqs_esp32_setup(SQ_INFO);
-  
+
   led.begin(); // Initialize the service
 
   Serial.println("RMT initialized with 100ns tick");

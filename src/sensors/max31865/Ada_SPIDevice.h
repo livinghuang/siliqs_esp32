@@ -1,5 +1,5 @@
-#ifndef Adafruit_SPIDevice_h
-#define Adafruit_SPIDevice_h
+#ifndef Ada_SPIDevice_h
+#define Ada_SPIDevice_h
 
 #include <Arduino.h>
 
@@ -95,23 +95,23 @@ typedef uint32_t BusIO_PortMask;
 #endif
 
 /**! The class which defines how we will talk to this device over SPI **/
-class Adafruit_SPIDevice
+class Ada_SPIDevice
 {
 public:
 #ifdef BUSIO_HAS_HW_SPI
-  Adafruit_SPIDevice(int8_t cspin, uint32_t freq = 1000000,
-                     BusIOBitOrder dataOrder = SPI_BITORDER_MSBFIRST,
-                     uint8_t dataMode = SPI_MODE0, SPIClass *theSPI = &SPI);
+  Ada_SPIDevice(int8_t cspin, uint32_t freq = 1000000,
+                BusIOBitOrder dataOrder = SPI_BITORDER_MSBFIRST,
+                uint8_t dataMode = SPI_MODE0, SPIClass *theSPI = &SPI);
 #else
-  Adafruit_SPIDevice(int8_t cspin, uint32_t freq = 1000000,
-                     BusIOBitOrder dataOrder = SPI_BITORDER_MSBFIRST,
-                     uint8_t dataMode = SPI_MODE0, SPIClass *theSPI = nullptr);
+  Ada_SPIDevice(int8_t cspin, uint32_t freq = 1000000,
+                BusIOBitOrder dataOrder = SPI_BITORDER_MSBFIRST,
+                uint8_t dataMode = SPI_MODE0, SPIClass *theSPI = nullptr);
 #endif
-  Adafruit_SPIDevice(int8_t cspin, int8_t sck, int8_t miso, int8_t mosi,
-                     uint32_t freq = 1000000,
-                     BusIOBitOrder dataOrder = SPI_BITORDER_MSBFIRST,
-                     uint8_t dataMode = SPI_MODE0);
-  ~Adafruit_SPIDevice();
+  Ada_SPIDevice(int8_t cspin, int8_t sck, int8_t miso, int8_t mosi,
+                uint32_t freq = 1000000,
+                BusIOBitOrder dataOrder = SPI_BITORDER_MSBFIRST,
+                uint8_t dataMode = SPI_MODE0);
+  ~Ada_SPIDevice();
 
   bool begin(void);
   bool read(uint8_t *buffer, size_t len, uint8_t sendvalue = 0xFF);
@@ -150,4 +150,4 @@ private:
   bool _begun;
 };
 
-#endif // Adafruit_SPIDevice_h
+#endif // Ada_SPIDevice_h

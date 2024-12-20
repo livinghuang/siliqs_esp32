@@ -1,4 +1,4 @@
-#include "Adafruit_SPIDevice.h"
+#include "Ada_SPIDevice.h"
 
 // #define DEBUG_SERIAL Serial
 
@@ -11,9 +11,9 @@
  *    @param  dataMode The SPI mode to use, defaults to SPI_MODE0
  *    @param  theSPI The SPI bus to use, defaults to &theSPI
  */
-Adafruit_SPIDevice::Adafruit_SPIDevice(int8_t cspin, uint32_t freq,
-                                       BusIOBitOrder dataOrder,
-                                       uint8_t dataMode, SPIClass *theSPI)
+Ada_SPIDevice::Ada_SPIDevice(int8_t cspin, uint32_t freq,
+                             BusIOBitOrder dataOrder,
+                             uint8_t dataMode, SPIClass *theSPI)
 {
 #ifdef BUSIO_HAS_HW_SPI
   _cs = cspin;
@@ -47,10 +47,10 @@ Adafruit_SPIDevice::Adafruit_SPIDevice(int8_t cspin, uint32_t freq,
  * defaults to SPI_BITORDER_MSBFIRST
  *    @param  dataMode The SPI mode to use, defaults to SPI_MODE0
  */
-Adafruit_SPIDevice::Adafruit_SPIDevice(int8_t cspin, int8_t sckpin,
-                                       int8_t misopin, int8_t mosipin,
-                                       uint32_t freq, BusIOBitOrder dataOrder,
-                                       uint8_t dataMode)
+Ada_SPIDevice::Ada_SPIDevice(int8_t cspin, int8_t sckpin,
+                             int8_t misopin, int8_t mosipin,
+                             uint32_t freq, BusIOBitOrder dataOrder,
+                             uint8_t dataMode)
 {
   _cs = cspin;
   _sck = sckpin;
@@ -83,7 +83,7 @@ Adafruit_SPIDevice::Adafruit_SPIDevice(int8_t cspin, int8_t sckpin,
 /*!
  *    @brief  Release memory allocated in constructors
  */
-Adafruit_SPIDevice::~Adafruit_SPIDevice()
+Ada_SPIDevice::~Ada_SPIDevice()
 {
   if (_spiSetting)
     delete _spiSetting;
@@ -94,7 +94,7 @@ Adafruit_SPIDevice::~Adafruit_SPIDevice()
  *    @return Always returns true because there's no way to test success of SPI
  * init
  */
-bool Adafruit_SPIDevice::begin(void)
+bool Ada_SPIDevice::begin(void)
 {
   if (_cs != -1)
   {
@@ -143,7 +143,7 @@ bool Adafruit_SPIDevice::begin(void)
  *    @param  buffer The buffer to send and receive at the same time
  *    @param  len    The number of bytes to transfer
  */
-void Adafruit_SPIDevice::transfer(uint8_t *buffer, size_t len)
+void Ada_SPIDevice::transfer(uint8_t *buffer, size_t len)
 {
   //
   // HARDWARE SPI
@@ -308,7 +308,7 @@ void Adafruit_SPIDevice::transfer(uint8_t *buffer, size_t len)
  *    @param  send The byte to send
  *    @return The byte received while transmitting
  */
-uint8_t Adafruit_SPIDevice::transfer(uint8_t send)
+uint8_t Ada_SPIDevice::transfer(uint8_t send)
 {
   uint8_t data = send;
   transfer(&data, 1);
@@ -319,7 +319,7 @@ uint8_t Adafruit_SPIDevice::transfer(uint8_t send)
  *    @brief  Manually begin a transaction (calls beginTransaction if hardware
  * SPI)
  */
-void Adafruit_SPIDevice::beginTransaction(void)
+void Ada_SPIDevice::beginTransaction(void)
 {
   if (_spi)
   {
@@ -332,7 +332,7 @@ void Adafruit_SPIDevice::beginTransaction(void)
 /*!
  *    @brief  Manually end a transaction (calls endTransaction if hardware SPI)
  */
-void Adafruit_SPIDevice::endTransaction(void)
+void Ada_SPIDevice::endTransaction(void)
 {
   if (_spi)
   {
@@ -346,7 +346,7 @@ void Adafruit_SPIDevice::endTransaction(void)
  *    @brief  Assert/Deassert the CS pin if it is defined
  *    @param  value The state the CS is set to
  */
-void Adafruit_SPIDevice::setChipSelect(int value)
+void Ada_SPIDevice::setChipSelect(int value)
 {
   if (_cs != -1)
   {
@@ -360,7 +360,7 @@ void Adafruit_SPIDevice::setChipSelect(int value)
  *    @brief  Manually begin a transaction (calls beginTransaction if hardware
  *            SPI) with asserting the CS pin
  */
-void Adafruit_SPIDevice::beginTransactionWithAssertingCS()
+void Ada_SPIDevice::beginTransactionWithAssertingCS()
 {
   beginTransaction();
   setChipSelect(LOW);
@@ -370,7 +370,7 @@ void Adafruit_SPIDevice::beginTransactionWithAssertingCS()
  *    @brief  Manually end a transaction (calls endTransaction if hardware SPI)
  *            with deasserting the CS pin
  */
-void Adafruit_SPIDevice::endTransactionWithDeassertingCS()
+void Ada_SPIDevice::endTransactionWithDeassertingCS()
 {
   setChipSelect(HIGH);
   endTransaction();
@@ -387,9 +387,9 @@ void Adafruit_SPIDevice::endTransactionWithDeassertingCS()
  *    @return Always returns true because there's no way to test success of SPI
  * writes
  */
-bool Adafruit_SPIDevice::write(const uint8_t *buffer, size_t len,
-                               const uint8_t *prefix_buffer,
-                               size_t prefix_len)
+bool Ada_SPIDevice::write(const uint8_t *buffer, size_t len,
+                          const uint8_t *prefix_buffer,
+                          size_t prefix_len)
 {
   beginTransactionWithAssertingCS();
 
@@ -457,7 +457,7 @@ bool Adafruit_SPIDevice::write(const uint8_t *buffer, size_t len,
  *    @return Always returns true because there's no way to test success of SPI
  * writes
  */
-bool Adafruit_SPIDevice::read(uint8_t *buffer, size_t len, uint8_t sendvalue)
+bool Ada_SPIDevice::read(uint8_t *buffer, size_t len, uint8_t sendvalue)
 {
   memset(buffer, sendvalue, len); // clear out existing buffer
 
@@ -496,9 +496,9 @@ bool Adafruit_SPIDevice::read(uint8_t *buffer, size_t len, uint8_t sendvalue)
  *    @return Always returns true because there's no way to test success of SPI
  * writes
  */
-bool Adafruit_SPIDevice::write_then_read(const uint8_t *write_buffer,
-                                         size_t write_len, uint8_t *read_buffer,
-                                         size_t read_len, uint8_t sendvalue)
+bool Ada_SPIDevice::write_then_read(const uint8_t *write_buffer,
+                                    size_t write_len, uint8_t *read_buffer,
+                                    size_t read_len, uint8_t sendvalue)
 {
   beginTransactionWithAssertingCS();
   // do the writing
@@ -570,7 +570,7 @@ bool Adafruit_SPIDevice::write_then_read(const uint8_t *write_buffer,
  *    @return Always returns true because there's no way to test success of SPI
  * writes
  */
-bool Adafruit_SPIDevice::write_and_read(uint8_t *buffer, size_t len)
+bool Ada_SPIDevice::write_and_read(uint8_t *buffer, size_t len)
 {
   beginTransactionWithAssertingCS();
   transfer(buffer, len);

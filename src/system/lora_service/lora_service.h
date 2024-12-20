@@ -5,8 +5,7 @@
 #include "siliqs_esp32.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include <RadioLib.h>
-
+#include "radiolab/src/RadioLib.h"
 typedef struct lora_params_settings
 {
   int DIO1;            // DIO1 引脚号

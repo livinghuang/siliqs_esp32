@@ -3473,7 +3473,8 @@ void LoRaWANNode::selectChannelPlanDyn(bool joinRequest)
 
   size_t num = 0;
   // copy the default defined channels into the first slots (where Tx = Rx)
-  for (; num < 3 && this->band->txFreqs[num].enabled; num++)
+  // Living: for (; num < 3 && this->band->txFreqs[num].enabled; num++) , original setting
+  for (; num < 8 && this->band->txFreqs[num].enabled; num++) // Living: modify for num < 8 to fill all 8 channels, 20241213,
   {
     this->channelPlan[RADIOLIB_LORAWAN_UPLINK][num] = this->band->txFreqs[num];
     this->channelPlan[RADIOLIB_LORAWAN_DOWNLINK][num] = this->band->txFreqs[num];

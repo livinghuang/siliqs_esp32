@@ -47,7 +47,7 @@ void external_32k_setup()
 
     if (!rtc_clk_32k_enabled())
     {
-      console.log(sqINFO, "Error: 32.768 kHz crystal not enabled. Falling back to internal clock.");
+      console.log(sqERROR, "32.768 kHz crystal not enabled. Falling back to internal clock.");
       return;
     }
 
@@ -205,6 +205,10 @@ bool readSystemData(void *global_system_data, size_t dataSize)
 }
 void gotoSleep(uint32_t ms)
 {
+  if (ms == 0)
+  {
+    return;
+  }
   esp_sleep_enable_timer_wakeup(ms * 1000); // function uses uS
   console.log(sqINFO, "Sleeping... will wake in " + String(ms) + " milliseconds");
   Serial.flush();

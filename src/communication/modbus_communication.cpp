@@ -52,6 +52,7 @@ size_t ModbusCommunication::receive_modbus(modbus_data_t *modbusData, size_t len
   {
     // 如果接收失败，返回 false
     console.log(sqINFO, "No data received from Modbus.");
+    console.log(sqINFO, buffer, length);
     return 0;
   }
   console.log(sqINFO, "Received Modbus length:" + String(length));
@@ -99,7 +100,8 @@ size_t ModbusCommunication::receive_modbus(modbus_data_t *modbusData, char start
   if (length < 4)
   {
     // 如果接收失败，返回 false
-    console.log(sqINFO, "No data received from Modbus.");
+    console.log(sqDEBUG, "No data received from Modbus.");
+    console.log(sqDEBUG, buffer, length);
     return 0;
   }
   console.log(sqINFO, "Received Modbus length:" + String(length));
@@ -199,8 +201,11 @@ void ModbusCommunication::print_data(modbus_data_t *modbusData)
   print_bytes((uint8_t *)&calculated_crc, 2);
 }
 
-bool ModbusCommunication::startSlaveTask(std::function<void(const modbus_data_t *, modbus_data_t *&)> callback)
+bool ModbusCommunication::startSlaveTask(std::function<void(const modbus_data_t *, modbus_data_t *&)> callback, char start_char, size_t length, int timeout)
 {
+  this->start_char = start_char;
+  this->length = length;
+  this->timeout = timeout;
   if (modbusSlaveTaskHandle != nullptr)
   {
     // Task is already running
@@ -235,6 +240,7 @@ bool ModbusCommunication::startSlaveTask(std::function<void(const modbus_data_t 
 
 void ModbusCommunication::modbusSlaveTask(void *parameters)
 {
+
   // Retrieve the instance of ModbusCommunication
   ModbusCommunication *modbus = static_cast<ModbusCommunication *>(parameters);
 
@@ -243,17 +249,17 @@ void ModbusCommunication::modbusSlaveTask(void *parameters)
   for (;;)
   {
     // Receive a Modbus request
-    if (modbus->receive_modbus(&request) > 0)
+    if (modbus->receive_modbus(&request, modbus->start_char, modbus->length, modbus->timeout) > 0)
     {
-      console.log(sqINFO, "Processing Modbus request...");
-      console.log(sqINFO, "Received Modbus Address: " + String(request.address));
-      console.log(sqINFO, "Received Function Code: " + String(request.function));
+      console.log(sqDEBUG, "Processing Modbus request...");
+      console.log(sqDEBUG, "Received Modbus Address: " + String(request.address));
+      console.log(sqDEBUG, "Received Function Code: " + String(request.function));
 
       // Dynamically allocate a response object
       modbus_data_t *response = new modbus_data_t;
       if (response == nullptr)
       {
-        console.log(sqERROR, "Memory allocation failed for response object!");
+        console.log(sqDEBUG, "Memory allocation failed for response object!");
         vTaskDelete(nullptr); // Safely terminate the task
         return;               // Should not reach here
       }
@@ -265,19 +271,19 @@ void ModbusCommunication::modbusSlaveTask(void *parameters)
       }
       else
       {
-        console.log(sqERROR, "No request callback set!");
+        console.log(sqDEBUG, "No request callback set!");
         delete response; // Ensure allocated memory is released
         continue;
       }
 
       // Check if a valid response was generated
-      if (response->length > 0)
+      if (response != nullptr)
       {
         modbus->send_modbus(response);
       }
       else
       {
-        console.log(sqINFO, "No response generated for the request.");
+        console.log(sqDEBUG, "No response generated for the request.");
       }
 
       // Release the dynamically allocated response object

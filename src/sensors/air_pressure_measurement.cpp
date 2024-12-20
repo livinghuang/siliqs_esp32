@@ -14,7 +14,7 @@ void AirPressureMeasurement::getMeasurement()
 {
   uint8_t oversampling = 7;
   int16_t ret = Dps310PressureSensor.measurePressureOnce(pressure, oversampling);
-  float altitude = 44330.0 * (1.0 - pow(pressure / 101325, 0.1903));
+  altitude = 44330.0 * (1.0 - pow(pressure / 101325, 0.1903));
   if (ret != 0)
   {
     // Something went wrong.

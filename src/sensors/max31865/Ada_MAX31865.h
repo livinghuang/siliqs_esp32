@@ -1,5 +1,5 @@
-#ifndef ADAFRUIT_MAX31865_H
-#define ADAFRUIT_MAX31865_H
+#ifndef ADA_MAX31865_H
+#define ADA_MAX31865_H
 
 #define MAX31865_CONFIG_REG 0x00
 #define MAX31865_CONFIG_BIAS 0x80
@@ -31,7 +31,7 @@
 #define RTD_B -5.775e-7
 
 #include "Arduino.h"
-#include "sensors/max31865/Adafruit_SPIDevice.h"
+#include "sensors/max31865/Ada_SPIDevice.h"
 
 typedef enum max31865_numwires
 {
@@ -49,12 +49,12 @@ typedef enum
 } max31865_fault_cycle_t;
 
 /*! Interface class for the MAX31865 RTD Sensor reader */
-class Adafruit_MAX31865
+class Ada_MAX31865
 {
 public:
-  Adafruit_MAX31865(int8_t spi_cs, int8_t spi_mosi, int8_t spi_miso,
-                    int8_t spi_clk);
-  Adafruit_MAX31865(int8_t spi_cs, SPIClass *theSPI = &SPI);
+  Ada_MAX31865(int8_t spi_cs, int8_t spi_mosi, int8_t spi_miso,
+               int8_t spi_clk);
+  Ada_MAX31865(int8_t spi_cs, SPIClass *theSPI = &SPI);
 
   bool begin(max31865_numwires_t x = MAX31865_3WIRE);
 
@@ -76,7 +76,7 @@ public:
                              float refResistor);
 
 private:
-  Adafruit_SPIDevice spi_dev;
+  Ada_SPIDevice spi_dev;
 
   void readRegisterN(uint8_t addr, uint8_t buffer[], uint8_t n);
 

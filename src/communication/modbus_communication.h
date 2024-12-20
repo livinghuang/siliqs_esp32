@@ -37,9 +37,12 @@ public:
    * @param callback A user-defined callback for processing Modbus requests.
    * @return True if the task starts successfully, false otherwise.
    */
-  bool startSlaveTask(std::function<void(const modbus_data_t *, modbus_data_t *&)> callback = nullptr);
+  bool startSlaveTask(std::function<void(const modbus_data_t *, modbus_data_t *&)> callback = nullptr, char start_char = 0x10, size_t length = 7, int timeout = 100);
 
 private:
+  char start_char = 0x10;
+  size_t length = 7;
+  int timeout = 100;
   // FreeRTOS task handle
   TaskHandle_t modbusSlaveTaskHandle = nullptr;
 

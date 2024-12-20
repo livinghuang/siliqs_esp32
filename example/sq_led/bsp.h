@@ -1,29 +1,13 @@
 #pragma once
 #define USE_RGB_LED
-#ifdef USE_RGB_LED
 #define pRGB_LED 17
-#endif
-
 /*
-below is the example:
-// #define CUSTOM_PINS
-// #define pVext 1
-// #define pADC_BAT 2
-// #define pSDA 18
-// #define pSCL 19
-// #define pLORA_RST 5
-// #define pLED 0
+This LED library is derived from the esp32-hal-rgb-led library. It supports driving WS2812B LED strips and can be modified to control other types of LED strips as needed.
 
-// #define pCS 3
-// #define pMOSI 7
-// #define pMISO 6
-// #define pSCK 10
+The implementation files are located at:
 
-// // RS485
-// #define pRS485_RO 19 // Receiver Output (RO) connected to pin 19
-// #define pRS485_DI 18 // Driver Input (DI) connected to pin 18
-// #define pRS485_DE 4  // Data Enable (DE) connected to pin 4
+src/system/rgb_led_service/rgb_led_service.h
+src/system/rgb_led_service/rgb_led_service.cpp
 
-// // 24 POWER
-// #define pSDN 3
+This project is workable and it has been tested. But it may not suitable place at "src/system" folder. we may move to peripherals folder in future.
 */

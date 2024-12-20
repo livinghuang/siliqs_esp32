@@ -7,7 +7,7 @@
 #include "siliqs_esp32.h"
 
 #ifdef USE_MAX31865
-#include "sensors/max31865/Adafruit_MAX31865.h"
+#include "sensors/max31865/Ada_MAX31865.h"
 
 /**
  * @class PTCMeasurement
@@ -41,7 +41,7 @@ public:
   float getTemperature() const { return temperature; }
 
 private:
-  Adafruit_MAX31865 max31865;   // Instance of the MAX31865 sensor class
+  Ada_MAX31865 max31865;        // Instance of the MAX31865 sensor class
   float temperature = -273.15;  // Last recorded temperature (initialized to absolute zero)
   float nominalResistance;      // Nominal resistance of the RTD
   float referenceResistance;    // Reference resistance for the MAX31865 circuit

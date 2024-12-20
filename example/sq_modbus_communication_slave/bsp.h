@@ -1,41 +1,10 @@
-#ifndef BSP_H
-#define BSP_H
+#pragma once
 #define USE_RS485
 #define USE_MODBUS
-
-/*
-below is the example:
-// #define CUSTOM_PINS
-// #define pVext 1
-// #define pADC_BAT 2
-// #define pSDA 18
-// #define pSCL 19
-// #define pLORA_RST 5
-// #define pLED 0
-
-// #define pCS 3
-// #define pMOSI 7
-// #define pMISO 6
-// #define pSCK 10
-
-// // RS485
-// #define pRS485_RO 19 // Receiver Output (RO) connected to pin 19
-// #define pRS485_DI 18 // Driver Input (DI) connected to pin 18
-// #define pRS485_DE 4  // Data Enable (DE) connected to pin 4
-
-// // 24 POWER
-// #define pSDN 3
-*/
-
-#define CUSTOM_PINS
 #define pVext 2
-#define pADC_BAT 1
-#define pSDA 18
-#define pSCL 19
-
-// RS485
-#define pRS485_RO 7  // Receiver Output (RO) connected to pin 7
-#define pRS485_DI 8  // Driver Input (DI) connected to pin 8
-#define pRS485_DE 10 // Data Enable (DE) connected to pin 10
-
-#endif
+#define pSDA -1
+#define pSCL -1
+#define pLED -1
+#define pRS485_RO 19 // Receiver Output (RO)
+#define pRS485_DI 18 // Driver Input (DI)
+#define pRS485_DE 9  // Data Enable (DE)
