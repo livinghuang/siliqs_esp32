@@ -1,6 +1,10 @@
 #include "bsp.h"
 #include "siliqs_esp32.h"
 #include "communication/rs485_communication.h"
+/*
+If you use SQC-485I development board, the pRS485_DE pin is connected to the esp32 user pin (aka GPIO9).
+When you upload the code, GPIO9 may latch by USB to UART chip (aka CH340K), you could re-plug the USB cable to fix it.
+*/
 #include "communication/modbus_communication.h"
 
 ModbusCommunication modbusComm(Serial1, 4800, pRS485_RO, pRS485_DI, pRS485_DE, pVext, false);
