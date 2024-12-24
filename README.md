@@ -55,7 +55,7 @@ The **Siliq_ESP32 Project** is designed for the Siliqs-ESP32 development boards,
 Follow these steps to set up the **Siliq_ESP32** library for use in your Arduino IDE:
 
 ### 1. Download the Project
-1. Visit the [Siliq_ESP32 GitHub Repository](https://github.com/your-repo-url).
+1. Visit the [Siliq_ESP32 GitHub Repository](https://github.com/livinghuang/siliqs_esp32).
 2. Click on the **Code** button and choose **Download ZIP**.
 3. Extract the downloaded ZIP file to your Arduino libraries folder:
    - **Windows**: `Documents\Arduino\libraries`
@@ -139,7 +139,7 @@ Ensure that the `Siliq_ESP32` folder inside the extracted content is correctly p
 請按照以下步驟設置 **Siliq_ESP32** 庫，以便在 Arduino IDE 中使用：
 
 ### 1. 下載專案
-1. 前往 [Siliq_ESP32 GitHub Repository](https://github.com/your-repo-url)。
+1. 前往 [Siliq_ESP32 GitHub Repository](https://github.com/livinghuang/siliqs_esp32)。
 2. 點擊 **Code** 按鈕，選擇 **Download ZIP**。
 3. 解壓縮 ZIP 檔案到 Arduino 的 `libraries` 資料夾：
    - **Windows**: `Documents\Arduino\libraries`
