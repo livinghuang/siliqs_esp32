@@ -70,5 +70,5 @@ void loop()
     }
     Serial.println();
   }
-  lorawan.sleep(false); // sleep interval time base on params.uplinkIntervalSeconds, if you use TTN law,set it true and then it will calculate minimum duty cycle delay
+  gotoSleep(params.uplinkIntervalSeconds * 1000);
 }
