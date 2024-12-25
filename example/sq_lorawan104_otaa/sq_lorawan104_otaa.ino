@@ -43,7 +43,7 @@ LoRaWanService lorawan(&params);
 void setup()
 {
   siliqs_esp32_setup(SQ_INFO);
-  lorawan.begin();
+  lorawan.begin(false); // false: not use auto generate keys
 }
 
 void loop()

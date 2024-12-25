@@ -37,9 +37,11 @@ void LoRaWanService::autoGenKeys()
   print_bytes_reverse((uint8_t *)&params->DEVADDR, sizeof(params->DEVADDR));
   char chipidStr[17];
   snprintf(chipidStr, sizeof(chipidStr), "%016llx", chipid);
+
   memcpy(&params->DEVEUI, &chipid, sizeof(params->DEVEUI));
   Serial.print("DEVEUI:");
-  print_bytes((uint8_t *)&params->DEVEUI, sizeof(params->DEVEUI));
+  print_bytes_reverse((uint8_t *)&params->DEVEUI, sizeof(params->DEVEUI));
+
   memcpy(&params->APPxKEY, chipidStr, 16);
   Serial.print("APPxKEY:");
   print_bytes((uint8_t *)&params->APPxKEY, sizeof(params->APPxKEY));
