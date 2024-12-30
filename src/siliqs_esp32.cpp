@@ -220,3 +220,30 @@ void gotoSleep(uint32_t ms)
   delay(15000);
   ESP.restart();
 }
+
+/**
+ * @brief Calculate CRC16 for error checking
+ * @param data Pointer to the data
+ * @param length Length of the data
+ * @return Calculated CRC16 value
+ */
+uint16_t calculateCRC(const uint8_t *data, size_t length)
+{
+  uint16_t crc = 0xFFFF;
+  for (size_t i = 0; i < length; i++)
+  {
+    crc ^= data[i];
+    for (uint8_t j = 0; j < 8; j++)
+    {
+      if (crc & 1)
+      {
+        crc = (crc >> 1) ^ 0xA001;
+      }
+      else
+      {
+        crc >>= 1;
+      }
+    }
+  }
+  return crc;
+}

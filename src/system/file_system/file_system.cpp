@@ -12,20 +12,20 @@ FileSystem::~FileSystem()
   // Cleanup resources if needed
 }
 
-// Initialize LittleFS
+// Initialize sqLittleFS
 bool FileSystem::begin(bool formatOnFail)
 {
-  if (!LittleFS.begin(formatOnFail))
+  if (!sqLittleFS.begin(formatOnFail))
   {
-    console.log(sqINFO, "Failed to load LittleFS");
+    console.log(sqINFO, "Failed to load sqLittleFS");
     return false;
   }
-  console.log(sqINFO, "LittleFS loaded successfully");
+  console.log(sqINFO, "sqLittleFS loaded successfully");
 
   // Get and display storage information
-  size_t totalBytes = LittleFS.totalBytes(); // Total storage in bytes
-  size_t usedBytes = LittleFS.usedBytes();   // Used storage in bytes
-  size_t freeBytes = totalBytes - usedBytes; // Free storage in bytes
+  size_t totalBytes = sqLittleFS.totalBytes(); // Total storage in bytes
+  size_t usedBytes = sqLittleFS.usedBytes();   // Used storage in bytes
+  size_t freeBytes = totalBytes - usedBytes;   // Free storage in bytes
 
   console.log(sqINFO, "Storage Information:");
   console.log(sqINFO, "Total Space: " + String(totalBytes) + " bytes");
@@ -45,7 +45,7 @@ bool FileSystem::appendFile(const char *path, const String &data)
   }
 
   // Attempt to open the file in append mode
-  File file = LittleFS.open(path, FILE_APPEND);
+  File file = sqLittleFS.open(path, FILE_APPEND);
   if (!file)
   {
     console.log(sqERROR, "Failed to open file: " + String(path) + ", cannot append data");
@@ -78,7 +78,7 @@ bool FileSystem::writeFile(const char *path, const String &data)
     return false;
   }
 
-  File file = LittleFS.open(path, FILE_WRITE);
+  File file = sqLittleFS.open(path, FILE_WRITE);
   if (!file)
   {
     console.log(sqINFO, "Failed to open file " + String(path) + ", cannot write");
@@ -109,7 +109,7 @@ String FileSystem::readFile(const char *path)
     return "";
   }
 
-  File file = LittleFS.open(path, FILE_READ);
+  File file = sqLittleFS.open(path, FILE_READ);
   if (!file)
   {
     console.log(sqINFO, "Failed to open file " + String(path) + ", cannot read");
@@ -137,7 +137,7 @@ bool FileSystem::deleteFile(const char *path)
     return false;
   }
 
-  if (LittleFS.remove(path))
+  if (sqLittleFS.remove(path))
   {
     console.log(sqINFO, "File " + String(path) + " deleted successfully");
     return true;
@@ -149,11 +149,11 @@ bool FileSystem::deleteFile(const char *path)
   }
 }
 
-// List all files in LittleFS
+// List all files in sqLittleFS
 void FileSystem::listFiles()
 {
-  console.log(sqINFO, "Listing all files in LittleFS:");
-  File root = LittleFS.open("/");
+  console.log(sqINFO, "Listing all files in sqLittleFS:");
+  File root = sqLittleFS.open("/");
   File file = root.openNextFile();
   while (file)
   {
@@ -165,14 +165,14 @@ void FileSystem::listFiles()
 // Format the file system
 bool FileSystem::formatFS()
 {
-  if (LittleFS.format())
+  if (sqLittleFS.format())
   {
-    console.log(sqINFO, "LittleFS formatted successfully");
+    console.log(sqINFO, "sqLittleFS formatted successfully");
     return true;
   }
   else
   {
-    console.log(sqINFO, "Failed to format LittleFS");
+    console.log(sqINFO, "Failed to format sqLittleFS");
     return false;
   }
 }

@@ -3,7 +3,7 @@
 #define FILE_SYSTEM_H
 #include "siliqs_esp32.h"
 #include <Arduino.h>
-#include <LittleFS.h> // Include the LittleFS library
+#include "littleFS_src/sqLittleFS.h" // Include the LittleFS library
 
 class FileSystem
 {

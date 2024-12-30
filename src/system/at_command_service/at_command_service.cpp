@@ -35,6 +35,9 @@ ATCommandService::ATCommandService()
   // 注册 ATWF 命令，用于写入文件信息
   registerCommand("ATWF", [this](String cmd, String param)
                   { this->writeFile(param); });
+  // 注册 ATOTA 命令，用于启动 ATOTA 服务
+  registerCommand("ATOTA", [this](String cmd, String param)
+                  { this->startOTAServer(param); });
 #ifdef USE_WEB_OTA_SERVER
   // 注册 ATWOTA 命令，用于启动 WebOTA 服务
   registerCommand("ATWOTA", [this](String cmd, String param)

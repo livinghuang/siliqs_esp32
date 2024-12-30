@@ -12,26 +12,6 @@ void ATCommandService::showInfo()
   this->sendResponse("CHIP Information:");
   this->sendResponse("CHIP ID: " + String(get_chip_id()));
 
-  // #if defined(USE_LORAWAN) || defined(USE_CUSTOM_LORAWAN)
-  //   this->sendResponse("LoRaWAN Information");
-  //   this->sendResponse("devEUI: " + devEuiString());
-  //   this->sendResponse("appEUI: " + appEuiString());
-  //   this->sendResponse("appKey: " + appKeyString());
-
-  //   this->sendResponse("nwkSKey: " + nwkSKeyString());
-  //   this->sendResponse("appSKey: " + appSKeyString());
-  //   this->sendResponse("devAddr: " + devAddrString());
-
-  //   this->sendResponse("LoRaWAN Region: " + loraWanRegionString());
-  //   this->sendResponse("LoRaWAN Class: " + loraWanClassString());
-  //   this->sendResponse("appTxDutyCycle: " + appTxDutyCycleString());
-  //   this->sendResponse("OTAA: " + otaaString());
-  //   this->sendResponse("LoRaWAN Adr: " + loraWanAdrString());
-  //   this->sendResponse("LoRaWAN Tx Confirmed : " + loraWanTxConfirmedString());
-  // #else
-  //   this->sendResponse("No LoRaWAN support");
-  // #endif
-
 #ifdef USE_WIFI_CLIENT
   this->sendResponse("WIFI Information:");
   this->sendResponse("WEB SERVER: 192.168.3.1");
@@ -205,34 +185,23 @@ if param = file_param, if index =1 , got content , means to write the file. writ
 */
 void ATCommandService::writeFile(const String &param)
 {
-  // union file_param fileData;
-  // // 假設 param 是經過轉換得到的 file_param 結構
-  // memcpy(&fileData, param.c_str(), sizeof(file_param));
+}
 
-  // if (fileData.header.index == 0)
-  // {
-  //   // 寫入文件頭
-  //   File file = LittleFS.open(fileData.header.file_name, "w");
-  //   if (!file)
-  //   {
-  //     this->sendResponse("Failed to open file for writing");
-  //     return;
-  //   }
-  //   this->sendResponse("Writing file header: " + String(fileData.header.file_name) + ", size: " + String(fileData.header.file_size) + "\n");
-  //   file.close();
-  // }
-  // else
-  // {
-  //   // 寫入文件內容
-  //   File file = LittleFS.open(fileData.header.file_name, "a");
-  //   if (file)
-  //   {
-  //     file.seek((fileData.content.index - 1) * sizeof(fileData.content.raw_data));
-  //     file.write((const uint8_t *)fileData.content.raw_data, sizeof(fileData.content.raw_data));
-  //     this->sendResponse("Writing content, index:" + String(fileData.content.index) + "\n");
-  //     file.close();
-  //   }
-  // }
+/*
+处理 ATOTA 命令，用于启动 ATOTA 服务
+*/
+void parseOTAParam(const String &param)
+{
+  console.log(sqINFO, param);
+}
+void ATCommandService::startOTAServer(const String &param)
+{
+  this->sendResponse("Starting OTA Server...\r\n");
+  parseOTAParam(param);
+  if (param == "1")
+  {
+    this->sendResponse("Start OTA Server\r\n");
+  }
 }
 
 #ifdef USE_WEB_OTA_SERVER

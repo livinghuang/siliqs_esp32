@@ -8,7 +8,7 @@
  */
 void setup()
 {
-  siliqs_esp32_setup(SQ_INFO); // use SQ_INFO for show sqINFO message but not sqDEBUG message, use SQ_DEBUG for show sqDEBUG message, if you do not want to show any console message, use SQ_NONE or leave it blank
+  siliqs_esp32_setup(SQ_DEBUG); // use SQ_INFO for show sqINFO message but not sqDEBUG message, use SQ_DEBUG for show sqDEBUG message, if you do not want to show any console message, use SQ_NONE or leave it blank
   console.log(sqINFO, "Serial Console initialized");
   Serial.begin(115200);
 

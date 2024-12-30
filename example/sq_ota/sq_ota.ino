@@ -1,172 +1,271 @@
-/**
- * @file ota_debug_serial.ino
- * @brief OTA update using structured data received from the debug serial port
- *
- * This project demonstrates Over-The-Air (OTA) update functionality using the debug port.
- * Firmware data is transmitted in a structured data format via the serial port.
- * The `Update.h` library is utilized for robust handling of firmware updates.
- *
- * ************
- * NOTE: Under development
- * ************
- */
+#include "siliqs_esp32.h"
 
-#include <Arduino.h>
-#include <Update.h>
+#define ACK_SUCCESS 0xAA
+#define ACK_FAILURE 0xFF
 
-// Define structured data format for firmware transmission
-#define HEADER_HIGH 0xAA
-#define HEADER_LOW 0x55
+#define HEADER_CHAR 0xAA
+#define OTA_PACKET_SIZE 512
+#define PACKET_HEADER 0x00
+#define PACKET_NORMAL 0x02
+#define PACKET_END 0x03
+#define INVALID_PACKET 0xFF
+#define COMMUNICATION_SPEED 115200
+
+#define UNKNOWN_UPLOAD_FIRMWARE_SIZE 0xFFFFFFFF
+
+#ifdef USE_NIMBLE
+// 创建 BLEATCommandService 实例
+BLEATCommandService BLEatService;
+#endif
+// 创建 UARTATCommandService 实例，使用 Serial 作为通信接口
+UARTATCommandService UARTatService;
+
+/*
+  Define OTA packet structure
+  Header = HEADER_CHAR as 0xAA
+  Type = PACKET_HEADER  as PACKET_NORMAL, PACKET_END
+  Packet ID = Packet ID
+  Payload size = Size of the payload
+  Payload = Payload data (adjust size based on needs)
+  CRC = crc for error detection
+*/
 
 struct DataPacket
 {
-  uint8_t header[2]; // Packet header (0xAA, 0x55)
-  uint8_t type;      // Packet type (0x02 for OTA data)
-  uint16_t length;   // Length of the data payload
-  uint8_t data[512]; // Data payload (maximum 512 bytes)
-  uint16_t crc;      // CRC16 for error checking
+  uint8_t header;                   // Header
+  uint8_t type;                     // packet type, 0x00 :normal packet, 0x01 : packet end
+  uint16_t packet_id;               // Unique ID for the packet
+  uint16_t payload_size;            // Size of the payload
+  uint8_t payload[OTA_PACKET_SIZE]; // Payload data (adjust size based on needs)
+  uint16_t crc;                     // crc for error detection
 };
 
-// Function prototypes
+/*
+Define Header Packet Payload structure, the header packet payload will show communication status for handshake
+*/
+struct DataHeaderPacket
+{
+  size_t total_firmware_size;
+  size_t each_packet_size;
+  size_t total_packets;
+  size_t communication_speed;
+};
+
+struct payload_data
+{
+  uint8_t data[512];
+  uint16_t length;
+  bool isFinalPacket;
+};
+
+const int ledPin = 2; // 替换为实际的引脚号
+size_t global_information_total_firmware_size;
+size_t global_information_each_packet_size;
+size_t global_information_total_packets;
+size_t global_information_communication_speed;
+
 bool validatePacket(const DataPacket &packet);
-uint16_t calculateCRC(const uint8_t *data, size_t length);
-void processPacket(const DataPacket &packet);
 
 void setup()
 {
-  Serial.begin(115200); // Initialize debug serial port
-  Serial.println("Waiting for OTA packets...");
-
-  // Begin update setup (size will be validated in packets)
-  if (!Update.begin(UPDATE_SIZE_UNKNOWN))
+  siliqs_esp32_setup(SQ_DEBUG);
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
+  const char *partitionLabel = NULL;
+  if (sqUpdate.begin())
   {
-    Serial.println("Failed to initialize update process!");
+    Serial.println("开始 OTA 更新...");
+  }
+  else
+  {
+    Serial.printf("启动 OTA 更新失败: \n");
   }
 }
 
-void loop()
+void sendAck(uint8_t ackType)
 {
-  static uint8_t buffer[sizeof(DataPacket)]; // Buffer to store incoming data
-  static size_t bufferIndex = 0;
+  delay(100);
+  Serial.write(ackType);
+}
 
-  // Read from Serial and fill the buffer
-  while (Serial.available())
+bool processPacket(DataPacket &packet)
+{
+  static size_t receivedFirmwareSize = 0;
+  static size_t expectedFirmwareSize = 0;
+  bool result = false;
+  if (packet.header != HEADER_CHAR)
   {
-    buffer[bufferIndex++] = Serial.read();
+    Serial.println("Invalid header received.");
+    result = false;
+    return false;
+  }
 
-    // If the buffer contains a complete packet
-    if (bufferIndex == sizeof(DataPacket))
+  if (!validatePacket(packet))
+  {
+    Serial.println("CRC validation failed.");
+    result = false;
+    return false;
+  }
+
+  if (packet.type == PACKET_HEADER)
+  {
+    DataHeaderPacket *header = (DataHeaderPacket *)packet.payload;
+    expectedFirmwareSize = header->total_firmware_size;
+    result = true;
+  }
+  else if (packet.type == PACKET_NORMAL || packet.type == PACKET_END)
+  {
+    // Write the payload to flash or buffer (implementation based on your requirements)
+    receivedFirmwareSize += packet.payload_size;
+
+    Serial.printf("Data Packet Received: ID: %d, Size: %d, Total Received: %d\n",
+                  packet.packet_id, packet.payload_size, receivedFirmwareSize);
+
+    if (packet.type == PACKET_END)
     {
-      DataPacket packet;
-      memcpy(&packet, buffer, sizeof(DataPacket));
-
-      // Validate the packet
-      if (validatePacket(packet))
+      Serial.println("Final Packet Received. Verifying...");
+      if (receivedFirmwareSize == expectedFirmwareSize)
       {
-        processPacket(packet); // Process the valid packet
+        Serial.println("Firmware received successfully.");
+        result = true;
       }
       else
       {
-        Serial.println("Invalid packet received!");
+        Serial.println("Firmware size mismatch!");
+        result = false;
       }
-
-      bufferIndex = 0; // Reset buffer for the next packet
-    }
-  }
-
-  // If the update is finished
-  if (Update.isFinished())
-  {
-    if (Update.end())
-    {
-      Serial.println("OTA Update complete! Restarting...");
-      ESP.restart(); // Restart to apply the update
     }
     else
     {
-      Serial.printf("OTA Update failed: %s\n", Update.errorString());
-    }
-  }
-}
-
-/**
- * @brief Validate the received packet
- * @param packet The received data packet
- * @return true if the packet is valid, false otherwise
- */
-bool validatePacket(const DataPacket &packet)
-{
-  // Check the packet header
-  if (packet.header[0] != HEADER_HIGH || packet.header[1] != HEADER_LOW)
-  {
-    return false; // Invalid header
-  }
-
-  // Calculate CRC for the packet
-  uint16_t calculatedCRC = calculateCRC(reinterpret_cast<const uint8_t *>(&packet),
-                                        sizeof(packet) - sizeof(packet.crc));
-  return (calculatedCRC == packet.crc);
-}
-
-/**
- * @brief Calculate CRC16 for error checking
- * @param data Pointer to the data
- * @param length Length of the data
- * @return Calculated CRC16 value
- */
-uint16_t calculateCRC(const uint8_t *data, size_t length)
-{
-  uint16_t crc = 0xFFFF;
-  for (size_t i = 0; i < length; i++)
-  {
-    crc ^= data[i];
-    for (uint8_t j = 0; j < 8; j++)
-    {
-      if (crc & 1)
-      {
-        crc = (crc >> 1) ^ 0xA001;
-      }
-      else
-      {
-        crc >>= 1;
-      }
-    }
-  }
-  return crc;
-}
-void processPacket(const DataPacket &packet)
-{
-  char ACK_SUCCESS = 0xAA;
-  char ACK_FAILURE = 0xFF;
-  // Check the packet type
-  if (packet.type == 0x02)
-  {                                                                       // OTA data type
-    size_t written = Update.write((uint8_t *)packet.data, packet.length); // Cast to non-const
-    if (written == packet.length)
-    {
-      Serial.write(ACK_SUCCESS); // Send ACK for success
-    }
-    else
-    {
-      Serial.write(ACK_FAILURE); // Send ACK for failure
-    }
-
-    // If the update is finished
-    if (Update.isFinished())
-    {
-      if (Update.end())
-      {
-        Serial.println("OTA Update complete! Restarting...");
-        ESP.restart(); // Restart to apply the update
-      }
-      else
-      {
-        Serial.printf("OTA Update failed: %s\n", Update.errorString());
-      }
+      result = true;
     }
   }
   else
   {
-    Serial.println("Unsupported packet type received.");
+    Serial.println("Invalid packet type received.");
+    result = false;
   }
+  return result;
+}
+void loop()
+{
+  static uint8_t buffer[sizeof(DataPacket)];
+  static size_t bytesRead = 0;
+
+  // Read incoming data from the serial port
+  while (Serial.available())
+  {
+    buffer[bytesRead++] = Serial.read();
+
+    // Check if a full packet has been received
+    if (bytesRead == sizeof(DataPacket))
+    {
+      DataPacket *packet = (DataPacket *)buffer;
+      if (processPacket(*packet))
+      {
+        if (packet->type == PACKET_HEADER)
+        {
+          global_information_total_firmware_size = ((DataHeaderPacket *)packet->payload)->total_firmware_size;
+          global_information_each_packet_size = ((DataHeaderPacket *)packet->payload)->each_packet_size;
+          global_information_total_packets = ((DataHeaderPacket *)packet->payload)->total_packets;
+          global_information_communication_speed = ((DataHeaderPacket *)packet->payload)->communication_speed;
+          sqUpdate.setUpdateSize(global_information_total_firmware_size);
+          Serial.printf("Header Packet Received:\n");
+          Serial.printf("  Total Firmware Size: %ld\n", global_information_total_firmware_size);
+          Serial.printf("  Each Packet Size: %ld\n", global_information_each_packet_size);
+          Serial.printf("  Total Packets: %ld\n", global_information_total_packets);
+          Serial.printf("  Communication Speed: %ld\n", global_information_communication_speed);
+        }
+        else
+        {
+          DataPacket global_data_packet;
+          memcpy(&global_data_packet, packet, sizeof(DataPacket));
+
+          if (global_data_packet.type == PACKET_NORMAL)
+          {
+            Serial.printf("Normal Packet Received: ID: %d, Size: %d\n", global_data_packet.packet_id, global_data_packet.payload_size);
+          }
+          else if (global_data_packet.type == PACKET_END)
+          {
+            Serial.printf("Final Packet Received: ID: %d, Size: %d\n", global_data_packet.packet_id, global_data_packet.payload_size);
+          }
+
+          size_t written = sqUpdate.write512(global_data_packet.payload, global_data_packet.payload_size, global_data_packet.type == PACKET_END);
+          if (written != global_data_packet.payload_size)
+          {
+            while (1)
+            {
+              Serial.printf("write data block failed, written: %d, expected: %d\n", written, global_data_packet.payload_size);
+              delay(1000);
+            }
+          }
+          else
+          {
+            if (global_data_packet.type == PACKET_END)
+            {
+              sendAck(ACK_SUCCESS);
+              if (sqUpdate.end())
+              {
+                Serial.println("OTA 更新成功");
+              }
+              else
+              {
+                Serial.printf("OTA 更新失败: %s\n", sqUpdate.errorString());
+              }
+              while (1)
+              {
+                Serial.println("Simulate Raw Payload end");
+                delay(1000);
+              }
+            }
+          }
+        }
+        sendAck(ACK_SUCCESS);
+        if (packet->type == PACKET_HEADER)
+        {
+          delay(100);
+          Serial.end();
+          delay(100);
+          Serial.begin(global_information_communication_speed);
+          delay(100);
+        }
+      }
+      else
+      {
+        sendAck(ACK_FAILURE);
+      }
+      // Reset for the next packet
+      bytesRead = 0;
+    }
+  }
+}
+uint16_t swapBytes(uint16_t value)
+{
+  // Swap high and low bytes
+  return (value >> 8) | (value << 8);
+}
+
+bool validatePacket(const DataPacket &packet)
+{
+  if (packet.header != HEADER_CHAR)
+  {
+    Serial.println("Invalid packet header.");
+    return false;
+  }
+
+  // Calculate the CRC for the packet (excluding the CRC field itself)
+  uint16_t calculated_crc = calculateCRC(reinterpret_cast<const uint8_t *>(&packet), offsetof(DataPacket, crc));
+
+  // Swap the high and low bytes of the received CRC
+  uint16_t swapped_crc = swapBytes(packet.crc);
+
+  // Compare the calculated CRC with the swapped CRC
+  if ((calculated_crc == swapped_crc) || (calculated_crc == packet.crc))
+  {
+    return true;
+  }
+  // Print the CRC values for debugging
+  Serial.printf("CRC mismatch! Calculated: 0x%04X, Received: 0x%04X (Swapped: 0x%04X)\n",
+                calculated_crc, packet.crc, swapped_crc);
+  return false;
 }
