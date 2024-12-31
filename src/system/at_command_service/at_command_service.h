@@ -10,7 +10,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-#define AT_COMMAND_MESSAGE_MAX_SIZE 192
+#define AT_COMMAND_MESSAGE_MAX_SIZE 1024
 
 class ATCommandService
 {
@@ -23,9 +23,6 @@ protected:
 
   // 当接收到未知指令时的默认错误响应
   String defaultErrorResponse = "ERROR: Invalid command\r\n";
-
-  // 记录是否启用了回显功能
-  bool echoEnabled = true; // 默认为开启回显
 
   // 解析和处理指令的辅助函数
   void processCommand(const String &command);
@@ -57,7 +54,7 @@ protected:
   void writeFile(const String &param); // under construction
 
   // 注册 ATOTA 命令，用于启动 ATOTA 服务
-  void startOTAServer(const String &param);
+  void OTAServer(const String &param);
 
 #ifdef USE_WEB_OTA_SERVER
   // 处理 ATWOTA 命令，start web ota server
@@ -66,6 +63,9 @@ protected:
 public:
   // 构造函数
   ATCommandService();
+
+  // 记录是否启用了回显功能
+  bool echoEnabled = true; // 默认为开启回显
 
   // 注册 AT 指令并绑定回调函数
   void registerCommand(const String &command, std::function<void(String, String)> callback);

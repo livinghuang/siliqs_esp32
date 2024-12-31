@@ -13,7 +13,6 @@ SerialConsole::SerialConsole()
 void SerialConsole::begin(int level)
 {
   print_level = level;
-  Serial.begin(115200); // 初始化串行通信
 }
 // 處理接收到的數據
 bool SerialConsole::handleToRadio(const uint8_t *buf, size_t len)

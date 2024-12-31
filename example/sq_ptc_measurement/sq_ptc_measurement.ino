@@ -27,7 +27,6 @@ void loop()
   delay(1000); // Wait for 1 second between readings
   float temperature = ptcSensor.getTemperature();
   digitalWrite(pVext, HIGH);
-  Serial.begin(115200);
   Serial.print("Temperature: ");
   Serial.print(temperature);
   Serial.println(" °C");

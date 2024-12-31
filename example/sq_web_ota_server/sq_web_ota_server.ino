@@ -8,7 +8,6 @@
 
 void setup()
 {
-  Serial.begin(115200);
   siliqs_esp32_setup(SQ_INFO);
   WebOTATaskParams *taskParams = new WebOTATaskParams;
   taskParams->ssid = "SQ-888888";

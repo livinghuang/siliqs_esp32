@@ -9,7 +9,6 @@
 MotionMeasurement motionSensor(MPU6050_I2C_ADDRESS, pMPU6050_I2C_SDA, pMPU6050_I2C_SCL, -1);
 void setup()
 {
-  Serial.begin(115200);
   siliqs_esp32_setup(SQ_INFO);
   Serial.println("Initializing motion sensor...");
   // motionSensor.begin();

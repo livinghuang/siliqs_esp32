@@ -33,7 +33,7 @@ void UARTATCommandService::taskFunction(void *pvParameters)
   UARTATCommandService *service = static_cast<UARTATCommandService *>(pvParameters);
   while (true)
   {
-    Serial.setTimeout(1000);
+    Serial.setTimeout(20);
     // 检查 UART 中是否有可读取的数据
     if (Serial.available())
     {

@@ -11,7 +11,6 @@ Magnetometer mag(MQC5883_I2C_ADDRESS, pMQC5883_I2C_SDA, pMQC5883_I2C_SCL); // Ad
 
 void setup()
 {
-  Serial.begin(115200);
   siliqs_esp32_setup(SQ_INFO);
   mag.begin();
 }

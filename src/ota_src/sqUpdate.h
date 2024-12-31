@@ -43,12 +43,12 @@ public:
   size_t write(uint8_t *data, size_t len);
   size_t write4096(uint8_t *data, size_t len, bool isFinalPacket);
   size_t write512(uint8_t *data, size_t len, bool isFinalPacket);
-
-  bool flushBuffer();
+  size_t write64(uint8_t *data, size_t len, bool isFinalPacket);
+  // bool flushBuffer();
   void setUpdateSize(size_t size);
 
   // 完成OTA更新
-  bool end(bool evenIfRemaining = false);
+  bool end();
 
   // 获取最后的错误信息
   // uint8_t getError();

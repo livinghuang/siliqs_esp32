@@ -2,7 +2,7 @@
 #ifdef USE_AT_COMMAND_SERVICE
 
 #include "at_command_service.h"
-#include <LittleFS.h> // Include the LittleFS library
+#include "littleFS_src/sqLittleFS.h"
 // 重启设备的功能
 void ATCommandService::showInfo()
 {
@@ -22,9 +22,9 @@ void ATCommandService::showInfo()
 #endif
 
   // Get and display storage information
-  size_t totalBytes = LittleFS.totalBytes(); // Total storage in bytes
-  size_t usedBytes = LittleFS.usedBytes();   // Used storage in bytes
-  size_t freeBytes = totalBytes - usedBytes; // Free storage in bytes
+  size_t totalBytes = sqLittleFS.totalBytes(); // Total storage in bytes
+  size_t usedBytes = sqLittleFS.usedBytes();   // Used storage in bytes
+  size_t freeBytes = totalBytes - usedBytes;   // Free storage in bytes
 
   this->sendResponse("Storage Information:");
   this->sendResponse("Total Space: " + String(totalBytes) + " bytes");
@@ -86,11 +86,11 @@ union file_param
   struct file_content content;
 };
 /*
-处理 ATLF 命令，List all files in LittleFS
+处理 ATLF 命令，List all files in sqLittleFS
 */
 void ATCommandService::listFiles(const String &param)
 {
-  File root = LittleFS.open("/"); // 打開根目錄
+  File root = sqLittleFS.open("/"); // 打開根目錄
 
   if (!root || !root.isDirectory())
   {
@@ -98,7 +98,7 @@ void ATCommandService::listFiles(const String &param)
     return;
   }
 
-  this->sendResponse("Files in LittleFS:");
+  this->sendResponse("Files in sqLittleFS:");
   File file = root.openNextFile();
   while (file)
   {
@@ -116,7 +116,7 @@ void ATCommandService::readFile(const String &param)
   Serial.println("Reading file from: " + file_name);
 
   // 打开文件以读取
-  File file = LittleFS.open(file_name, "r");
+  File file = sqLittleFS.open(file_name, "r");
   if (!file)
   {
     this->sendResponse("Failed to open file for reading");
@@ -161,14 +161,14 @@ void ATCommandService::deleteFile(const String &param)
   Serial.println("Deleting file: " + file_name);
 
   // 检查文件是否存在
-  if (!LittleFS.exists(file_name))
+  if (!sqLittleFS.exists(file_name))
   {
     this->sendResponse("File does not exist: " + file_name);
     return;
   }
 
   // 删除文件
-  if (LittleFS.remove(file_name))
+  if (sqLittleFS.remove(file_name))
   {
     this->sendResponse("File deleted successfully: " + file_name);
   }
@@ -180,8 +180,8 @@ void ATCommandService::deleteFile(const String &param)
 
 /*
 处理 ATWF 命令，用于写入文件信息
-if param = file_param, if index =0 , got header , means to open the file. write header into LittleFS
-if param = file_param, if index =1 , got content , means to write the file. write content into LittleFS
+if param = file_param, if index =0 , got header , means to open the file. write header into sqLittleFS
+if param = file_param, if index =1 , got content , means to write the file. write content into sqLittleFS
 */
 void ATCommandService::writeFile(const String &param)
 {
@@ -190,18 +190,10 @@ void ATCommandService::writeFile(const String &param)
 /*
 处理 ATOTA 命令，用于启动 ATOTA 服务
 */
-void parseOTAParam(const String &param)
+#include "system/ota_service/ota_service.h"
+void ATCommandService::OTAServer(const String &param)
 {
-  console.log(sqINFO, param);
-}
-void ATCommandService::startOTAServer(const String &param)
-{
-  this->sendResponse("Starting OTA Server...\r\n");
-  parseOTAParam(param);
-  if (param == "1")
-  {
-    this->sendResponse("Start OTA Server\r\n");
-  }
+  this->sendResponse(server_param_receive(param));
 }
 
 #ifdef USE_WEB_OTA_SERVER

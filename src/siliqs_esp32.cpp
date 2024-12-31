@@ -247,3 +247,9 @@ uint16_t calculateCRC(const uint8_t *data, size_t length)
   }
   return crc;
 }
+
+uint16_t swapBytes(uint16_t value)
+{
+  // Swap high and low bytes
+  return (value >> 8) | (value << 8);
+}

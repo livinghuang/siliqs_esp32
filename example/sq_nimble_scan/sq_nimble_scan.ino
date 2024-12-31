@@ -4,12 +4,6 @@
 void setup()
 {
   siliqs_esp32_setup(SQ_INFO);
-  // 初始化串口通信
-  Serial.begin(115200);
-  while (!Serial)
-  {
-    delay(10); // 等待串口连接
-  }
 
   Serial.println("初始化 NimBLE 服务...");
 

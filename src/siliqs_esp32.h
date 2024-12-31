@@ -3,7 +3,7 @@
 #include "system/serial_console/serial_console.h"
 #include "system/file_system/file_system.h"
 #include "system/base64/base64.h"
-#include "system/update/sqUpdate.h"
+#include "ota_src/sqUpdate.h"
 
 #ifdef USE_NIMBLE
 #include "system/nimble_service/nimble_service.h"
@@ -47,3 +47,4 @@ bool readSystemData(void *global_system_data, size_t dataSize);
 bool storageSystemData(void *global_system_data, size_t dataSize);
 void gotoSleep(uint32_t ms);
 uint16_t calculateCRC(const uint8_t *data, size_t length);
+uint16_t swapBytes(uint16_t value);

@@ -2,6 +2,7 @@ import os
 import struct
 import serial
 import time
+import base64
 
 # Constants
 HEADER_CHAR = 0xAA
@@ -14,7 +15,6 @@ COMMUNICATION_SPEED = 115200
 SERIAL_PORT = "/dev/tty.wchusbserial830"  # Update to your serial port
 BAUD_RATE = 115200
 ACK_TIMEOUT = 2  # Timeout in seconds
-
 
 def calculate_crc(data):
     """
@@ -42,6 +42,7 @@ class DataHeaderPacket:
 
     def pack(self):
         return struct.pack("<IIII", self.total_firmware_size, self.each_packet_size, self.total_packets, self.communication_speed)
+
 
 
 # DataPacket
@@ -85,7 +86,13 @@ class DataPacket:
         Pack the DataPacket into bytes for transmission.
         """
         return struct.pack("<BBHH", self.header, self.type, self.packet_id, self.payload_size) + self.payload + struct.pack(">H", self.crc)
-
+    def packBase64(self):
+        """
+        Pack the DataPacket into bytes and encode it as a Base64 string.
+        """
+        packed_data = self.pack()  # Get the packed data as bytes
+        base64_encoded = base64.b64encode(packed_data).decode('utf-8')  # Encode the packed data as base64 and decode it to UTF-8 string
+        return base64_encoded
 
 def wait_for_ack(serial_port):
     start_time = time.time()
@@ -107,22 +114,34 @@ def wait_for_ack(serial_port):
             # Print the character to the screen
             print(char.decode('ascii', errors='replace'), end='', flush=True)
 
-            if char == b'\xAA':  # Success ACK
-                print("[END FROM ESP32]")
-                print("\nReceived success ACK.")
+            # Check if we have received the full success or error acknowledgment
+            if received_data.endswith(b"SQ OK"):
+                print("\n[END FROM ESP32]")
+                print("\nReceived success ACK (SQ OK).")
                 return True
-            elif char == b'\xFF':  # Failure ACK
-                print("[END FROM ESP32]")
-                print("\nReceived failure ACK.")
+            elif received_data.endswith(b"SQ ERROR"):
+                print("\n[END FROM ESP32]")
+                print("\nReceived failure ACK (SQ ERROR).")
                 return False
 
 
 def send_packet(serial_port, packet):
-    packed_data = packet.pack()
-    serial_port.write(packed_data)
+    serial_port.write(packet)
     serial_port.flush()
     return wait_for_ack(serial_port)
 
+
+
+def send_atota_command(header,binary_data,baud_rate=BAUD_RATE):
+    """
+    Send the ATOTA=B command to the serial port to start the OTA process.
+    """
+    command='ATOTA='+header+binary_data
+    atota_command = command.encode()
+    ser.write(atota_command)
+    print("[PYTHON] ATOTA="+header+" command sent.")
+    result = wait_for_ack(ser)
+    return result
 
 
 # Main program
@@ -130,6 +149,11 @@ if __name__ == "__main__":
     FIRMWARE_PATH = "/Users/living/Documents/Arduino/libraries/siliqs_esp32/example/sq_ota/Blink.ino.bin"
     try:
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=ACK_TIMEOUT) as ser:
+            # # Send the ATOTA command to start the process
+            # if not send_atota_command('S','\r\n',BAUD_RATE):
+            #     print("Failed to send ATOTA command.")
+            #     exit(1)
+            # print("ATOTA command sent successfully.")
             total_firmware_size = os.path.getsize(FIRMWARE_PATH)
             total_packets = total_firmware_size // OTA_PACKET_SIZE
             if total_firmware_size % OTA_PACKET_SIZE != 0:
@@ -145,36 +169,63 @@ if __name__ == "__main__":
                 total_packets=total_packets,
                 communication_speed=COMMUNICATION_SPEED,
             )
-            header_payload = header_packet.pack()
-            print(header_payload.hex())
+
+            # Create header packet
+            header_payload = header_packet.pack()  # Pack the header into bytes
             header_data_packet = DataPacket.from_parameters(HEADER_CHAR, PACKET_HEADER, 0, header_payload, len(header_payload))
             print("Sending header packet...")
-            if not send_packet(ser, header_data_packet):
+            # Encode the header_payload as Base64 and convert it to a string
+            encoded_header_data_packet = header_data_packet.packBase64()
+            # Construct the full ATOTA command string
+            command_with_end_char = f"{encoded_header_data_packet}\r\n"  # Adding carriage return and line feed at the end
+            # Print the full command (for debugging)
+            # print(f"Encoded Header Payload (Base64): {command_with_end_char}")
+            # Send the full command as byte data
+            if not send_atota_command('B',command_with_end_char):
                 print("Failed to send header packet.")
+                ser.close()
                 exit(1)
             print("Header packet sent successfully.")
-
-            # Change baud rate and restart serial port
-            ser.close()  # Close the current serial port
-            ser = restart_serial_port(SERIAL_PORT, COMMUNICATION_SPEED)  # Restart with new baud rate
-            time.sleep(0.1)
+            ser.close()
 
             # Send firmware data packets
             with open(FIRMWARE_PATH, "rb") as firmware:
-                packet_id = 1
+                packet_id = 0
                 while True:
                     chunk = firmware.read(OTA_PACKET_SIZE)
                     if not chunk:
                         break
                     is_final_packet = firmware.tell() == total_firmware_size
                     data_packet = DataPacket(packet_id, chunk, is_final_packet)
+                    # Encode the header_payload as Base64 and convert it to a string
+                    encoded_data_packet = data_packet.packBase64()
+                    # Construct the full ATOTA command string
+                    command_with_end_char = f"{encoded_data_packet}\r\n"  # Adding carriage return and line feed at the end
+                    # Print the full command (for debugging)
+                    # print(f"Encoded Header Payload (Base64): {command_with_end_char}")
                     print(f"Sending packet ID: {data_packet.packet_id}")
-                    if not send_packet(ser, data_packet):
-                        print(f"Failed to send packet ID: {data_packet.packet_id}")
-                        exit(1)
-                    print(f"Packet ID {data_packet.packet_id} sent successfully.")
+                    if is_final_packet:
+                        print("Sending final packet...")
+                    # Send the full command as byte data
+                        ser.open()
+                        if not send_atota_command('E',command_with_end_char):
+                            print("Failed to send header packet.")
+                            ser.close()
+                            exit(1)
+                        print(f"Packet ID {data_packet.packet_id} sent successfully.")
+                        ser.close()
+                        break
+                    else:
+                        print("Sending intermediate packet...")
+                    # Send the full command as byte data   
+                        ser.open()
+                        if not send_atota_command('N',command_with_end_char):
+                            print("Failed to send header packet.")
+                            ser.close()
+                            exit(1)
+                        print(f"Packet ID {data_packet.packet_id} sent successfully.")
+                        ser.close()
                     packet_id += 1
-                    time.sleep(0.1)
             print("Firmware transmission completed successfully.")
 
     except FileNotFoundError:
