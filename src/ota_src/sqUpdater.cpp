@@ -137,57 +137,49 @@ size_t SQUpdateClass::write4096(uint8_t *data, size_t len, bool isFinalPacket)
 
   // Update progress
   _progress += write_size;
-
-  // // If it's the final packet, validate completion
-  // if (isFinalPacket)
-  // {
-  //   if (_progress == _size)
-  //   {
-  //     console.log(sqINFO, "Final packet written. All data successfully written to flash. progress (%d) match size (%d)."), _progress, _size;
-  //   }
-  //   else
-  //   {
-  //     console.log(sqWARNING, "Final packet written, but progress (%d) does not match size (%d).", _progress, _size);
-  //   }
-  // }
   console.log(sqINFO, "Written 4096 Done");
   return write_size;
 }
-
-size_t SQUpdateClass::write64(uint8_t *data, size_t len, bool isFinalPacket)
+size_t SQUpdateClass::writebychunksize(uint8_t *data, size_t len, size_t chunkSize, bool isFinalPacket)
 {
   size_t result = len;
   constexpr size_t BLOCK_SIZE = SPI_FLASH_SEC_SIZE; // 4 KB
-  constexpr size_t CHUNK_SIZE = 64;                 // 每次寫入的數據塊大小
 
-  // 驗證基本條件
+  // Validate state and partition
   if (_error != UPDATE_ERROR_OK || !_partition)
   {
     console.log(sqERROR, "Write failed: Invalid state or partition.");
     return 0;
   }
 
-  // 靜態緩衝區和偏移量
+  // Static buffer and offset
   static uint8_t buffer[BLOCK_SIZE];
   static size_t buffer_offset = 0;
 
-  // 檢查輸入數據大小是否正確
+  // Check input data validity
   if (data == nullptr)
   {
     console.log(sqERROR, "Input data is null.");
     return 0;
   }
 
-  // 將字節數據添加到緩衝區
-  memcpy(buffer + buffer_offset, data, CHUNK_SIZE);
+  // Validate chunk size
+  if (len > chunkSize)
+  {
+    console.log(sqERROR, "Input data length exceeds chunk size.");
+    return 0;
+  }
+
+  // Add data to buffer
+  memcpy(buffer + buffer_offset, data, len);
   buffer_offset += len;
 
   console.log(sqINFO, "Added %d bytes to buffer. Current buffer offset: %d", len, buffer_offset);
 
-  // 當緩衝區達到 4 KB 時，調用 write4096
-  if ((buffer_offset == BLOCK_SIZE) || (isFinalPacket))
+  // Flush buffer if full or if it's the final packet
+  if ((buffer_offset >= BLOCK_SIZE) || isFinalPacket)
   {
-    console.log(sqINFO, "Buffer full  Writing %d bytes to flash.", buffer_offset);
+    console.log(sqINFO, "Buffer full or final packet. Writing %d bytes to flash.", buffer_offset);
 
     size_t written = write4096(buffer, buffer_offset, isFinalPacket);
 
@@ -197,105 +189,18 @@ size_t SQUpdateClass::write64(uint8_t *data, size_t len, bool isFinalPacket)
       _error = UPDATE_ERROR_WRITE;
       return 0;
     }
+
     if (isFinalPacket)
     {
       console.log(sqINFO, "Final packet written. All data successfully written to flash.");
     }
-    buffer_offset = 0; // 重置緩衝區偏移量
+
+    buffer_offset = 0; // Reset buffer offset
   }
 
   return result;
 }
 
-size_t SQUpdateClass::write512(uint8_t *data, size_t len, bool isFinalPacket)
-{
-  size_t result = len;
-  constexpr size_t BLOCK_SIZE = SPI_FLASH_SEC_SIZE; // 4 KB
-  constexpr size_t CHUNK_SIZE = 512;                // 每次寫入的數據塊大小
-
-  // 驗證基本條件
-  if (_error != UPDATE_ERROR_OK || !_partition)
-  {
-    console.log(sqERROR, "Write failed: Invalid state or partition.");
-    return 0;
-  }
-
-  // 靜態緩衝區和偏移量
-  static uint8_t buffer[BLOCK_SIZE];
-  static size_t buffer_offset = 0;
-
-  // 檢查輸入數據大小是否正確
-  if (data == nullptr)
-  {
-    console.log(sqERROR, "Input data is null.");
-    return 0;
-  }
-
-  // 將字節數據添加到緩衝區
-  memcpy(buffer + buffer_offset, data, CHUNK_SIZE);
-  buffer_offset += len;
-
-  console.log(sqINFO, "Added %d bytes to buffer. Current buffer offset: %d", len, buffer_offset);
-
-  // 當緩衝區達到 4 KB 時，調用 write4096
-  if ((buffer_offset == BLOCK_SIZE) || (isFinalPacket))
-  {
-    console.log(sqINFO, "Buffer full  Writing %d bytes to flash.", buffer_offset);
-
-    size_t written = write4096(buffer, buffer_offset, isFinalPacket);
-
-    if (written != buffer_offset)
-    {
-      console.log(sqERROR, "Failed to write block");
-      _error = UPDATE_ERROR_WRITE;
-      return 0;
-    }
-    if (isFinalPacket)
-    {
-      console.log(sqINFO, "Final packet written. All data successfully written to flash.");
-    }
-    buffer_offset = 0; // 重置緩衝區偏移量
-  }
-
-  return result;
-}
-
-// Call this function at the end to flush any remaining data in the buffer
-// bool SQUpdateClass::flushBuffer()
-// {
-//   // 检查缓冲区中是否有剩余数据需要写入
-//   if (_bufferLen > 0) // 使用 _bufferLen 来追踪缓冲区中数据的长度
-//   {
-//     console.log(sqINFO, "正在刷新缓冲区。剩余字节数: %d", _bufferLen);
-
-//     // 确保剩余数据的大小对齐到完整的 Flash 扇区大小
-//     size_t padded_size = (_bufferLen + SPI_FLASH_SEC_SIZE - 1) & ~(SPI_FLASH_SEC_SIZE - 1);
-//     memset(_buffer + _bufferLen, 0xFF, padded_size - _bufferLen); // 用 0xFF 填充剩余空间
-
-//     // 将填充后的缓冲区写入 Flash
-//     esp_err_t write_result = esp_partition_write(_partition, _progress, _buffer, padded_size);
-//     if (write_result != ESP_OK)
-//     {
-//       console.log(sqERROR, "将缓冲区刷新到分区失败。错误: %s", esp_err_to_name(write_result));
-//       _error = UPDATE_ERROR_WRITE;
-//       return false;
-//     }
-
-//     // 更新进度并重置缓冲区长度
-//     _progress += padded_size;
-//     _bufferLen = 0;
-
-//     console.log(sqINFO, "缓冲区刷新成功。当前进度: %d", _progress);
-//   }
-//   else
-//   {
-//     console.log(sqINFO, "没有数据需要刷新。缓冲区为空。");
-//   }
-
-//   return true;
-// }
-
-// 结束OTA更新
 bool SQUpdateClass::end()
 {
   if (_error != UPDATE_ERROR_OK)

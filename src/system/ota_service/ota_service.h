@@ -4,7 +4,7 @@
 #define ACK_FAILURE 0xFF
 
 #define HEADER_CHAR 0xAA
-#define OTA_PACKET_SIZE 512
+#define OTA_PACKET_SIZE 256
 #define PACKET_HEADER 0x00
 #define PACKET_NORMAL 0x02
 #define PACKET_END 0x03
@@ -42,13 +42,6 @@ struct DataHeaderPacket
   size_t each_packet_size;
   size_t total_packets;
   size_t communication_speed;
-};
-
-struct payload_data
-{
-  uint8_t data[512];
-  uint16_t length;
-  bool isFinalPacket;
 };
 
 bool validatePacket(const DataPacket &packet);

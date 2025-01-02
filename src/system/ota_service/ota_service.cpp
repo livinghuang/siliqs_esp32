@@ -52,7 +52,7 @@ bool decode_and_validate_packet(const String &payload, uint8_t *decodedData, siz
 bool ota_write_data_execute_normal_packet(DataPacket *packet)
 {
   Serial.printf("Normal Packet Received: ID: %d, Size: %d\n", packet->packet_id, packet->payload_size);
-  size_t written = sqUpdate.write512(packet->payload, packet->payload_size, packet->type == PACKET_END);
+  size_t written = sqUpdate.writebychunksize(packet->payload, packet->payload_size, OTA_PACKET_SIZE, packet->type == PACKET_END);
   if (written != packet->payload_size)
   {
     Serial.printf("write data block failed, written: %d, expected: %d\n", written, packet->payload_size);
@@ -66,6 +66,7 @@ bool begin_pack(const String &payload)
   uint8_t decodedData[Base64::decodedLength(payload.c_str())];
   size_t decodedLength = 0;
 
+  Serial.println("Begin OTA updating...");
   if (!decode_and_validate_packet(payload, decodedData, decodedLength))
   {
     return false;
@@ -119,6 +120,8 @@ String server_param_receive(const String &param)
 
   switch (param_char)
   {
+  case OTA_PARAM_START_CHAR:
+    return "START SQ OK";
   case OTA_PARAM_BEGIN_PACK:
     if (begin_pack(payload))
     {
@@ -151,10 +154,6 @@ String server_param_receive(const String &param)
         Serial.println("END SQ OK");
         delay(1000);
         esp_restart(); // 重启设备以加载新固件
-        while (1)
-        {
-          delay(1);
-        }
         return "END SQ OK";
       }
       else

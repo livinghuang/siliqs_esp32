@@ -43,7 +43,7 @@ public:
   size_t write(uint8_t *data, size_t len);
   size_t write4096(uint8_t *data, size_t len, bool isFinalPacket);
   size_t write512(uint8_t *data, size_t len, bool isFinalPacket);
-  size_t write64(uint8_t *data, size_t len, bool isFinalPacket);
+  size_t writebychunksize(uint8_t *data, size_t len, size_t chunkSize, bool isFinalPacket);
   // bool flushBuffer();
   void setUpdateSize(size_t size);
 
