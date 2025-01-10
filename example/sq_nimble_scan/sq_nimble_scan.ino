@@ -4,7 +4,7 @@ String toFindDeviceName = "YT9";
 String toFindDeviceAddress = "d5:12:d8:96:00:31";
 void setup()
 {
-  siliqs_esp32_setup(SQ_INFO);
+  siliqs_esp32_setup();
 
   Serial.println("初始化 NimBLE 服务...");
 
