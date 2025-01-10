@@ -1,4 +1,3 @@
-#pragma once
 #include "bsp.h"
 #ifdef USE_GPS
 #include "siliqs_esp32.h"
