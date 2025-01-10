@@ -20,12 +20,13 @@ class SQNimBLEService
 public:
   SQNimBLEService();
   ~SQNimBLEService(); // 析构函数
-  String toFindDeviceName = "";
-  String toFindDeviceAddress = "";
+
   NimBLEAdvertisedDevice foundDevice;
+  bool deviceFoundWhenScanning = false;
   bool deviceConnected = false;
   bool oldDeviceConnected = false;
-
+  String toFindDeviceName = "";
+  String toFindDeviceAddress = "";
   void init();
   void stop();
   void sendData(const char *data);
@@ -33,9 +34,13 @@ public:
   void setReceivedData(const String &data); // setter 方法
   String getReceivedData();                 // getter 方法
 
-  void scanDevices(int scanTime);                 // 扫描设备
-  void task(void *pvParameters);                  // FreeRTOS 任务函数
-  static void bleTaskWrapper(void *pvParameters); // FreeRTOS 任务包装
+  void startScanDevices(int scanTime);                              // 开始扫描
+  void startScanDevices(int scanTime, String name, String address); // 开始扫描
+  void stopScanDevices();                                           // 停止扫描
+  void rescanDevices(int scanTime);                                 // 重新扫描
+  void rescanDevices(int scanTime, String name, String address);    // 重新扫描
+  void task(void *pvParameters);                                    // FreeRTOS 任务函数
+  static void bleTaskWrapper(void *pvParameters);                   // FreeRTOS 任务包装
 
   std::vector<NimBLEAdvertisedDevice> discoveredDevices; // 声明一个设备列表
   void printDiscoveredDevices();
@@ -46,6 +51,8 @@ public:
 private:
   QueueHandle_t bleQueue; // FreeRTOS队列
   bool scanActive = false;
+  int scanTime = 0;
+
   NimBLEAdvertising *pAdvertising;
   NimBLEService *pService;                 // 服务
   NimBLECharacteristic *pTxCharacteristic; // TX 特性

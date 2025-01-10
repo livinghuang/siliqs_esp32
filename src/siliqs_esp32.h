@@ -4,7 +4,7 @@
 #include "system/file_system/file_system.h"
 #include "system/base64/base64.h"
 #include "ota_src/sqUpdate.h"
-
+#include "system/ota_service/ota_service.h"
 #ifdef USE_NIMBLE
 #include "system/nimble_service/nimble_service.h"
 #endif

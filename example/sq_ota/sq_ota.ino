@@ -1,5 +1,5 @@
 #include "siliqs_esp32.h"
-#include "system/ota_service/ota_service.h"
+
 #ifdef USE_NIMBLE
 // 创建 BLEATCommandService 实例
 BLEATCommandService BLEatService;

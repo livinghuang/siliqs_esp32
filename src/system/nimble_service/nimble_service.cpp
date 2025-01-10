@@ -25,7 +25,20 @@ class MyAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) override
   {
     bool deviceExists = false;
-
+    // console.log(sqINFO, "found device: %s", advertisedDevice->toString().c_str());
+    if ((nimbleService.toFindDeviceAddress != "") &&
+        (nimbleService.toFindDeviceAddress == String(advertisedDevice->getAddress().toString().c_str())))
+    {
+      nimbleService.deviceFoundWhenScanning = true;
+      nimbleService.foundDevice = *advertisedDevice;
+      console.log(sqINFO, "Found Device By Address: %s \n", nimbleService.foundDevice.toString().c_str());
+    }
+    if ((nimbleService.toFindDeviceName != "") && (nimbleService.toFindDeviceName == String(advertisedDevice->getName().c_str())))
+    {
+      nimbleService.deviceFoundWhenScanning = true;
+      nimbleService.foundDevice = *advertisedDevice;
+      console.log(sqINFO, "Found Device By Name: %s \n", nimbleService.foundDevice.toString().c_str());
+    }
     // 检查设备是否已经存在
     for (const auto &device : nimbleService.discoveredDevices)
     {
@@ -40,12 +53,6 @@ class MyAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks
     if (!deviceExists)
     {
       nimbleService.discoveredDevices.push_back(*advertisedDevice);
-    }
-
-    if (nimbleService.toFindDeviceName == String(advertisedDevice->getName().c_str()))
-    {
-      nimbleService.foundDevice = *advertisedDevice;
-      console.log(sqINFO, "Found Device By Name: %s \n", nimbleService.foundDevice.toString().c_str());
     }
   }
 };
@@ -123,31 +130,82 @@ void SQNimBLEService::init()
 
   pService->start();  // 启动服务
   startAdvertising(); // 启动广播
-
-  NimBLEDevice::setScanFilterMode(CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE);
-  NimBLEDevice::setScanDuplicateCacheSize(200);
-
-  pBLEScan = NimBLEDevice::getScan(); // 创建扫描对象
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks(), false);
-  pBLEScan->setActiveScan(true); // 启用主动扫描
-  pBLEScan->setInterval(97);     // 扫描间隔，单位：毫秒
-  pBLEScan->setWindow(37);       // 扫描窗口，单位：毫秒
-  pBLEScan->setMaxResults(0);    // 不存储扫描结果，只通过回调处理
 }
 
 // 实现设备扫描
-void SQNimBLEService::scanDevices(int scanTime)
+void SQNimBLEService::startScanDevices(int scanTime)
 {
   if (!scanActive)
   {
-    console.log(sqINFO, "开始扫描设备...");
+    console.log(sqINFO, "start scanning...");
+    pBLEScan = NimBLEDevice::getScan(); // 创建扫描对象
+    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks(), false);
+    pBLEScan->setActiveScan(true); // 启用主动扫描
+    pBLEScan->setInterval(97);     // 扫描间隔，单位：毫秒
+    pBLEScan->setWindow(37);       // 扫描窗口，单位：毫秒
+    pBLEScan->setMaxResults(0);    // 不存储扫描结果，只通过回调处理
     pBLEScan->start(scanTime, nullptr);
     scanActive = true;
+    deviceFoundWhenScanning = false;
   }
   else
   {
-    console.log(sqINFO, "扫描已经在运行中...");
+    console.log(sqINFO, "scan is already active...");
   }
+}
+
+// 实现设备扫描
+void SQNimBLEService::startScanDevices(int _scanTime, String _name, String _address)
+{
+  toFindDeviceName = _name;
+  toFindDeviceAddress = _address;
+  scanTime = _scanTime;
+  if (!scanActive)
+  {
+    console.log(sqINFO, "start scanning...");
+    pBLEScan = NimBLEDevice::getScan(); // 创建扫描对象
+    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks(), false);
+    pBLEScan->setActiveScan(true); // 启用主动扫描
+    pBLEScan->setInterval(97);     // 扫描间隔，单位：毫秒
+    pBLEScan->setWindow(37);       // 扫描窗口，单位：毫秒
+    pBLEScan->setMaxResults(0);    // 不存储扫描结果，只通过回调处理
+    pBLEScan->start(scanTime, nullptr);
+    scanActive = true;
+    deviceFoundWhenScanning = false;
+  }
+  else
+  {
+    console.log(sqINFO, "scan is already active...");
+  }
+}
+
+// 停止扫描
+void SQNimBLEService::stopScanDevices()
+{
+  if (pBLEScan != nullptr && pBLEScan->isScanning())
+  {
+    console.log(sqINFO, "stop scanning...");
+    toFindDeviceName = "";
+    toFindDeviceAddress = "";
+    pBLEScan->stop();
+    scanActive = false;
+  }
+}
+
+// 重新扫描
+void SQNimBLEService::rescanDevices(int _scanTime, String _toFindDeviceName, String _toFindDeviceAddress)
+{
+  scanTime = _scanTime;
+  toFindDeviceName = _toFindDeviceName;
+  toFindDeviceAddress = _toFindDeviceAddress;
+  stopScanDevices();
+  startScanDevices(scanTime, toFindDeviceName, toFindDeviceAddress);
+}
+void SQNimBLEService::rescanDevices(int _scanTime)
+{
+  scanTime = _scanTime;
+  stopScanDevices();
+  startScanDevices(scanTime);
 }
 
 void SQNimBLEService::processQueue()
@@ -226,7 +284,7 @@ void SQNimBLEService::printDiscoveredDevices()
 {
   if (discoveredDevices.empty())
   {
-    console.log(sqINFO, "No devices discovered yet.");
+    Serial.println("No devices discovered yet.");
     return;
   }
 
@@ -235,9 +293,9 @@ void SQNimBLEService::printDiscoveredDevices()
   for (size_t i = 0; i < discoveredDevices.size(); i++)
   {
     NimBLEAdvertisedDevice &device = discoveredDevices[i];
-    console.log(sqINFO, "Device %d:\n  Name: %s\n  Address: %s\n  RSSI: %d",
-                i + 1, device.getName().empty() ? "Unnamed" : device.getName().c_str(),
-                device.getAddress().toString().c_str(), device.getRSSI());
+    Serial.printf("Device %d:\n  Name: %s\n  Address: %s\n  RSSI: %d\n",
+                  i + 1, device.getName().empty() ? "Unnamed" : device.getName().c_str(),
+                  device.getAddress().toString().c_str(), device.getRSSI());
   }
 }
 void SQNimBLEService::stop()
@@ -285,8 +343,10 @@ void SQNimBLEService::task(void *pvParameters)
     processQueue(); // 处理队列中的消息
 
     // 只有在扫描时才进行扫描状态检查
+    // If an error occurs that stops the scan, it will be restarted here.
     if (scanActive && !pBLEScan->isScanning())
     {
+      // Start scan with: duration = 0 seconds(forever), no scan end callback, not a continuation of a previous scan.
       pBLEScan->start(0, nullptr, false); // 无限时长扫描
     }
 

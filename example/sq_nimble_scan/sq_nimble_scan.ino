@@ -1,6 +1,7 @@
 #include "bsp.h"
 #include "siliqs_esp32.h"
-
+String toFindDeviceName = "YT9";
+String toFindDeviceAddress = "d5:12:d8:96:00:31";
 void setup()
 {
   siliqs_esp32_setup(SQ_INFO);
@@ -10,45 +11,23 @@ void setup()
   // 初始化 NimBLE 服务
   nimbleService.init();
 
-  // 创建一个 FreeRTOS 任务来处理 BLE 扫描
-  xTaskCreate(
-      SQNimBLEService::bleTaskWrapper, // 任务函数包装器
-      "NimBLE Scan Task",              // 任务名称
-      4096,                            // 堆栈大小（字节）
-      &nimbleService,                  // 传递给任务的参数（NimBLE 服务实例）
-      1,                               // 任务优先级
-      NULL                             // 任务句柄（可以为 NULL）
-  );
-  nimbleService.toFindDeviceName = "HK99";
+  nimbleService.startScanDevices(0, toFindDeviceName, toFindDeviceAddress); // Start scan with: duration = 0 seconds(forever), no scan end callback, not a continuation of a previous scan.
   Serial.println("NimBLE 服务初始化完成，开始扫描...");
 }
 
 void loop()
 {
-  String target_address = "00:01:02:03:04:05";
-
   static uint32_t time = millis();
   if (millis() - time > 5000)
   {
     time = millis();
-    nimbleService.printDiscoveredDevices();
-  }
-  // Check if a specific device was found
-  if (!nimbleService.foundDevice.getName().empty())
-  {
-    Serial.printf("Found Device by Name: %s \n", nimbleService.foundDevice.toString().c_str());
-
-    if (String(nimbleService.foundDevice.getAddress().toString().c_str()) == target_address)
+    // nimbleService.printDiscoveredDevices();
+    if (nimbleService.deviceFoundWhenScanning)
     {
-      Serial.printf("Match Device Address: %s \n", nimbleService.foundDevice.getAddress().toString().c_str());
-      Serial.printf("Device manufacturer data: %s \n", nimbleService.foundDevice.getManufacturerData().c_str());
+      Serial.println("设备已找到，停止扫描...");
+      nimbleService.stopScanDevices();
+      Serial.println(nimbleService.foundDevice.toString().c_str());
+      nimbleService.rescanDevices(0, toFindDeviceName, toFindDeviceAddress);
     }
-    else
-    {
-      Serial.println("Device address not match, skipped.");
-    }
-
-    // Reset foundDevice to an empty state after processing
-    nimbleService.foundDevice = NimBLEAdvertisedDevice();
   }
 }

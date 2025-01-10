@@ -39,7 +39,8 @@ public:
   GPSMeasurement(uint8_t rxPin, uint8_t txPin);
   ~GPSMeasurement();
 
-  void begin() override; // Initialize the sensor and start the task
+  void begin() override; // Initialize the gps and start the task
+  void standby();        // Standby the gps
   void end();            // end the serial port
   void getMeasurement() override;
   void getRawData();

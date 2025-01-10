@@ -3,8 +3,8 @@
 #ifdef USE_LORAWAN
 
 #include "siliqs_esp32.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+// #include "freertos/FreeRTOS.h"
+// #include "freertos/task.h"
 #include "radiolab/src/RadioLib.h"
 enum LORAWAN_SLEEP_TYPE
 {
@@ -50,10 +50,10 @@ public:
   void sleep(enum LORAWAN_SLEEP_TYPE sleep_type = LORAWAN_SLEEP_IN_DEEP_WITH_TTN_LAW);
   void set_battery_level(int level);
   void send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPort, uint8_t *dataDown, size_t *lenDown, bool isConfirmed);
+  void autoGenKeys();
 
 private:
   lorawan_params_settings *params;
-  void autoGenKeys();
   int begin_node();
   int active_node();
   void setParams();
