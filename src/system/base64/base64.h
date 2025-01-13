@@ -60,7 +60,7 @@ public:
   // Decode Base64 data
   static bool decode(char *output, const char *input, size_t inputLength)
   {
-    const char table[256] = {
+    const int table[256] = {
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0-15
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 16-31
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, // 32-47
