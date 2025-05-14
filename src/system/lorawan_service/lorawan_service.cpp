@@ -18,6 +18,8 @@ void print_bytes(uint8_t *data, int length);
 LoRaWanService::LoRaWanService(lorawan_params_settings *params)
 {
   this->params = params;
+  pinMode(LORA_NRST, OUTPUT);
+  digitalWrite(LORA_NRST, LOW);
 }
 
 // Destructor
@@ -231,7 +233,17 @@ bool LoRaWanService::begin(bool autogen)
 // Stop method: Stops the LoRaWAN service
 void LoRaWanService::stop()
 {
-  // Logic to stop the radio
+  radio.sleep();
+  SPI.end();
+}
+
+void LoRaWanService::softSleep()
+{
+  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_NSS);
+  radio.begin();
+  delay(10);
+  radio.sleep();
+  SPI.end();
 }
 
 void LoRaWanService::sleep(enum LORAWAN_SLEEP_TYPE sleep_type)
@@ -268,7 +280,7 @@ void LoRaWanService::set_battery_level(int level)
 }
 
 // Publish a message
-void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPort, uint8_t *dataDown, size_t *lenDown, bool isConfirmed)
+void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPortUp, uint8_t *dataDown, size_t *lenDown, uint8_t *fPortDown, bool isConfirmed)
 {
   int16_t state = 0;
   console.log(sqINFO, "send process start");
@@ -286,11 +298,11 @@ void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8
     console.log(sqINFO, F("Sending uplink and requesting LinkCheck and DeviceTime"));
     node.sendMacCommandReq(RADIOLIB_LORAWAN_MAC_LINK_CHECK);
     node.sendMacCommandReq(RADIOLIB_LORAWAN_MAC_DEVICE_TIME);
-    state = node.sendReceive(dataUp, lenUp, fPort, dataDown, lenDown, true, &uplinkDetails, &downlinkDetails);
+    state = node.sendReceive(dataUp, lenUp, fPortUp, dataDown, lenDown, true, &uplinkDetails, &downlinkDetails);
   }
   else
   {
-    state = node.sendReceive(dataUp, lenUp, fPort, dataDown, lenDown, true, &uplinkDetails, &downlinkDetails);
+    state = node.sendReceive(dataUp, lenUp, fPortUp, dataDown, lenDown, true, &uplinkDetails, &downlinkDetails);
   }
   debug((state < RADIOLIB_ERR_NONE) && (state != RADIOLIB_ERR_NONE), F("Error in sendReceive"), state, false);
   fCntUp = node.getFCntUp();
@@ -303,12 +315,21 @@ void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8
   // (state 0 = no downlink, state 1/2 = downlink in window Rx1/Rx2)
   if (state > 0)
   {
-    console.log(sqINFO, F("Received a downlink"));
+    console.log(sqINFO, "Received a downlink on port %d", downlinkDetails.fPort);
+    if (fPortDown != NULL)
+    {
+      *fPortDown = downlinkDetails.fPort;
+    }
   }
   else
   {
     console.log(sqINFO, F("No downlink received"));
   }
+}
+
+void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPortUp, uint8_t *dataDown, size_t *lenDown, bool isConfirmed)
+{
+  send_and_receive(dataUp, lenUp, fPortUp, dataDown, lenDown, NULL, isConfirmed);
 }
 
 // result code to text - these are error codes that can be raised when using LoRaWAN

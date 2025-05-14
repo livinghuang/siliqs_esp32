@@ -212,7 +212,6 @@ void gotoSleep(uint32_t ms)
   esp_sleep_enable_timer_wakeup(ms * 1000); // function uses uS
   console.log(sqINFO, "Sleeping... will wake in " + String(ms) + " milliseconds");
   Serial.flush();
-
   esp_deep_sleep_start();
   // if this appears in the serial debug, we didn't go to sleep!
   // so take defensive action

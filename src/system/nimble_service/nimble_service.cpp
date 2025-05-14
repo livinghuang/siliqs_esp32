@@ -20,12 +20,50 @@ class MyServerCallbacks : public NimBLEServerCallbacks
 };
 
 // 自定义的设备回调类
+class MutipleAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks
+{
+  void onResult(NimBLEAdvertisedDevice *advertisedDevice) override
+  {
+    bool deviceExists = false;
+    console.log(sqINFO, "In MutipleAdvertisedDeviceCallbacks: found device: %s", advertisedDevice->toString().c_str());
+    if ((nimbleService.toFindDeviceAddress != "") &&
+        (nimbleService.toFindDeviceAddress == String(advertisedDevice->getAddress().toString().c_str())))
+    {
+      nimbleService.deviceFoundWhenScanning = true;
+      nimbleService.foundDevice = *advertisedDevice;
+      console.log(sqINFO, "Found Device By Address: %s \n", nimbleService.foundDevice.toString().c_str());
+    }
+    if ((nimbleService.toFindDeviceName != "") && (nimbleService.toFindDeviceName == String(advertisedDevice->getName().c_str())))
+    {
+      nimbleService.deviceFoundWhenScanning = true;
+      nimbleService.foundDevice = *advertisedDevice;
+      console.log(sqINFO, "Found Device By Name: %s \n", nimbleService.foundDevice.toString().c_str());
+    }
+    // 检查设备是否已经存在
+    for (const auto &device : nimbleService.discoveredDevices)
+    {
+      if (const_cast<NimBLEAdvertisedDevice &>(device).getAddress().equals(advertisedDevice->getAddress())) // 问题在这里
+      {
+        deviceExists = true;
+        break;
+      }
+    }
+
+    // 如果设备不存在，则添加到列表中
+    if (!deviceExists)
+    {
+      nimbleService.discoveredDevices.push_back(*advertisedDevice);
+    }
+  }
+};
+
+// 自定义的设备回调类
 class MyAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks
 {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice) override
   {
     bool deviceExists = false;
-    // console.log(sqINFO, "found device: %s", advertisedDevice->toString().c_str());
+    console.log(sqINFO, "found device: %s", advertisedDevice->toString().c_str());
     if ((nimbleService.toFindDeviceAddress != "") &&
         (nimbleService.toFindDeviceAddress == String(advertisedDevice->getAddress().toString().c_str())))
     {
@@ -95,6 +133,7 @@ SQNimBLEService::SQNimBLEService()
     console.log(sqERROR, "无法创建 BLE 消息队列");
     return;
   }
+  stopAllRF();
 }
 
 // 析构函数
@@ -130,6 +169,27 @@ void SQNimBLEService::init()
 
   pService->start();  // 启动服务
   startAdvertising(); // 启动广播
+}
+
+void SQNimBLEService::startScanDevices(struct set_scan_params params)
+{
+  if (!scanActive)
+  {
+    console.log(sqINFO, "start scanning...");
+    pBLEScan = NimBLEDevice::getScan(); // 创建扫描对象
+    pBLEScan->setAdvertisedDeviceCallbacks(new MutipleAdvertisedDeviceCallbacks(), false);
+    pBLEScan->setActiveScan(params.scanActive);     // 启用主动扫描
+    pBLEScan->setInterval(params.scanInterval);     // 扫描间隔，单位：毫秒
+    pBLEScan->setWindow(params.scanWindow);         // 扫描窗口，单位：毫秒
+    pBLEScan->setMaxResults(params.scanMaxResults); //
+    pBLEScan->start(scanTime, nullptr);
+    scanActive = true;
+    deviceFoundWhenScanning = false;
+  }
+  else
+  {
+    console.log(sqINFO, "scan is already active...");
+  }
 }
 
 // 实现设备扫描
@@ -282,6 +342,7 @@ String SQNimBLEService::getReceivedData()
 
 void SQNimBLEService::printDiscoveredDevices()
 {
+
   if (discoveredDevices.empty())
   {
     Serial.println("No devices discovered yet.");

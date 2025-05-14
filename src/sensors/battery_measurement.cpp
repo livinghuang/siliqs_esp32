@@ -13,13 +13,13 @@ void BatteryMeasurement::begin()
 void BatteryMeasurement::getMeasurement()
 {
   uint32_t sum = 0;
-  for (size_t i = 0; i < 16; i++)
+  for (size_t i = 0; i < 4; i++)
   {
     uint16_t analogValue = analogRead(BAT_ADC_PIN); // 读取模拟值
     sum += analogValue;
   }
 
-  float avg = (float)(sum >> 4); // 计算16次采样的平均值
+  float avg = (float)(sum / 4); // 计算4次采样的平均值
   console.log(sqINFO, "Battery ADC value: " + String(avg));
   // 使用宏定义替换硬编码的值
   batteryVoltage = ((avg - TESTED_MIN) * (BAT_MAX_VOLTAGE - BAT_MIN_VOLTAGE) / (TESTED_MAX - TESTED_MIN) + BAT_MIN_VOLTAGE) * BAT_VOLTAGE_MULTIPLIER;

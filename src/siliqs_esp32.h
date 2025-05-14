@@ -5,6 +5,7 @@
 #include "system/base64/base64.h"
 #include "ota_src/sqUpdate.h"
 #include "system/ota_service/ota_service.h"
+#include "utility.h"
 #ifdef USE_NIMBLE
 #include "system/nimble_service/nimble_service.h"
 #endif
@@ -38,6 +39,24 @@
 #include "esp_sleep.h"
 extern RTC_DATA_ATTR uint32_t cal_32k;
 #endif
+
+#ifdef USE_SYSTIME
+#include "system/systime_service/systime.h"
+#endif
+
+#ifdef USE_SLEEP
+#include "system/systime_service/systime.h"
+#include "system/sleep_service/sleep_manager.h"
+#endif
+
+#ifdef USE_LED
+#include "system/led_service/led.h"
+#endif
+
+#ifdef USE_BATTERY_SERVICE
+#include "system/battery_service/battery.h"
+#endif
+
 extern RTC_DATA_ATTR uint32_t bootCount;
 extern SemaphoreHandle_t i2cMutex;
 void siliqs_esp32_setup(int print_level = SQ_NONE);
