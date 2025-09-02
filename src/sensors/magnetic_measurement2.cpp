@@ -1,31 +1,38 @@
-// #include "bsp.h"
-// #ifdef USE_MAGNETOMETER2
-// #include <Arduino.h>
-// #include "magnetic_measurement2.h"
-// // QMC5883 qmc5883;
-// // // #define pMQC5883_I2C_SCL 19
-// // // #define pMQC5883_I2C_SDA 18
-// // void magnetic_init()
-// // {
-// //   Serial.begin(115200);
-// //   while (!Serial)
-// //     ; // Wait for Serial Monitor to open (for boards like Leonardo)
-
-// //   Serial.println("I2C Scanner Starting...");
-// // }
-
-// // void test_magnetic()
-// // {
-// //   Wire.begin(pMQC5883_I2C_SDA, pMQC5883_I2C_SCL); // Join I2C bus as master
-// //   qmc5883.begin();
-// //   Serial.println("Magnetic test");
-// //   while (1)
-// //   {
-// //     qmc5883.fetch_data();
-// //     qmc5883.print_data();
-// //     delay(500);
-// //     qmc5883.print_LSB();
-// //     delay(500);
-// //   }
-// // }
-// #endif
+#include "bsp.h"
+#ifdef USE_MAGNETOMETER2
+#include "magnetic_measurement2.h"
+#include "Arduino.h"
+Magnetometer2 mag(QMC5883_ADDRESS, pMQC5883_I2C_SDA, pMQC5883_I2C_SCL);
+void test_magnetic()
+{
+  pinMode(1, OUTPUT);
+  digitalWrite(1, LOW);
+  delay(1000);
+  Wire.begin(pMQC5883_I2C_SDA, pMQC5883_I2C_SCL, 400000);
+  mag.begin(Wire);
+  while (1)
+  {
+    mag.getMeasurement();
+    if (mag.isAlarm())
+    {
+      if (mag.alarmOverflow)
+        Serial.println("Alarm overflow");
+      if (mag.alarmCommError)
+        Serial.println("Alarm comm error");
+    }
+    else
+    {
+      Serial.print("X: ");
+      Serial.print(mag.mGaussX);
+      Serial.println(" mGauss");
+      Serial.print(" Y: ");
+      Serial.print(mag.mGaussY);
+      Serial.println(" mGauss");
+      Serial.print(" Z: ");
+      Serial.print(mag.mGaussZ);
+      Serial.println(" mGauss");
+    }
+    delay(200);
+  }
+}
+#endif

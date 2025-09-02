@@ -71,7 +71,10 @@ void print_data(const void *data, size_t len);
 void print_hex(uint8_t data);
 void print_hex(const void *data, size_t len);
 void swap_high_low_bytes(uint16_t *a);
+uint16_t swap_high_low_bytes(uint16_t a);
 void print_reverse_endian(uint16_t a);
+uint16_t calculateCRC(const uint8_t *data, size_t length);
+void calculateCRC(const uint8_t *data, size_t length, uint16_t *result_crc);
 
 void vector_to_buffer();
 void buffer_to_vector();

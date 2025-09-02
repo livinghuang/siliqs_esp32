@@ -5,8 +5,8 @@
 #include "esp_system.h"
 
 // 在 RTC FAST memory 中保留時間資料（重開機時失效，深眠不會）
-extern RTC_DATA_ATTR time_t saved_rtc_time;
-extern RTC_DATA_ATTR int64_t saved_esp_us;
+extern time_t saved_rtc_time;
+extern int64_t saved_esp_us;
 
 class systime
 {

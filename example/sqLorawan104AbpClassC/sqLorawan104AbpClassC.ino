@@ -6,6 +6,7 @@
  *                                                                                      \
  * 该函数首先调用 siliqs_esp32_setup() 函数来初始化 ESP32 主板。 \
  */
+#define RADIOLIB_DEBUG
 #define LORA_DIO1 3
 #define LORA_BUSY 4
 #define LORA_NRST 5
@@ -48,26 +49,23 @@ void setup()
 void loop()
 {
   uint8_t updata[] = "hello world";
-  static uint8_t fport = 10;
+  uint8_t fportUp = 10;
+  uint8_t fportDown;
   uint8_t downbuffer[255];
   size_t downlen = 0;
   bool isConfirmed = true;
   lorawan.set_battery_level(146);
-  lorawan.send_and_receive(updata, sizeof(updata), fport, downbuffer, &downlen, isConfirmed);
+  lorawan.send_and_receive(updata, sizeof(updata), fportUp, downbuffer, &downlen, isConfirmed);
 
-  if (downlen > 0)
+  uint32_t t_now = millis();
+  Serial.println(t_now);
+  while (millis() - t_now < 30000)
   {
-    Serial.print("Downlink: ");
-    for (int i = 0; i < downlen; i++)
+    if (lorawan.receive(downbuffer, &downlen, &fportDown))
     {
-      if (downbuffer[i] < 0x10)
-      {
-        Serial.print("0");
-      }
-      Serial.print(downbuffer[i], HEX);
-      Serial.print(" ");
+      print_hex(downbuffer, downlen);
     }
-    Serial.println();
+    delay(10);
   }
-  gotoSleep(params.uplinkIntervalSeconds * 1000);
+  delay(10);
 }

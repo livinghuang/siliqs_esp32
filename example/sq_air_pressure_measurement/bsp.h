@@ -5,3 +5,5 @@
 #define DSP310_I2C_ADDRESS 0x77 // 假设使用 DSP310 传感器的 I2C 地址
 #define pDSP310_I2C_SCL 19
 #define pDSP310_I2C_SDA 18
+
+#define pVext 1

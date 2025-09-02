@@ -56,8 +56,11 @@ void test_battery(void)
   // class battery batt(false, MySerial1);
   // MySerial1.begin(115200, SERIAL_8N1, SERIAL1_RXD, SERIAL1_TXD);
   Serial.begin(115200);
-  batt.set_correction(BATTERY_TEST_GAIN, BATTERY_TEST_OFFSET);
-  batt.begin(1, 15); // 背景中以任務 (task) 方式運行
+  // batt.set_correction(BATTERY_TEST_GAIN, BATTERY_TEST_OFFSET);
+  // batt.begin(1, 15); // 背景中以任務 (task) 方式運行
+
+  batt.set_correction(BATTERY_GAIN, BATTERY_OFFSET);
+  batt.begin(pADC_BAT, 16); // 背景中以任務 (task) 方式運行
 
   while (true)
   {

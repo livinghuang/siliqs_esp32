@@ -4,6 +4,12 @@
 #include <Arduino.h>
 #include "utility.h"
 
+struct battery_adc_correction_struct
+{
+  float factor; // 用於電池電壓的 ADC 校正因子
+  float offset; // 用於電池電壓的 ADC 校正偏移量
+};
+
 #define POWER_NORMAL 0
 #define POWER_SAVING 1
 #define POWER_CHARGING 2
@@ -16,10 +22,21 @@ struct battery_struct // 2 bytes
 
 class battery
 {
+public:
+  void set_battery_mode(uint8_t mode)
+  {
+    data.mode = mode;
+  }
+  void set_power_mode_charging(float voltage)
+  {
+    power_mode_charging = voltage;
+  }
+
 private:
   bool print_log = false;
-  float power_mode_min = 3.1;
-  float power_mode_full = 4.2;
+  float power_mode_min = 3.35;
+  float power_mode_full = 4.1;
+  float power_mode_charging = 4.5;
   float power_mode_normal = 3.7;
   float vref = 3.3; // ADC 參考電壓
   int battery_percentage;
@@ -71,7 +88,7 @@ private:
     {
       data.mode = POWER_SAVING;
     }
-    else if (battery_voltage > power_mode_full)
+    else if (battery_voltage > power_mode_charging)
     {
       data.mode = POWER_CHARGING;
     }
@@ -238,6 +255,16 @@ public:
     log("Manual correction set: factor = " + String(factor) + ", offset = " + String(offset));
   }
 
+  void set_power_mode_min(float voltage)
+  {
+    power_mode_min = voltage;
+  }
+
+  void set_power_mode_full(float voltage)
+  {
+    power_mode_full = voltage;
+  }
+
   void enable_log(bool enable)
   {
     print_log = enable;
@@ -251,6 +278,16 @@ public:
   void set_adc_reference(float ref_voltage)
   {
     vref = ref_voltage;
+  }
+
+  /*
+  Enter calibration mode in factory settings.
+  This function is for calibration the battery voltage in factory mode.
+  It will define the battery slope and offset.
+  */
+  void enter_calibration_in_factory_mode(float real_highest_voltage, float real_lowest_voltage)
+  {
+    // under development
   }
 
   ~battery()

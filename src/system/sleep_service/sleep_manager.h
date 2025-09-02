@@ -6,7 +6,7 @@
 #if defined(CONFIG_IDF_TARGET_ESP32C3)
 #define MIN_SLEEP_TIME_MS 100
 // RTC fast memory 中保留的跨深眠時間戳（秒）
-extern RTC_DATA_ATTR time_t rtcSleepStartTime;
+extern time_t rtcSleepStartTime;
 enum WakeUpLevel
 {
   WAKE_HIGH,

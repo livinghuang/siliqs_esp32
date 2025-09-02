@@ -69,7 +69,7 @@ private:
       if (instance->blinking && instance->blinkCount > 0)
       {
         instance->toggle();
-        instance->blinkCount--;
+        instance->blinkCount = instance->blinkCount - 1;
         vTaskDelay(instance->blinkInterval / portTICK_PERIOD_MS);
         instance->toggle();
         vTaskDelay(instance->blinkInterval / portTICK_PERIOD_MS);

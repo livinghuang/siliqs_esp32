@@ -10,7 +10,10 @@ RTC_DATA_ATTR uint8_t LWsession[RADIOLIB_LORAWAN_SESSION_BUF_SIZE];
 const LoRaWANBand_t Region = REGION;
 const uint8_t subBand = SUB_BAND; // For US915, change this to 2, otherwise leave on 0
 
-SX1262 radio = new Module(LORA_NSS, LORA_DIO1, LORA_NRST, LORA_BUSY);
+// SX1262 radio = new Module(LORA_NSS, LORA_DIO1, LORA_NRST, LORA_BUSY);
+// Global (or wherever you create the radio)
+SX1262 radio = SX1262(new Module(LORA_NSS, LORA_DIO1, LORA_NRST, LORA_BUSY,
+                                 SPI, SPISettings(8000000, MSBFIRST, SPI_MODE0)));
 RTC_DATA_ATTR LoRaWANNode node(&radio, &Region, subBand);
 void print_bytes_reverse(uint8_t *data, int length);
 void print_bytes(uint8_t *data, int length);
@@ -18,6 +21,9 @@ void print_bytes(uint8_t *data, int length);
 LoRaWanService::LoRaWanService(lorawan_params_settings *params)
 {
   this->params = params;
+  pinMode(LORA_BUSY, INPUT);
+  pinMode(LORA_DIO1, INPUT);
+  pinMode(LORA_NSS, OUTPUT);
   pinMode(LORA_NRST, OUTPUT);
   digitalWrite(LORA_NRST, LOW);
 }
@@ -214,20 +220,47 @@ int16_t LoRaWanService::lwActivate()
 bool LoRaWanService::begin(bool autogen)
 {
   int16_t state = 0; // return value for calls to RadioLib
-  // setup the radio based on the pinmap (connections) in config.h
+
   console.log(sqINFO, F("Initalise the radio"));
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_NSS);
+  Serial.print("Reset SX1262...");
+  pinMode(LORA_NRST, OUTPUT);
+  digitalWrite(LORA_NRST, LOW);
+  delay(20);
+  digitalWrite(LORA_NRST, HIGH);
+  delay(20);
+
+  // 等 BUSY 釋放
+  pinMode(LORA_BUSY, INPUT);
+  while (digitalRead(LORA_BUSY))
+  {
+    Serial.print(".");
+    delay(1);
+  }
+  Serial.println("done.");
+  // radio.XTAL = true;
   state = radio.begin();
-  debug(state != RADIOLIB_ERR_NONE, F("Initalise radio failed"), state, true);
-  if (autogen == true)
+
+  if (state == RADIOLIB_ERR_NONE)
+  {
+    console.log(sqINFO, F("Radio initialised OK"));
+  }
+  else
+  {
+    debug(true, F("Initialise radio failed"), state, true);
+  }
+
+  if (autogen)
   {
     console.log(sqINFO, F("Generating keys"));
     autoGenKeys();
   }
+
   // activate node by restoring session or otherwise joining the network
   state = lwActivate();
-  // state is one of RADIOLIB_LORAWAN_NEW_SESSION or RADIOLIB_LORAWAN_SESSION_RESTORED
-  return true;
+
+  return (state == RADIOLIB_LORAWAN_NEW_SESSION ||
+          state == RADIOLIB_LORAWAN_SESSION_RESTORED);
 }
 
 // Stop method: Stops the LoRaWAN service
@@ -298,11 +331,11 @@ void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8
     console.log(sqINFO, F("Sending uplink and requesting LinkCheck and DeviceTime"));
     node.sendMacCommandReq(RADIOLIB_LORAWAN_MAC_LINK_CHECK);
     node.sendMacCommandReq(RADIOLIB_LORAWAN_MAC_DEVICE_TIME);
-    state = node.sendReceive(dataUp, lenUp, fPortUp, dataDown, lenDown, true, &uplinkDetails, &downlinkDetails);
+    state = node.sendReceive(dataUp, lenUp, fPortUp, dataDown, lenDown, isConfirmed, &uplinkDetails, &downlinkDetails);
   }
   else
   {
-    state = node.sendReceive(dataUp, lenUp, fPortUp, dataDown, lenDown, true, &uplinkDetails, &downlinkDetails);
+    state = node.sendReceive(dataUp, lenUp, fPortUp, dataDown, lenDown, isConfirmed, &uplinkDetails, &downlinkDetails);
   }
   debug((state < RADIOLIB_ERR_NONE) && (state != RADIOLIB_ERR_NONE), F("Error in sendReceive"), state, false);
   fCntUp = node.getFCntUp();

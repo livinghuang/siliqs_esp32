@@ -694,12 +694,12 @@ public:
   virtual int16_t sendReceive(const uint8_t *dataUp, size_t lenUp, uint8_t fPort, uint8_t *dataDown, size_t *lenDown, bool isConfirmed = false, LoRaWANEvent_t *eventUp = NULL, LoRaWANEvent_t *eventDown = NULL);
 
   /*!
-    \brief Add a MAC command to the uplink queue.
-    Only LinkCheck and DeviceTime are available to the user.
-    Other commands are ignored; duplicate MAC commands are discarded.
-    \param cid ID of the MAC command
-    \returns \ref status_codes
-  */
+  \brief Add a MAC command to the uplink queue.
+  Only LinkCheck and DeviceTime are available to the user.
+  Other commands are ignored; duplicate MAC commands are discarded.
+  \param cid ID of the MAC command
+  \returns \ref status_codes
+*/
   int16_t sendMacCommandReq(uint8_t cid);
 
   /*!
@@ -846,6 +846,11 @@ public:
     Most importantly, this includes dwell time limitations and ADR.
   */
   uint8_t getMaxPayloadLen();
+
+  void getChannels(LoRaWANChannel_t *_channels)
+  {
+    memcpy(_channels, this->channels, sizeof(this->channels));
+  }
 
   /*!
     \brief TS009 Protocol Specification Verification switch
@@ -1020,7 +1025,7 @@ protected:
   // transmit uplink buffer on a specified channel
   int16_t transmitUplink(LoRaWANChannel_t *chnl, uint8_t *in, uint8_t len, bool retrans);
 
-  // wait for, open and listen during receive windows; only performs listening
+  // wait for, open and listen during receive windows; only performs listening (for class A ,RX1/RX2)
   int16_t receiveCommon(uint8_t dir, const LoRaWANChannel_t *dlChannels, const RadioLibTime_t *dlDelays, uint8_t numWindows, RadioLibTime_t tReference);
 
   // extract downlink payload and process MAC commands
@@ -1099,7 +1104,7 @@ protected:
 
   // apply a 96-bit channel mask
   bool applyChannelMask(uint64_t chMaskGrp0123, uint32_t chMaskGrp45);
-
+  String stateDecode(const int16_t result);
 #if RADIOLIB_DEBUG_PROTOCOL
   // print the available channels through debug
   void printChannels();

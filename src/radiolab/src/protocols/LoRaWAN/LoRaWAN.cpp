@@ -297,7 +297,7 @@ int16_t LoRaWANNode::setBufferNonces(const uint8_t *persistentBuffer)
   this->joinNonce = LoRaWANNode::ntoh<uint32_t>(&this->bufferNonces[RADIOLIB_LORAWAN_NONCES_JOIN_NONCE], 3);
 
   // revert to inactive as long as no session is restored
-  this->bufferNonces[RADIOLIB_LORAWAN_NONCES_ACTIVE] = (uint8_t) false;
+  this->bufferNonces[RADIOLIB_LORAWAN_NONCES_ACTIVE] = (uint8_t)false;
   this->isActive = false;
 
   return (state);
@@ -308,7 +308,7 @@ void LoRaWANNode::clearSession()
   memset(this->bufferSession, 0, RADIOLIB_LORAWAN_SESSION_BUF_SIZE);
   memset(this->fOptsUp, 0, RADIOLIB_LORAWAN_FHDR_FOPTS_MAX_LEN);
   memset(this->fOptsDown, 0, RADIOLIB_LORAWAN_FHDR_FOPTS_MAX_LEN);
-  this->bufferNonces[RADIOLIB_LORAWAN_NONCES_ACTIVE] = (uint8_t) false;
+  this->bufferNonces[RADIOLIB_LORAWAN_NONCES_ACTIVE] = (uint8_t)false;
   this->isActive = false;
 
   // reset all frame counters
@@ -656,7 +656,7 @@ int16_t LoRaWANNode::setBufferSession(const uint8_t *persistentBuffer)
   memcpy(&this->fOptsUpLen, &this->bufferSession[RADIOLIB_LORAWAN_SESSION_MAC_QUEUE_LEN], 1);
 
   // as both the Nonces and session are restored, revert to active session
-  this->bufferNonces[RADIOLIB_LORAWAN_NONCES_ACTIVE] = (uint8_t) true;
+  this->bufferNonces[RADIOLIB_LORAWAN_NONCES_ACTIVE] = (uint8_t)true;
   return (state);
 }
 
@@ -955,7 +955,7 @@ int16_t LoRaWANNode::processJoinAccept(LoRaWANJoinEvent_t *joinEvent)
 
   LoRaWANNode::hton<uint32_t>(&this->bufferNonces[RADIOLIB_LORAWAN_NONCES_JOIN_NONCE], this->joinNonce, 3);
 
-  this->bufferNonces[RADIOLIB_LORAWAN_NONCES_ACTIVE] = (uint8_t) true;
+  this->bufferNonces[RADIOLIB_LORAWAN_NONCES_ACTIVE] = (uint8_t)true;
 
   // generate the signature of the Nonces buffer, and store it in the last two bytes of the Nonces buffer
   uint16_t signature = LoRaWANNode::checkSum16(this->bufferNonces, RADIOLIB_LORAWAN_NONCES_BUF_SIZE - 2);
@@ -1106,7 +1106,7 @@ int16_t LoRaWANNode::activateABP(uint8_t initialDr)
   this->createSession(RADIOLIB_LORAWAN_MODE_ABP, initialDr);
 
   // new session all good, so set active-bit to true
-  this->bufferNonces[RADIOLIB_LORAWAN_NONCES_ACTIVE] = (uint8_t) true;
+  this->bufferNonces[RADIOLIB_LORAWAN_NONCES_ACTIVE] = (uint8_t)true;
 
   // generate the signature of the Nonces buffer, and store it in the last two bytes of the Nonces buffer
   uint16_t signature = LoRaWANNode::checkSum16(this->bufferNonces, RADIOLIB_LORAWAN_NONCES_BUF_SIZE - 2);
@@ -3218,7 +3218,7 @@ int16_t LoRaWANNode::setPhyProperties(const LoRaWANChannel_t *chnl, uint8_t dir,
   int16_t state = this->phyLayer->standby();
   if (state != RADIOLIB_ERR_NONE)
   {
-    RADIOLIB_DEBUG_PROTOCOL_PRINTLN("Failed to set radio into standby - is it connected?");
+    Serial.println("Failed to set radio into standby - is it connected?");
     return (state);
   }
 
@@ -4025,6 +4025,72 @@ uint16_t LoRaWANNode::checkSum16(const uint8_t *key, uint16_t keyLen)
     checkSum ^= word;
   }
   return (checkSum);
+}
+
+String LoRaWANNode::stateDecode(const int16_t result)
+{
+  switch (result)
+  {
+  case RADIOLIB_ERR_NONE:
+    return "ERR_NONE";
+  case RADIOLIB_ERR_CHIP_NOT_FOUND:
+    return "ERR_CHIP_NOT_FOUND";
+  case RADIOLIB_ERR_PACKET_TOO_LONG:
+    return "ERR_PACKET_TOO_LONG";
+  case RADIOLIB_ERR_RX_TIMEOUT:
+    return "ERR_RX_TIMEOUT";
+  case RADIOLIB_ERR_CRC_MISMATCH:
+    return "ERR_CRC_MISMATCH";
+  case RADIOLIB_ERR_INVALID_BANDWIDTH:
+    return "ERR_INVALID_BANDWIDTH";
+  case RADIOLIB_ERR_INVALID_SPREADING_FACTOR:
+    return "ERR_INVALID_SPREADING_FACTOR";
+  case RADIOLIB_ERR_INVALID_CODING_RATE:
+    return "ERR_INVALID_CODING_RATE";
+  case RADIOLIB_ERR_INVALID_FREQUENCY:
+    return "ERR_INVALID_FREQUENCY";
+  case RADIOLIB_ERR_INVALID_OUTPUT_POWER:
+    return "ERR_INVALID_OUTPUT_POWER";
+  case RADIOLIB_ERR_NETWORK_NOT_JOINED:
+    return "RADIOLIB_ERR_NETWORK_NOT_JOINED";
+  case RADIOLIB_ERR_DOWNLINK_MALFORMED:
+    return "RADIOLIB_ERR_DOWNLINK_MALFORMED";
+  case RADIOLIB_ERR_INVALID_REVISION:
+    return "RADIOLIB_ERR_INVALID_REVISION";
+  case RADIOLIB_ERR_INVALID_PORT:
+    return "RADIOLIB_ERR_INVALID_PORT";
+  case RADIOLIB_ERR_NO_RX_WINDOW:
+    return "RADIOLIB_ERR_NO_RX_WINDOW";
+  case RADIOLIB_ERR_INVALID_CID:
+    return "RADIOLIB_ERR_INVALID_CID";
+  case RADIOLIB_ERR_UPLINK_UNAVAILABLE:
+    return "RADIOLIB_ERR_UPLINK_UNAVAILABLE";
+  case RADIOLIB_ERR_COMMAND_QUEUE_FULL:
+    return "RADIOLIB_ERR_COMMAND_QUEUE_FULL";
+  case RADIOLIB_ERR_COMMAND_QUEUE_ITEM_NOT_FOUND:
+    return "RADIOLIB_ERR_COMMAND_QUEUE_ITEM_NOT_FOUND";
+  case RADIOLIB_ERR_JOIN_NONCE_INVALID:
+    return "RADIOLIB_ERR_JOIN_NONCE_INVALID";
+  case RADIOLIB_ERR_N_FCNT_DOWN_INVALID:
+    return "RADIOLIB_ERR_N_FCNT_DOWN_INVALID";
+  case RADIOLIB_ERR_A_FCNT_DOWN_INVALID:
+    return "RADIOLIB_ERR_A_FCNT_DOWN_INVALID";
+  case RADIOLIB_ERR_DWELL_TIME_EXCEEDED:
+    return "RADIOLIB_ERR_DWELL_TIME_EXCEEDED";
+  case RADIOLIB_ERR_CHECKSUM_MISMATCH:
+    return "RADIOLIB_ERR_CHECKSUM_MISMATCH";
+  case RADIOLIB_ERR_NO_JOIN_ACCEPT:
+    return "RADIOLIB_ERR_NO_JOIN_ACCEPT";
+  case RADIOLIB_LORAWAN_SESSION_RESTORED:
+    return "RADIOLIB_LORAWAN_SESSION_RESTORED";
+  case RADIOLIB_LORAWAN_NEW_SESSION:
+    return "RADIOLIB_LORAWAN_NEW_SESSION";
+  case RADIOLIB_ERR_NONCES_DISCARDED:
+    return "RADIOLIB_ERR_NONCES_DISCARDED";
+  case RADIOLIB_ERR_SESSION_DISCARDED:
+    return "RADIOLIB_ERR_SESSION_DISCARDED";
+  }
+  return "See https://jgromes.github.io/RadioLib/group__status__codes.html";
 }
 
 #endif

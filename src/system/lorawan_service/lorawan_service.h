@@ -6,6 +6,7 @@
 // #include "freertos/FreeRTOS.h"
 // #include "freertos/task.h"
 #include "radiolab/src/RadioLib.h"
+
 enum LORAWAN_SLEEP_TYPE
 {
   LORAWAN_SLEEP_NONE = 0,                 // no sleeping, no radio off, spi ended
@@ -52,6 +53,7 @@ public:
   void send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPortUp, uint8_t *dataDown, size_t *lenDown, uint8_t *fPortDown, bool isConfirmed);
   void send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPortUp, uint8_t *dataDown, size_t *lenDown, bool isConfirmed);
   void autoGenKeys();
+
   void end()
   {
     // stop();

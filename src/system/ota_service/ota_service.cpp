@@ -22,8 +22,8 @@ bool validatePacket(const DataPacket &packet)
   uint16_t calculated_crc = calculateCRC(reinterpret_cast<const uint8_t *>(&packet), offsetof(DataPacket, crc));
 
   // Swap the high and low bytes of the received CRC
-  uint16_t swapped_crc = swapBytes(packet.crc);
-
+  uint16_t swapped_crc;
+  swap_high_low_bytes(&swapped_crc);
   // Compare the calculated CRC with the swapped CRC
   if ((calculated_crc == swapped_crc) || (calculated_crc == packet.crc))
   {

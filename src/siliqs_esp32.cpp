@@ -90,9 +90,9 @@ void external_32k_setup()
 #endif
 
 SemaphoreHandle_t i2cMutex = nullptr;
-void siliqs_esp32_setup(int print_level)
+void siliqs_esp32_setup(int print_level, int serial_speed)
 {
-  Serial.begin(115200);
+  Serial.begin(serial_speed);
   console.begin(print_level);
   bootCount++;
   // 初始化文件系统
@@ -218,37 +218,4 @@ void gotoSleep(uint32_t ms)
   Serial.println(F("\n\n### Sleep failed, delay of 15 seconds & then restart ###\n"));
   delay(15000);
   ESP.restart();
-}
-
-/**
- * @brief Calculate CRC16 for error checking
- * @param data Pointer to the data
- * @param length Length of the data
- * @return Calculated CRC16 value
- */
-uint16_t calculateCRC(const uint8_t *data, size_t length)
-{
-  uint16_t crc = 0xFFFF;
-  for (size_t i = 0; i < length; i++)
-  {
-    crc ^= data[i];
-    for (uint8_t j = 0; j < 8; j++)
-    {
-      if (crc & 1)
-      {
-        crc = (crc >> 1) ^ 0xA001;
-      }
-      else
-      {
-        crc >>= 1;
-      }
-    }
-  }
-  return crc;
-}
-
-uint16_t swapBytes(uint16_t value)
-{
-  // Swap high and low bytes
-  return (value >> 8) | (value << 8);
 }
