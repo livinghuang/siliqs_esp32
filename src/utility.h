@@ -70,6 +70,8 @@ void print_data(uint8_t data);
 void print_data(const void *data, size_t len);
 void print_hex(uint8_t data);
 void print_hex(const void *data, size_t len);
+String to_hex_string(const void *data, size_t len);
+
 void swap_high_low_bytes(uint16_t *a);
 uint16_t swap_high_low_bytes(uint16_t a);
 void print_reverse_endian(uint16_t a);

@@ -16,7 +16,7 @@ lorawan_params_settings params = {
     .DR = 5,                 // 起始 DR，ADR 開啟後會被網路調整
     .DutyCycleFactor = 1250, // 1/1250 ≈ 0.08%，僅 EU 適用；AS923 可視需求 0
     .DwellTime = 400,        // 只對 US/AU 有 Dwell 規範；AS923 留 0 或依 RP 設
-    .OTAA = false,
+    .OTAA = true,
     .LORAWAN_1_1 = false,
 
     .JOINEUI = 0x0000000000000000ULL,

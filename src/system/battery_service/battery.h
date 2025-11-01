@@ -36,7 +36,7 @@ private:
   bool print_log = false;
   float power_mode_min = 3.35;
   float power_mode_full = 4.1;
-  float power_mode_charging = 4.5;
+  float power_mode_charging = 5.0;
   float power_mode_normal = 3.7;
   float vref = 3.3; // ADC 參考電壓
   int battery_percentage;

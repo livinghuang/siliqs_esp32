@@ -1,8 +1,27 @@
 #include "bsp.h"
+#define USE_LORA
+
 #ifdef USE_LORA // Only compile when USE_LORA is enabled
 #include "lora_service.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
+// ---- 放在某個共用 header (.h) 最上面 ----
+#ifndef LORA_TASK_CORE
+#if defined(ARDUINO_ARCH_ESP32)
+// FreeRTOS 會用這個巨集宣告處理器數
+#if (portNUM_PROCESSORS == 1)
+// ESP32-C3 / ESP32-S2 等單核
+#define LORA_TASK_CORE 0
+#else
+// ESP32 / ESP32-S3 等雙核，預設放在 APP core(1)
+#define LORA_TASK_CORE 1
+#endif
+#else
+// 非 ESP32 平台（若有移植），用 0 當預設
+#define LORA_TASK_CORE 0
+#endif
+#endif
 
 static LoRaService *loRaInstance = nullptr; // Static global instance pointer for interrupt handling
 
@@ -47,7 +66,7 @@ bool LoRaService::begin()
   // Set interrupt for DIO1
   radio.setDio1Action(onDio1Interrupt);
 
-  // Create the background task
+  // // Create the background task
   xTaskCreatePinnedToCore(
       loRaTask,    // Task function
       "LoRaTask",  // Task name
@@ -55,8 +74,7 @@ bool LoRaService::begin()
       this,        // Task parameter
       1,           // Priority
       &taskHandle, // Task handle
-      1            // Run on core 1
-  );
+      LORA_TASK_CORE);
 
   return true;
 }
@@ -108,7 +126,7 @@ void LoRaService::loRaTask(void *parameter)
       self->handleOperation(); // Handle completed LoRa operations
       self->operationDone = false;
     }
-    delay(10); // Avoid busy waiting
+    vTaskDelay(10); // Avoid busy waiting
   }
 }
 
@@ -154,4 +172,5 @@ void LoRaService::handleOperation()
     }
   }
 }
+
 #endif

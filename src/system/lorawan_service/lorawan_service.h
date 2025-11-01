@@ -52,8 +52,16 @@ public:
   void set_battery_level(int level);
   void send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPortUp, uint8_t *dataDown, size_t *lenDown, uint8_t *fPortDown, bool isConfirmed);
   void send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPortUp, uint8_t *dataDown, size_t *lenDown, bool isConfirmed);
+  void send_and_receive(bool *success, const uint8_t *dataUp, size_t lenUp, uint8_t fPortUp, uint8_t *dataDown, size_t *lenDown, uint8_t *fPortDown, bool isConfirmed);
+  void send_and_receive(bool *success, const uint8_t *dataUp, size_t lenUp, uint8_t fPortUp, uint8_t *dataDown, size_t *lenDown, bool isConfirmed);
+  void setCSMA(bool csmaEnabled, uint8_t maxChanges, uint8_t backoffMax, uint8_t difsSlots);
+  void setClass(LoRaWANClass cls);
+  void startClassC();                                                     // 進入常駐 Rx2
+  void stopClassC();                                                      // 暫停（例如 TX 前）
+  bool pollClassC(uint8_t *dataDown, size_t *lenDown, uint8_t *portDown); // 在主循環呼叫：若 ISR 置位，取包並解析
   void autoGenKeys();
-
+  void setParams(lorawan_params_settings *params);
+  void printParams();
   void end()
   {
     // stop();
@@ -61,9 +69,9 @@ public:
 
 private:
   lorawan_params_settings *params;
+  bool success_downlink_received = false;
   int begin_node();
   int active_node();
-  void setParams();
   int16_t lwActivate();
 };
 

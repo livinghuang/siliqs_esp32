@@ -1,5 +1,5 @@
 #pragma once
-#define USE_LORA
+#define USE_LORAWAN
 /*
 We use a forked version of the RadioLib library (original repository: https://github.com/jgromes/RadioLib) to implement the LoRaWAN service.
 Our fork includes modifications to support the AS923_1 band, which is not available in the original library.
@@ -14,11 +14,5 @@ The source code for these modifications can be found in the file src/radiolab/sr
 #define LORA_MOSI 7
 #define LORA_NSS 8
 #define LORA_SCK 10
-
-//  #define LORA_DIO1  14
-//  #define LORA_BUSY  13
-//  #define LORA_NRST  12
-//  #define LORA_MISO  11
-//  #define LORA_MOSI  10
-//  #define LORA_SCK =9
-//  #define LORA_NSS =8
+#define REGION (LoRaWANBand_t) AS923_1
+#define SUB_BAND 0

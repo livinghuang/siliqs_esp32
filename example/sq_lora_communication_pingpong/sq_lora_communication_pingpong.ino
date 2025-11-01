@@ -2,13 +2,13 @@
 #include "siliqs_esp32.h"
 
 lora_params_settings params = {
-    .DIO1 = 14,
-    .BUSY = 13,
-    .NRST = 12,
-    .MISO = 11,
-    .MOSI = 10,
-    .SCK = 9,
-    .NSS = 8,
+    .DIO1 = LORA_DIO1,
+    .BUSY = LORA_BUSY,
+    .NRST = LORA_NRST,
+    .MISO = LORA_MISO,
+    .MOSI = LORA_MOSI,
+    .SCK = LORA_SCK,
+    .NSS = LORA_NSS,
     .FREQUENCY = 922.0,
     .BANDWIDTH = 125.0,
     .SF = 7,

@@ -94,6 +94,21 @@ void print_hex(const void *data, size_t len)
   Serial.println();
 }
 
+String to_hex_string(const void *data, size_t len)
+{
+  String hexString = "";
+  const uint8_t *bytes = (const uint8_t *)data;
+  for (size_t i = 0; i < len; i++)
+  {
+    if (bytes[i] < 0x10)
+    {
+      hexString += "0";
+    }
+    hexString += String(bytes[i], HEX);
+  }
+  return hexString;
+}
+
 /**
  * Swap the high and low order bytes of a 16-bit word.
  *

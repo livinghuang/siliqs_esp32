@@ -60,6 +60,10 @@ extern uint32_t cal_32k;
 #include "system/battery_service/battery.h"
 #endif
 
+#ifdef USE_RL78_GPIO_SERVICE
+#include "system/rl78_gpio_service/rl78_gpio_service.h"
+#endif
+
 extern uint32_t bootCount;
 extern SemaphoreHandle_t i2cMutex;
 void siliqs_esp32_setup(int print_level = SQ_NONE, int serial_speed = 115200);

@@ -534,10 +534,29 @@ struct LoRaWANEvent_t
 
 /*!
   \class LoRaWANNode
-  \brief LoRaWAN-compatible node (class A device).
+  \brief LoRaWAN-compatible node (class A device, class C device).
 */
+/*add by Living: 20251101*/
+enum class LoRaWANClass : uint8_t
+{
+  A = RADIOLIB_LORAWAN_CLASS_A,
+  C = RADIOLIB_LORAWAN_CLASS_C
+};
+
 class LoRaWANNode
 {
+  /*add by Living: 20251101*/
+public:
+  void setClass(LoRaWANClass c);
+  void startClassC();                                                     // 進入常駐 Rx2
+  void stopClassC();                                                      // 暫停（例如 TX 前）
+  bool pollClassC(uint8_t *dataDown, size_t *lenDown, uint8_t *portDown); // 在主循環呼叫：若 ISR 置位，取包並解析
+
+private:
+  LoRaWANClass cls = LoRaWANClass::A;
+  void (*classC)() = nullptr;
+  /*add by Living end: 20251101*/
+
 public:
   /*!
     \brief Default constructor.
@@ -870,7 +889,7 @@ public:
     500 is the **maximum** value, but it is not a good idea to go anywhere near that.
     If you have to go above 50 you probably have a bug somewhere. Check your device timing.
   */
-  RadioLibTime_t scanGuard = 10;
+  RadioLibTime_t scanGuard = 50;
 
 #if !RADIOLIB_GODMODE
 protected:
@@ -1105,10 +1124,8 @@ protected:
   // apply a 96-bit channel mask
   bool applyChannelMask(uint64_t chMaskGrp0123, uint32_t chMaskGrp45);
   String stateDecode(const int16_t result);
-#if RADIOLIB_DEBUG_PROTOCOL
   // print the available channels through debug
   void printChannels();
-#endif
 
   // method to generate message integrity code
   uint32_t generateMIC(uint8_t *msg, size_t len, uint8_t *key);

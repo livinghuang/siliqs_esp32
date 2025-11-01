@@ -13,7 +13,7 @@ const uint8_t subBand = SUB_BAND; // For US915, change this to 2, otherwise leav
 // SX1262 radio = new Module(LORA_NSS, LORA_DIO1, LORA_NRST, LORA_BUSY);
 // Global (or wherever you create the radio)
 SX1262 radio = SX1262(new Module(LORA_NSS, LORA_DIO1, LORA_NRST, LORA_BUSY,
-                                 SPI, SPISettings(8000000, MSBFIRST, SPI_MODE0)));
+                                 SPI, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
 RTC_DATA_ATTR LoRaWANNode node(&radio, &Region, subBand);
 void print_bytes_reverse(uint8_t *data, int length);
 void print_bytes(uint8_t *data, int length);
@@ -124,12 +124,99 @@ int LoRaWanService::active_node()
   return state;
 }
 
-void LoRaWanService::setParams(void)
+void LoRaWanService::printParams()
+{
+  if (params == nullptr)
+  {
+    console.log(sqERROR, "LoRaWAN params not initialized!");
+    return;
+  }
+
+  console.log(sqINFO, "========== LoRaWAN Parameters ==========");
+
+  // --- 基本硬體腳位設定 ---
+  console.log(sqINFO, "[Hardware Pins]");
+  console.log(sqINFO, "DIO1 : %d", params->DIO1);
+  console.log(sqINFO, "BUSY : %d", params->BUSY);
+  console.log(sqINFO, "NRST : %d", params->NRST);
+  console.log(sqINFO, "MISO : %d", params->MISO);
+  console.log(sqINFO, "MOSI : %d", params->MOSI);
+  console.log(sqINFO, "SCK  : %d", params->SCK);
+  console.log(sqINFO, "NSS  : %d", params->NSS);
+
+  // --- 基本通訊設定 ---
+  console.log(sqINFO, "\n[Communication Settings]");
+  console.log(sqINFO, "uplinkIntervalSeconds : %u s", params->uplinkIntervalSeconds);
+  console.log(sqINFO, "ADR                  : %s", params->ADR ? "true" : "false");
+  console.log(sqINFO, "DR                   : %u", params->DR);
+  console.log(sqINFO, "DutyCycleFactor      : %u (DutyCycle = 1/%.2f%%)",
+              params->DutyCycleFactor, 100.0f / params->DutyCycleFactor);
+  console.log(sqINFO, "DwellTime            : %u ms", params->DwellTime);
+
+  // --- 通訊協定版本與模式 ---
+  console.log(sqINFO, "\n[LoRaWAN Mode]");
+  console.log(sqINFO, "OTAA          : %s", params->OTAA ? "true" : "false");
+  console.log(sqINFO, "LORAWAN_1_1   : %s", params->LORAWAN_1_1 ? "true" : "false");
+
+  // --- 位址與金鑰 ---
+  console.log(sqINFO, "\n[Identifiers]");
+  console.log(sqINFO, "JOINEUI :");
+  print_bytes_reverse((uint8_t *)&params->JOINEUI, sizeof(params->JOINEUI));
+
+  console.log(sqINFO, "DEVEUI  :");
+  print_bytes_reverse((uint8_t *)&params->DEVEUI, sizeof(params->DEVEUI));
+
+  console.log(sqINFO, "DEVADDR :");
+  print_bytes_reverse((uint8_t *)&params->DEVADDR, sizeof(params->DEVADDR));
+
+  console.log(sqINFO, "\n[Keys]");
+  console.log(sqINFO, "APPxKEY :");
+  print_bytes(params->APPxKEY, sizeof(params->APPxKEY));
+
+  console.log(sqINFO, "NWKxKEY :");
+  print_bytes(params->NWKxKEY, sizeof(params->NWKxKEY));
+
+  console.log(sqINFO, "FNWKSINT :");
+  print_bytes(params->FNWKSINT, sizeof(params->FNWKSINT));
+
+  console.log(sqINFO, "SNWKSINT :");
+  print_bytes(params->SNWKSINT, sizeof(params->SNWKSINT));
+
+  // --- OTAA / ABP 模式提示 ---
+  console.log(sqINFO, "\n[Mode Summary]");
+  if (params->OTAA)
+  {
+    console.log(sqINFO, "Mode : OTAA");
+    if (params->LORAWAN_1_1)
+      console.log(sqINFO, "LoRaWAN 1.1 OTAA -> APPxKEY=AppKey, NWKxKEY=NwkKey");
+    else
+      console.log(sqINFO, "LoRaWAN 1.0.x OTAA -> NWKxKEY not used");
+  }
+  else
+  {
+    console.log(sqINFO, "Mode : ABP");
+    if (params->LORAWAN_1_1)
+      console.log(sqINFO, "LoRaWAN 1.1 ABP -> APPxKEY=AppSKey, NWKxKEY=NwkSKey, FNWKSINT/SNWKSINT valid");
+    else
+      console.log(sqINFO, "LoRaWAN 1.0.x ABP -> APPxKEY=AppSKey, NWKxKEY=NwkSKey, FNWKSINT/SNWKSINT not used");
+  }
+
+  console.log(sqINFO, "========================================");
+}
+
+void LoRaWanService::setParams(lorawan_params_settings *params)
 {
   int16_t state = RADIOLIB_ERR_NONE;
-  console.log(sqINFO, "DevAddr: ");
-  Serial.println((unsigned long)node.getDevAddr(), HEX);
+  printParams();
   // Enable the ADR algorithm (on by default which is preferable)
+  if (params->ADR == true)
+  {
+    console.log(sqINFO, "Enable ADR");
+  }
+  else
+  {
+    console.log(sqINFO, "Disable ADR");
+  }
   node.setADR(params->ADR);
   // Set a datarate to start off with
   node.setDatarate(params->DR);
@@ -208,7 +295,7 @@ int16_t LoRaWanService::lwActivate()
     }
   } // while join
   console.log(sqINFO, F("Joined"));
-  setParams();
+  setParams(params);
   // reset the failed join count
   bootCountSinceUnsuccessfulJoin = 0;
   delay(1000); // hold off off hitting the airwaves again too soon - an issue in the US
@@ -256,6 +343,7 @@ bool LoRaWanService::begin(bool autogen)
     autoGenKeys();
   }
 
+  setParams(params);
   // activate node by restoring session or otherwise joining the network
   state = lwActivate();
 
@@ -317,6 +405,7 @@ void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8
 {
   int16_t state = 0;
   console.log(sqINFO, "send process start");
+
   // you can also retrieve additional information about an uplink or
   // downlink by passing a reference to LoRaWANEvent_t structure
   LoRaWANEvent_t uplinkDetails;
@@ -346,6 +435,7 @@ void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8
 
   // Check if a downlink was received
   // (state 0 = no downlink, state 1/2 = downlink in window Rx1/Rx2)
+  success_downlink_received = false;
   if (state > 0)
   {
     console.log(sqINFO, "Received a downlink on port %d", downlinkDetails.fPort);
@@ -353,6 +443,7 @@ void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8
     {
       *fPortDown = downlinkDetails.fPort;
     }
+    success_downlink_received = true;
   }
   else
   {
@@ -363,6 +454,41 @@ void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8
 void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8_t fPortUp, uint8_t *dataDown, size_t *lenDown, bool isConfirmed)
 {
   send_and_receive(dataUp, lenUp, fPortUp, dataDown, lenDown, NULL, isConfirmed);
+}
+
+void LoRaWanService::send_and_receive(bool *success, const uint8_t *dataUp, size_t lenUp, uint8_t fPortUp, uint8_t *dataDown, size_t *lenDown, uint8_t *fPortDown, bool isConfirmed)
+{
+  send_and_receive(dataUp, lenUp, fPortUp, dataDown, lenDown, fPortDown, isConfirmed);
+  *success = success_downlink_received;
+}
+void LoRaWanService::send_and_receive(bool *success, const uint8_t *dataUp, size_t lenUp, uint8_t fPortUp, uint8_t *dataDown, size_t *lenDown, bool isConfirmed)
+{
+  send_and_receive(success, dataUp, lenUp, fPortUp, dataDown, lenDown, NULL, isConfirmed);
+}
+
+void LoRaWanService::setCSMA(bool csmaEnabled, uint8_t maxChanges, uint8_t backoffMax, uint8_t difsSlots)
+{
+  node.setCSMA(csmaEnabled, maxChanges, backoffMax, difsSlots);
+}
+
+void LoRaWanService::setClass(LoRaWANClass cls)
+{
+  node.setClass(cls);
+}
+
+void LoRaWanService::startClassC()
+{
+  node.startClassC();
+}
+
+void LoRaWanService::stopClassC()
+{
+  node.stopClassC();
+}
+
+bool LoRaWanService::pollClassC(uint8_t *dataDown, size_t *lenDown, uint8_t *portDown) // 在主循環呼叫：若 ISR 置位，取包並解析
+{
+  return node.pollClassC(dataDown, lenDown, portDown);
 }
 
 // result code to text - these are error codes that can be raised when using LoRaWAN

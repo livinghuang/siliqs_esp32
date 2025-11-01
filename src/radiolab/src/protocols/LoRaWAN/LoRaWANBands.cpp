@@ -209,37 +209,50 @@ const LoRaWANBand_t AS923 = {
     .txAck = {{.enabled = true, .idx = 0, .freq = 9238000, .drMin = 3, .drMax = 3, .dr = 3, .available = true}, RADIOLIB_LORAWAN_CHANNEL_NONE},
     .dataRates = {RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_12 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_11 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_10 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_9 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_8 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_7 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_7 | RADIOLIB_LORAWAN_DATA_RATE_BW_250_KHZ, RADIOLIB_LORAWAN_DATA_RATE_FSK, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED}};
 
-// Living: 20241213 added AS923_1 for 8 channels support
+// Living: 20251021 added AS923_1 for 8 channels support
 const LoRaWANBand_t AS923_1 = {
     .bandNum = BandAS923_1,
     .bandType = RADIOLIB_LORAWAN_BAND_DYNAMIC,
-    .freqMin = 9150000,
-    .freqMax = 9280000,
+
+    .freqMin = 9230000,
+    .freqMax = 9250000,
+
     .payloadLenMax = {51, 51, 115, 115, 242, 242, 242, 242, 0, 0, 0, 0, 0, 0, 0},
-    .powerMax = 30,
-    .powerNumSteps = 7,
+
+    // 你現場想要的 EIRP 上限（先放 22dBm；TxParamSetup 會把它量化成允許的等級）
+    .powerMax = 16,
+    .powerNumSteps = 7, // 2 dB/step：足夠涵蓋 16→2 dB 的步階
+
     .dutyCycle = 0,
     .dwellTimeUp = RADIOLIB_LORAWAN_DWELL_TIME,
     .dwellTimeDn = RADIOLIB_LORAWAN_DWELL_TIME,
     .txParamSupported = true,
+
+    // 8 個上行頻道（923.2~924.6，每 200 kHz）
     .txFreqs = {
-        {.enabled = true, .idx = 0, .freq = 9232000, .drMin = 0, .drMax = 5, .dr = 5, .available = true},
-        {.enabled = true, .idx = 1, .freq = 9234000, .drMin = 0, .drMax = 5, .dr = 5, .available = true},
-        {.enabled = true, .idx = 2, .freq = 9236000, .drMin = 0, .drMax = 5, .dr = 5, .available = true},
-        {.enabled = true, .idx = 3, .freq = 9238000, .drMin = 0, .drMax = 5, .dr = 5, .available = true},
-        {.enabled = true, .idx = 4, .freq = 9240000, .drMin = 0, .drMax = 5, .dr = 5, .available = true},
-        {.enabled = true, .idx = 5, .freq = 9242000, .drMin = 0, .drMax = 5, .dr = 5, .available = true},
-        {.enabled = true, .idx = 6, .freq = 9244000, .drMin = 0, .drMax = 5, .dr = 5, .available = true},
-        {.enabled = true, .idx = 7, .freq = 9246000, .drMin = 0, .drMax = 5, .dr = 5, .available = true},
+        {true, 0, 9232000, 0, 5, 5, true},
+        {true, 1, 9234000, 0, 5, 5, true},
+        {true, 2, 9236000, 0, 5, 5, true},
+        {true, 3, 9238000, 0, 5, 5, true},
+        {true, 4, 9240000, 0, 5, 5, true},
+        {true, 5, 9242000, 0, 5, 5, true},
+        {true, 6, 9244000, 0, 5, 5, true},
+        {true, 7, 9246000, 0, 5, 5, true},
     },
+
+    // Join 僅兩條（AS923-1 規範）：DR2（SF10/125）
     .txJoinReq = {
-        {.enabled = true, .idx = 0, .freq = 9232000, .drMin = 0, .drMax = 5, .dr = 5, .available = true},
-        {.enabled = true, .idx = 1, .freq = 9234000, .drMin = 0, .drMax = 5, .dr = 5, .available = true},
+        {true, 0, 9232000, 0, 5, 2, true},
+        {true, 1, 9234000, 0, 5, 2, true},
         RADIOLIB_LORAWAN_CHANNEL_NONE,
     },
+
+    // ---- 關鍵：固定制別，一定把 TxSpan 全關 ----
     .numTxSpans = 0,
     .txSpans = {RADIOLIB_LORAWAN_CHANNEL_SPAN_NONE, RADIOLIB_LORAWAN_CHANNEL_SPAN_NONE},
     .rx1Span = RADIOLIB_LORAWAN_CHANNEL_SPAN_NONE,
+
+    // 與你原本相同的 RX1 Offset 對照表
     .rx1DrTable = {
         {0, 0, 0, 0, 0, 0, 1, 2},
         {1, 0, 0, 0, 0, 0, 2, 3},
@@ -257,10 +270,27 @@ const LoRaWANBand_t AS923_1 = {
         {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
         {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     },
-    .rx2 = {.enabled = true, .idx = 0, .freq = 9232000, .drMin = 0, .drMax = 7, .dr = 2, .available = true},
-    .txWoR = {{.enabled = true, .idx = 0, .freq = 9236000, .drMin = 3, .drMax = 3, .dr = 3, .available = true}, RADIOLIB_LORAWAN_CHANNEL_NONE},
-    .txAck = {{.enabled = true, .idx = 0, .freq = 9238000, .drMin = 3, .drMax = 3, .dr = 3, .available = true}, RADIOLIB_LORAWAN_CHANNEL_NONE},
-    .dataRates = {RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_12 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_11 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_10 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_9 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_8 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_7 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_7 | RADIOLIB_LORAWAN_DATA_RATE_BW_250_KHZ, RADIOLIB_LORAWAN_DATA_RATE_FSK, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED}};
+
+    // RX2 預設 AS923_1：923.2 MHz / DR2
+    .rx2 = {true, 0, 9232000, 0, 7, 2, true},
+
+    // WoR / Ack 可留著（並不影響 Join）
+    .txWoR = {{true, 0, 9236000, 3, 3, 3, true}, RADIOLIB_LORAWAN_CHANNEL_NONE},
+    .txAck = {{true, 0, 9238000, 3, 3, 3, true}, RADIOLIB_LORAWAN_CHANNEL_NONE},
+
+    // DR 定義
+    .dataRates = {RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_12 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, // DR0
+                  RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_11 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, // DR1
+                  RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_10 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ, // DR2
+                  RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_9 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ,  // DR3
+                  RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_8 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ,  // DR4
+                  RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_7 | RADIOLIB_LORAWAN_DATA_RATE_BW_125_KHZ,  // DR5
+                  RADIOLIB_LORAWAN_DATA_RATE_LORA | RADIOLIB_LORAWAN_DATA_RATE_SF_7 | RADIOLIB_LORAWAN_DATA_RATE_BW_250_KHZ,  // DR6
+                  RADIOLIB_LORAWAN_DATA_RATE_FSK,                                                                             // DR7
+                  RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED, RADIOLIB_LORAWAN_DATA_RATE_UNUSED},
+};
+
+// Living: 20251021 added AS923_1 for 8 channels support
 
 const LoRaWANBand_t AS923_2 = {
     .bandNum = BandAS923_2,

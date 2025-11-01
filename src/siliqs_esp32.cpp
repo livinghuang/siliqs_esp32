@@ -95,6 +95,7 @@ void siliqs_esp32_setup(int print_level, int serial_speed)
   Serial.begin(serial_speed);
   console.begin(print_level);
   bootCount++;
+  console.log(sqINFO, "Boot number: %d", bootCount);
   // 初始化文件系统
   setupFileSystem();
 
