@@ -111,7 +111,7 @@ bool SQ_LittleFSFS::begin(bool formatOnFail, const char *basePath, uint8_t maxOp
   }
   else
   {
-    console.log(sqWARNING, "Could not retrieve partition information for label: %s", partitionLabel_);
+    console.log(sqWARN, "Could not retrieve partition information for label: %s", partitionLabel_);
   }
 
   _impl->mountpoint(basePath);

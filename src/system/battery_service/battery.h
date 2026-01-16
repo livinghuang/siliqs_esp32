@@ -180,19 +180,51 @@ public:
     }
   }
 
+  float read_adc_stable()
+  {
+    const int N = 33; // 奇數方便取中位數
+    float buf[N];
+    for (int i = 0; i < N; i++)
+    {
+      buf[i] = read(gpio);
+      delayMicroseconds(500); // 高阻抗建議一定要有
+    }
+    // 排序
+    for (int i = 0; i < N - 1; i++)
+    {
+      for (int j = 0; j < N - 1 - i; j++)
+      {
+        if (buf[j] > buf[j + 1])
+        {
+          float temp = buf[j];
+          buf[j] = buf[j + 1];
+          buf[j + 1] = temp; // 交換
+        }
+      }
+    }
+    return buf[N / 2]; // 取中位數
+  }
+
   void fetch_adc()
   {
     float voltage = 0.0;
     float adc = 0.0;
     log("GPIO PIN:" + String(gpio));
 
+    for (int i = 0; i < 10; i++)
+    {
+      (void)read(gpio);
+      delayMicroseconds(500);
+    }
+
     for (int i = 0; i < fetch_times; i++)
     {
-      adc = read(gpio);
+      adc = read_adc_stable();
       voltage += adc;
       log(String(adc));
       vTaskDelay(10 / portTICK_PERIOD_MS);
     }
+
     battery_voltage = voltage / fetch_times;
     log("ADC average: " + String(battery_voltage));
     set_power_mode(battery_voltage);

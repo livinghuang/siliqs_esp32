@@ -29,6 +29,34 @@ public:
     }
   }
 
+  void begin(time_t localTime)
+  {
+    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER)
+    {
+      // 從 RTC 記憶體還原
+      struct timeval tv = {.tv_sec = saved_rtc_time, .tv_usec = 0};
+      settimeofday(&tv, nullptr);
+      Serial.printf("Restored time from RTC: %lu\n", (unsigned long)saved_rtc_time);
+    }
+    else
+    {
+      // 冷開機設定時間
+      set_time(localTime);
+      Serial.printf("Cold boot - default time set: %lu\n", (unsigned long)localTime);
+    }
+  }
+
+  void begin()
+  {
+    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER)
+    {
+      // 從 RTC 記憶體還原
+      struct timeval tv = {.tv_sec = saved_rtc_time, .tv_usec = 0};
+      settimeofday(&tv, nullptr);
+      Serial.printf("Restored time from RTC: %lu\n", (unsigned long)saved_rtc_time);
+    }
+  }
+
   void set_time(time_t t)
   {
     struct timeval tv = {.tv_sec = t, .tv_usec = 0};
