@@ -20,6 +20,12 @@ void RS485Communication::begin()
   _serial.begin(_baudRate, SERIAL_8N1, _RO, _DI); // Use _serial
 }
 
+void RS485Communication::end()
+{
+  _serial.end(); // End the serial communication
+  powerOff();    // Power off if powerPin is set
+}
+
 void RS485Communication::send(const char *data, int length)
 {
   powerOn();        // Power on if powerPin is set
