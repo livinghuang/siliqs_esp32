@@ -7,6 +7,271 @@ Preferences store;
 RTC_DATA_ATTR uint16_t bootCountSinceUnsuccessfulJoin = 0;
 RTC_DATA_ATTR uint8_t LWsession[RADIOLIB_LORAWAN_SESSION_BUF_SIZE];
 
+QueueHandle_t LoRaWanService::s_lorawanDownQ = nullptr;
+QueueHandle_t LoRaWanService::s_lorawanUpQ = nullptr;
+
+SemaphoreHandle_t LoRaWanService::s_lorawanUpQMutex = nullptr;
+SemaphoreHandle_t LoRaWanService::s_lorawanDownQMutex = nullptr;
+
+void LoRaWanService::init_uplink_queue()
+{
+  console.log(sqINFO, "[LoRaWAN] init uplink queue");
+  if (!s_lorawanUpQ)
+  {
+    s_lorawanUpQ = xQueueCreate(LORAWAN_UP_QSIZE, sizeof(LoraUplinkMsg_t));
+    configASSERT(s_lorawanUpQ);
+  }
+
+  if (!s_lorawanUpQMutex)
+  {
+    s_lorawanUpQMutex = xSemaphoreCreateMutex();
+    configASSERT(s_lorawanUpQMutex);
+  }
+}
+
+bool LoRaWanService::is_uplink_queue_empty() const
+{
+  if (!s_lorawanUpQ)
+    return true;
+  return uxQueueMessagesWaiting(s_lorawanUpQ) == 0;
+}
+
+size_t LoRaWanService::uplink_queue_size() const
+{
+  return s_lorawanUpQ ? uxQueueMessagesWaiting(s_lorawanUpQ) : 0;
+}
+
+bool LoRaWanService::pop_from_uplink_queue(LoraUplinkMsg_t *out)
+{
+  if (!s_lorawanUpQ || !s_lorawanUpQMutex || !out)
+    return false;
+
+  const TickType_t takeTimeout = pdMS_TO_TICKS(50);
+
+  // optional: 先記一個時間點用於 debug（不用放在 critical）
+  uint32_t t0 = millis();
+
+  // 嘗試取得 mutex（不要在 mutex 內做昂貴的工作）
+  if (xSemaphoreTake(s_lorawanUpQMutex, takeTimeout) != pdTRUE)
+  {
+    // 取得不到 mutex -> 視情況決定是否重試或直接回失敗
+    // 這裡直接回失敗（呼叫端可選擇重試或記錄）
+    return false;
+  }
+
+  // 臨界區：盡量把工作縮到最小 —— 只做 xQueueReceive
+  bool ok = false;
+  if (xQueueReceive(s_lorawanUpQ, out, 0) == pdPASS)
+  {
+    ok = true;
+  }
+
+  // 立即釋放 mutex（臨界區結束）
+  xSemaphoreGive(s_lorawanUpQMutex);
+
+  // 在臨界區外做 log（避免延長 mutex 持有時間）
+  if (ok)
+  {
+    console.log(sqINFO, "[LoRaWAN] pop uplink (mutex protected) - got msg");
+  }
+  else
+  {
+    // optional: 只在 debug 或頻繁失敗時印出，避免 log 浪費時間
+    console.log(sqDEBUG, "[LoRaWAN] pop uplink empty or failed" + String(millis() - t0) + "ms wait");
+  }
+  return ok;
+}
+
+bool LoRaWanService::push_to_uplink_queue(const uint8_t *upBuffer, size_t upLen, uint8_t upPort)
+{
+  // 先做基本檢查（在 memcpy 前）
+  if (!s_lorawanUpQ || !s_lorawanUpQMutex || !upBuffer)
+  {
+    return false;
+  }
+  console.log(sqINFO, "[LoRaWAN] push uplink");
+  // 使用區域變數（非 static）以避免 race / 共用資料問題
+  LoraUplinkMsg_t msg;
+  msg.ts_ms = (uint32_t)millis();
+  msg.fport = upPort;
+  msg.len = (upLen > LORAWAN_UP_MAXLEN) ? LORAWAN_UP_MAXLEN : (uint8_t)upLen;
+  memcpy(msg.data, upBuffer, msg.len);
+  // 取得 mutex（不要用永遠等待，避免死鎖；timeout 可依需求調整）
+  const TickType_t takeTimeout = pdMS_TO_TICKS(50);
+  if (xSemaphoreTake(s_lorawanUpQMutex, takeTimeout) != pdTRUE)
+  {
+    // 取得不到 mutex，視情況回報失敗或重試
+    console.log(sqWARN, "[LoRaWAN] uplink mutex take failed");
+    return false;
+  }
+  bool result = false;
+  // 嘗試送入 queue（非阻塞）
+  if (xQueueSend(s_lorawanUpQ, &msg, 0) == pdPASS)
+  {
+    result = true;
+  }
+  else
+  {
+    // queue 滿了：在 mutex 保護下 pop 最舊一筆再 push（達到覆寫效果）
+    LoraUplinkMsg_t discarded;
+    if (xQueueReceive(s_lorawanUpQ, &discarded, 0) == pdTRUE)
+    {
+      if (xQueueSend(s_lorawanUpQ, &msg, 0) == pdPASS)
+      {
+        result = true;
+        console.log(sqINFO, "[LoRaWAN] uplink queue full, popped oldest and pushed new");
+      }
+      else
+      {
+        console.log(sqWARN, "[LoRaWAN] uplink push failed after pop");
+      }
+    }
+    else
+    {
+      // 理論上不會發生（因為 queueSend 失敗表示滿），但處理保險情況
+      console.log(sqERROR, "[LoRaWAN] unexpected queueReceive failed");
+    }
+  }
+  // 釋放 mutex
+  xSemaphoreGive(s_lorawanUpQMutex);
+  return result;
+}
+
+void LoRaWanService::init_downlink_queue()
+{
+  console.log(sqINFO, "[LoRaWAN] init downlink queue");
+  if (!s_lorawanDownQ)
+  {
+    s_lorawanDownQ = xQueueCreate(LORAWAN_DOWN_QSIZE, sizeof(LoraDownlinkMsg_t));
+    configASSERT(s_lorawanDownQ);
+  }
+  if (!s_lorawanDownQMutex)
+  {
+    s_lorawanDownQMutex = xSemaphoreCreateMutex();
+    configASSERT(s_lorawanDownQMutex);
+  }
+}
+
+bool LoRaWanService::is_downlink_queue_empty() const
+{
+  if (!s_lorawanDownQ || !s_lorawanDownQMutex)
+    return true;
+
+  // 短 timeout，避免長時間阻塞
+  const TickType_t takeTimeout = pdMS_TO_TICKS(20);
+  if (xSemaphoreTake(s_lorawanDownQMutex, takeTimeout) != pdTRUE)
+  {
+    // 取得不到 mutex 時採保守回傳（視情況可改為重試）
+    return true;
+  }
+
+  UBaseType_t cnt = uxQueueMessagesWaiting(s_lorawanDownQ);
+  xSemaphoreGive(s_lorawanDownQMutex);
+  return cnt == 0;
+}
+
+size_t LoRaWanService::downlink_queue_size() const
+{
+  if (!s_lorawanDownQ || !s_lorawanDownQMutex)
+    return 0;
+
+  const TickType_t takeTimeout = pdMS_TO_TICKS(20);
+  if (xSemaphoreTake(s_lorawanDownQMutex, takeTimeout) != pdTRUE)
+  {
+    // 取得不到 mutex 時採保守回傳 0（或可回 UINT_MAX 表示錯誤）
+    return 0;
+  }
+
+  UBaseType_t cnt = uxQueueMessagesWaiting(s_lorawanDownQ);
+  xSemaphoreGive(s_lorawanDownQMutex);
+  return (size_t)cnt;
+}
+
+bool LoRaWanService::push_to_downlink_queue(const uint8_t *downBuffer, size_t downLen, uint8_t downPort)
+{
+  if (!s_lorawanDownQ || !s_lorawanDownQMutex || !downBuffer)
+    return false;
+
+  console.log(sqINFO, "[LoRaWAN] push downlink");
+
+  // 使用區域變數，避免 static 造成的 race
+  LoraDownlinkMsg_t msg;
+  msg.ts_ms = millis();
+  msg.fport = downPort;
+  msg.len = (downLen > LORAWAN_DOWN_MAXLEN) ? LORAWAN_DOWN_MAXLEN : (uint8_t)downLen;
+  memcpy(msg.data, downBuffer, msg.len);
+
+  // 取得 mutex（不要永遠等，避免死鎖或長時間阻塞）
+  const TickType_t takeTimeout = pdMS_TO_TICKS(50);
+  if (xSemaphoreTake(s_lorawanDownQMutex, takeTimeout) != pdTRUE)
+  {
+    console.log(sqWARN, "[LoRaWAN] downlink mutex take failed");
+    return false;
+  }
+
+  bool result = false;
+  if (xQueueSend(s_lorawanDownQ, &msg, 0) == pdPASS)
+  {
+    result = true;
+  }
+  else
+  {
+    // queue 滿：pop 最舊一筆再 push（在 mutex 保護下安全）
+    LoraDownlinkMsg_t discarded;
+    if (xQueueReceive(s_lorawanDownQ, &discarded, 0) == pdTRUE)
+    {
+      if (xQueueSend(s_lorawanDownQ, &msg, 0) == pdPASS)
+      {
+        result = true;
+        console.log(sqINFO, "[LoRaWAN] downlink queue full, popped oldest and pushed new");
+      }
+      else
+      {
+        console.log(sqWARN, "[LoRaWAN] downlink push failed after pop");
+      }
+    }
+    else
+    {
+      // 理論上不會到這裡，保險處理
+      console.log(sqERROR, "[LoRaWAN] downlink unexpected receive failed");
+    }
+  }
+
+  xSemaphoreGive(s_lorawanDownQMutex);
+  return result;
+}
+bool LoRaWanService::pop_from_downlink_queue(LoraDownlinkMsg_t *out)
+{
+  if (!s_lorawanDownQ || !s_lorawanDownQMutex || !out)
+    return false;
+
+  const TickType_t takeTimeout = pdMS_TO_TICKS(50);
+  // 先嘗試取得 mutex（不要在 mutex 內做昂貴操作）
+  if (xSemaphoreTake(s_lorawanDownQMutex, takeTimeout) != pdTRUE)
+  {
+    // 取得不到 mutex -> 視情況回傳失敗（呼叫端可決定重試）
+    return false;
+  }
+
+  // 臨界區：只做必須的 xQueueReceive
+  bool ok = (xQueueReceive(s_lorawanDownQ, out, 0) == pdPASS);
+
+  // 立即釋放 mutex（縮短臨界區）
+  xSemaphoreGive(s_lorawanDownQMutex);
+
+  // 在臨界區外做 log
+  if (ok)
+  {
+    console.log(sqINFO, "[LoRaWAN] pop downlink - got fport=%u len=%u", out->fport, out->len);
+  }
+  else
+  {
+    console.log(sqDEBUG, "[LoRaWAN] pop downlink - empty or failed");
+  }
+
+  return ok;
+}
+
 const LoRaWANBand_t Region = REGION;
 const uint8_t subBand = SUB_BAND; // For US915, change this to 2, otherwise leave on 0
 
@@ -26,6 +291,23 @@ LoRaWanService::LoRaWanService(lorawan_params_settings *params)
   pinMode(LORA_NSS, OUTPUT);
   pinMode(LORA_NRST, OUTPUT);
   digitalWrite(LORA_NRST, LOW);
+}
+
+// Destructor
+void LoRaWanService::start()
+{
+  init_downlink_queue();
+  init_uplink_queue();
+  // Start the LoRaWAN service
+
+  xTaskCreatePinnedToCore(
+      taskLoop,
+      "lorawan_task",
+      8192,
+      this,
+      1,
+      &taskHandle,
+      0);
 }
 
 // Destructor
@@ -309,23 +591,24 @@ bool LoRaWanService::begin(bool autogen)
   int16_t state = 0; // return value for calls to RadioLib
 
   console.log(sqINFO, F("Initalise the radio"));
-  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_NSS);
-  Serial.print("Reset SX1262...");
+  console.log(sqINFO, "Reset SX1262 ");
+  Serial.print("Reset SX1262 ");
   pinMode(LORA_NRST, OUTPUT);
   digitalWrite(LORA_NRST, LOW);
-  delay(20);
+  delay(1);
   digitalWrite(LORA_NRST, HIGH);
-  delay(20);
+  delay(1);
+  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_NSS);
+  digitalWrite(LORA_NSS, LOW);
 
   // 等 BUSY 釋放
   pinMode(LORA_BUSY, INPUT);
   while (digitalRead(LORA_BUSY))
   {
     Serial.print(".");
-    delay(1);
+    Serial.flush();
   }
-  Serial.println("done.");
-  // radio.XTAL = true;
+  Serial.println(" done.");
   state = radio.begin();
 
   if (state == RADIOLIB_ERR_NONE)
@@ -489,6 +772,58 @@ void LoRaWanService::stopClassC()
 bool LoRaWanService::pollClassC(uint8_t *dataDown, size_t *lenDown, uint8_t *portDown) // 在主循環呼叫：若 ISR 置位，取包並解析
 {
   return node.pollClassC(dataDown, lenDown, portDown);
+}
+
+void LoRaWanService::taskLoop(void *param)
+{
+  static uint32_t lastMillis = 0;
+  LoRaWanService *instance = static_cast<LoRaWanService *>(param);
+
+  uint8_t downBuffer[255];
+  size_t downLen = 0;
+  uint8_t downPort = 0;
+  LoraUplinkMsg_t updata;
+  for (;;)
+  {
+    uint32_t now = millis();
+
+    // 範例：at least interval uplink
+    if ((now - lastMillis >= instance->uplink_interval_ms()) && (!instance->is_uplink_queue_empty()))
+    {
+      lastMillis = now;
+      instance->pop_from_uplink_queue(&updata);
+      instance->set_battery_level(updata.battery_level);
+      instance->send_and_receive(
+          (const uint8_t *)updata.data, updata.len,
+          updata.fport,
+          downBuffer, &downLen, &downPort,
+          updata.isConfirmed);
+      // 這裡可能也會帶回下行（視 NS 行為），一樣往下交給 pollClassC 流程
+      if (downLen > 0)
+      {
+        Serial.println("Downlink received in taskLoop after uplink");
+        print_bytes(downBuffer, downLen);
+        instance->push_to_downlink_queue(downBuffer, downLen, downPort);
+        downLen = 0;
+        downPort = 0;
+        memset(downBuffer, 0, 255);
+      }
+    }
+
+    // 維持 Class C 常駐接收；若抓到下行，複製到 queue
+    if (instance->pollClassC(downBuffer, &downLen, &downPort))
+    {
+      if (downLen > 0)
+      {
+        Serial.println("Class C downlink received in taskLoop");
+        instance->push_to_downlink_queue(downBuffer, downLen, downPort);
+        downLen = 0;
+        downPort = 0;
+        memset(downBuffer, 0, 255);
+      }
+    }
+    vTaskDelay(pdMS_TO_TICKS(10));
+  }
 }
 
 // result code to text - these are error codes that can be raised when using LoRaWAN
