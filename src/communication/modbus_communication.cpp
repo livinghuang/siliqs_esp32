@@ -216,7 +216,7 @@ bool ModbusCommunication::startSlaveTask(std::function<void(const modbus_data_t 
   {
     callback = [](const modbus_data_t *request, modbus_data_t *response)
     {
-      console.log(sqWARN, "Default callback: No processing performed.");
+      console.log(sqWARNING, "Default callback: No processing performed.");
       response = nullptr;
     };
     return false;

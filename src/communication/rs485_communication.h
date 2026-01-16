@@ -17,7 +17,6 @@ public:
 
   // 重写基类方法
   void begin();                                                                                                // 初始化 RS485 通信
-  void end();                                                                                                  // 结束 RS485 通信
   void send(const char *data, int length);                                                                     // 发送 RS485 数据
   size_t receive(char *buffer, size_t length = RS485_MAX_DATA_LENGTH, int timeout = -1);                       // 接收 RS485 数据
   size_t readFromChar(char *buffer, char start_char, size_t length = RS485_MAX_DATA_LENGTH, int timeout = -1); // 接收 RS485 数据

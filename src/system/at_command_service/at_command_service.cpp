@@ -113,7 +113,7 @@ void ATCommandService::registerCommand(const String &command, std::function<void
   if (commandCallbacks.find(command) != commandCallbacks.end())
   {
     // 如果命令已存在，可以发送一个警告或处理
-    console.log(sqWARNING, "Command already registered: " + command);
+    console.log(sqWARN, "Command already registered: " + command);
     return; // 或者根据需求选择返回错误或覆盖旧的回调函数
   }
   commandCallbacks[command] = callback;
