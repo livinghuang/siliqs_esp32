@@ -3,8 +3,6 @@
 #ifdef USE_LORAWAN
 
 #include "siliqs_esp32.h"
-// #include "freertos/FreeRTOS.h"
-// #include "freertos/task.h"
 #include "radiolab/src/RadioLib.h"
 
 enum LORAWAN_SLEEP_TYPE
@@ -39,6 +37,31 @@ typedef struct lorawan_params_settings
   uint8_t SNWKSINT[16];           // SNWKSINT, if lorawan v1.0.x, no use
 } lorawan_params_settings;
 
+#define LORAWAN_DOWN_MAXLEN 255
+#define LORAWAN_DOWN_QSIZE 16 // 你要幾筆緩衝就設多大
+
+typedef struct
+{
+  uint32_t ts_ms;                    // 收到時間
+  uint8_t fport;                     // 來源 FPort
+  size_t len;                        // 資料長度
+  uint8_t data[LORAWAN_DOWN_MAXLEN]; // 資料本體（拷貝進來）
+} LoraDownlinkMsg_t;
+
+#define LORAWAN_UP_MAXLEN 255
+#define LORAWAN_UP_QSIZE 16 // 你要幾筆緩衝就設多大
+
+typedef struct
+{
+  uint32_t ts_ms;                  // 收到時間
+  uint8_t fport;                   // FPort
+  size_t len;                      // 資料長度
+  uint8_t data[LORAWAN_UP_MAXLEN]; // 資料本體（拷貝進來）
+  uint8_t isConfirmed;
+  uint8_t ack;
+  uint8_t battery_level;
+} LoraUplinkMsg_t;
+
 class LoRaWanService
 {
 public:
@@ -46,6 +69,7 @@ public:
   LoRaWanService(lorawan_params_settings *params);
   ~LoRaWanService();
   bool begin(bool autogen = true);
+  void start();
   void stop();
   void softSleep();
   void sleep(enum LORAWAN_SLEEP_TYPE sleep_type = LORAWAN_SLEEP_IN_DEEP_WITH_TTN_LAW);
@@ -62,6 +86,19 @@ public:
   void autoGenKeys();
   void setParams(lorawan_params_settings *params);
   void printParams();
+
+  void init_downlink_queue();
+  bool is_downlink_queue_empty() const;
+  size_t downlink_queue_size() const;
+  bool pop_from_downlink_queue(LoraDownlinkMsg_t *out);
+  bool push_to_downlink_queue(const uint8_t *buf, size_t len, uint8_t fport);
+
+  void init_uplink_queue();
+  bool is_uplink_queue_empty() const;
+  size_t uplink_queue_size() const;
+  bool pop_from_uplink_queue(LoraUplinkMsg_t *out);
+  bool push_to_uplink_queue(const uint8_t *buf, size_t len, uint8_t fport);
+  uint32_t uplink_interval_ms() { return params->uplinkIntervalSeconds * 1000; }
   void end()
   {
     // stop();
@@ -73,9 +110,14 @@ private:
   int begin_node();
   int active_node();
   int16_t lwActivate();
+  TaskHandle_t taskHandle = nullptr;
+  static QueueHandle_t s_lorawanDownQ;
+  static QueueHandle_t s_lorawanUpQ;
+  static SemaphoreHandle_t s_lorawanUpQMutex;
+  static SemaphoreHandle_t s_lorawanDownQMutex;
+  static void taskLoop(void *param);
 };
 
-void arrayDump(uint8_t *buffer, uint16_t len);
 void debug(bool failed, const __FlashStringHelper *message, int state, bool halt);
 String stateDecode(const int16_t result);
 #endif // USE_LORAWAN
