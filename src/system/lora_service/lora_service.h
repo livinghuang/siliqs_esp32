@@ -34,13 +34,18 @@ public:
   bool begin();
 
   // Send a message
-  void sendMessage(const String &message);
+  // void sendMessage(const String &message);
+
+  // Send a message
+  bool sendMessage(const String &message);
 
   // Retrieve the last received message
   String getReceivedMessage();
 
   // Stop the background task
   void stop();
+
+  bool start_receiving();
 
   SX1262 radio;
 

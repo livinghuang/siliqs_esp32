@@ -79,7 +79,20 @@ bool LoRaService::begin()
   return true;
 }
 
-void LoRaService::sendMessage(const String &message)
+// void LoRaService::sendMessage(const String &message)
+// {
+//   xSemaphoreTake(messageMutex, portMAX_DELAY);    // Lock mutex
+//   messageToSend = message;                        // Store the message to be sent
+//   isTransmitting = true;                          // Set transmitting flag
+//   int state = radio.startTransmit(messageToSend); // Start transmission
+//   if (state != RADIOLIB_ERR_NONE)
+//   {
+//     console.log(sqINFO, "Failed to start transmission, code: %d\n", state);
+//   }
+//   xSemaphoreGive(messageMutex); // Unlock mutex
+// }
+
+bool LoRaService::sendMessage(const String &message)
 {
   xSemaphoreTake(messageMutex, portMAX_DELAY);    // Lock mutex
   messageToSend = message;                        // Store the message to be sent
@@ -90,6 +103,7 @@ void LoRaService::sendMessage(const String &message)
     console.log(sqINFO, "Failed to start transmission, code: %d\n", state);
   }
   xSemaphoreGive(messageMutex); // Unlock mutex
+  return (state == RADIOLIB_ERR_NONE);
 }
 
 String LoRaService::getReceivedMessage()
@@ -171,6 +185,12 @@ void LoRaService::handleOperation()
       console.log(sqINFO, "Reception failed, code: %d\n", state);
     }
   }
+}
+
+bool LoRaService::start_receiving()
+{
+  int state = radio.startReceive();
+  return (state == RADIOLIB_ERR_NONE);
 }
 
 #endif
