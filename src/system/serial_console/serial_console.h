@@ -15,11 +15,11 @@ enum Siliq_Log_Record_Level
   sqUNSET,
   sqDEBUG,
   sqINFO,
-  sqWARNING,
+  sqWARN,
   sqERROR,
   sqCRITICAL
 };
-
+#define sqWARNING sqWARN
 class SerialConsole
 {
   bool usingProtobufs = false; // 是否使用 protobuf 進行日誌記錄

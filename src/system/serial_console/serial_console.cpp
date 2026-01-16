@@ -67,7 +67,7 @@ void SerialConsole::log_to_serial(Siliq_Log_Record_Level logLevel, const char *f
   case sqINFO:
     Serial.print("INFO");
     break;
-  case sqWARNING:
+  case sqWARN:
     Serial.print("WARNING");
     break;
   case sqERROR:
