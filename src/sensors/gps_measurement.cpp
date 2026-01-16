@@ -33,7 +33,7 @@ bool GPSMeasurement::parseGPSData(const String &nmeaSentence)
 {
   if (!nmeaSentence.startsWith("$"))
   {
-    console.log(sqWARNING, "[ERROR] Invalid NMEA sentence: Does not start with '$'");
+    console.log(sqWARN, "[ERROR] Invalid NMEA sentence: Does not start with '$'");
     return false;
   }
 
@@ -91,8 +91,8 @@ bool GPSMeasurement::parseGPSData(const String &nmeaSentence)
   }
 
   // If no match is found, log the unknown sentence type
-  console.log(sqWARNING, "Unknown NMEA sentence type:");
-  console.log(sqWARNING, nmeaSentence);
+  console.log(sqWARN, "Unknown NMEA sentence type:");
+  console.log(sqWARN, nmeaSentence);
   return false;
 }
 
@@ -103,7 +103,7 @@ bool GPSMeasurement::parseZDA(const String &nmeaSentence)
   if (parts[1].isEmpty() || parts[2].isEmpty() || parts[3].isEmpty() ||
       parts[4].isEmpty() || parts[5].isEmpty() || parts[6].isEmpty())
   {
-    console.log(sqWARNING, "Missing critical ZDA fields");
+    console.log(sqWARN, "Missing critical ZDA fields");
     gpsData.valid = false;
   }
   else
@@ -147,7 +147,7 @@ bool GPSMeasurement::parseGLL(const String &nmeaSentence)
   if (parts[1].isEmpty() || parts[2].isEmpty() || parts[3].isEmpty() ||
       parts[4].isEmpty() || parts[5].isEmpty() || (parts[6] != "A"))
   {
-    console.log(sqWARNING, "Missing critical GLL fields");
+    console.log(sqWARN, "Missing critical GLL fields");
     gpsData.valid = false;
   }
   else
@@ -167,7 +167,7 @@ bool GPSMeasurement::parseGGA(const String &nmeaSentence)
   if (parts[1].isEmpty() || parts[2].isEmpty() || parts[3].isEmpty() ||
       parts[4].isEmpty() || parts[5].isEmpty() || parts[9].isEmpty() || parts[7].isEmpty())
   {
-    console.log(sqWARNING, "Missing critical GGA fields");
+    console.log(sqWARN, "Missing critical GGA fields");
     gpsData.valid = false;
   }
   else
@@ -189,7 +189,7 @@ bool GPSMeasurement::parseRMC(const String &nmeaSentence)
   if (parts[1].isEmpty() || (parts[2] != "A") || parts[3].isEmpty() || parts[4].isEmpty() ||
       parts[5].isEmpty() || parts[6].isEmpty())
   {
-    console.log(sqWARNING, "Missing critical RMC fields");
+    console.log(sqWARN, "Missing critical RMC fields");
     gpsData.valid = false;
   }
   else
@@ -274,7 +274,7 @@ void GPSMeasurement::getMeasurement()
     }
     else // Handle buffer overflow
     {
-      console.log(sqWARNING, "GPS buffer overflow. Discarding data.");
+      console.log(sqWARN, "GPS buffer overflow. Discarding data.");
       gpsBuffer = "";
     }
   }
