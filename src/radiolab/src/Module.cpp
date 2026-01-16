@@ -332,13 +332,11 @@ int16_t Module::SPIwriteStream(uint8_t *cmd, uint8_t cmdLen, uint8_t *data, size
   (void)verify;
   return (RADIOLIB_ERR_NONE);
 #else
-
   // check the status
   if (verify && (this->spiConfig.checkStatusCb != nullptr))
   {
     state = this->spiConfig.checkStatusCb(this);
   }
-
   return (state);
 #endif
 }

@@ -24,7 +24,7 @@
 #endif
 
 #if RADIOLIB_DEBUG
-#pragma message(RADIOLIB_INFO)
+// #pragma message(RADIOLIB_INFO)
 #endif
 
 #if defined(RADIOLIB_UNKNOWN_PLATFORM)

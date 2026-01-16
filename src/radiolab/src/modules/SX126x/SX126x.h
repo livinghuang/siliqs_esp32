@@ -495,7 +495,7 @@ public:
   /*!
     \brief Whether to use XOSC (true) or RC (false) oscillator in standby mode. Defaults to false.
   */
-  bool standbyXOSC;
+  bool standbyXOSC = false;
 
   // basic methods
 

@@ -1,6 +1,7 @@
 #include "SX126x.h"
 #include <string.h>
 #include <math.h>
+#include "siliqs_esp32.h"
 #if !RADIOLIB_EXCLUDE_SX126X
 
 SX126x::SX126x(Module *mod) : PhysicalLayer(RADIOLIB_SX126X_FREQUENCY_STEP_SIZE, RADIOLIB_SX126X_MAX_PACKET_LENGTH)
@@ -181,23 +182,34 @@ int16_t SX126x::reset(bool verify)
 
   // set mode to standby - SX126x often refuses first few commands after reset
   RadioLibTime_t start = this->mod->hal->millis();
+  int i = 0;
   while (true)
   {
+    i++;
+    console.log(sqDEBUG, "Attempt #%d", i);
     // try to set mode to standby
     int16_t state = standby();
+
     if (state == RADIOLIB_ERR_NONE)
     {
+      console.log(sqDEBUG, "SX126x reset verified");
       // standby command successful
       return (RADIOLIB_ERR_NONE);
+    }
+    else
+    {
+      console.log(sqDEBUG, "SX126x standby command failed with code %d", state);
     }
 
     // standby command failed, check timeout and try again
     if (this->mod->hal->millis() - start >= 1000)
     {
+      console.log(sqDEBUG, "SX126x reset verification failed");
       // timed out, possibly incorrect wiring
       return (state);
     }
 
+    console.log(sqDEBUG, "SX126x reset not yet verified, retrying...");
     // wait a bit to not spam the module
     this->mod->hal->delay(10);
   }
@@ -506,9 +518,10 @@ int16_t SX126x::standby()
 
 int16_t SX126x::standby(uint8_t mode, bool wakeup)
 {
+  // console.log(sqDEBUG, "set to standby with mode=%d, wakeup=%d", mode, wakeup);
+
   // set RF switch (if present)
   this->mod->setRfSwitchState(Module::MODE_IDLE);
-
   if (wakeup)
   {
     // pull NSS low to wake up
@@ -2620,24 +2633,50 @@ int16_t SX126x::modSetup(float tcxoVoltage, bool useRegulatorLDO, uint8_t modem)
   pinMode(this->mod->getIrq(), INPUT);
   pinMode(this->mod->getGpio(), INPUT);
 
+  // if (digitalRead(this->mod->getIrq()) == HIGH)
+  // {
+  //   Serial.println(" SX126x IRQ pin is HIGH");
+  // }
+  // else
+  // {
+  //   Serial.println(" SX126x IRQ pin is LOW");
+  // }
+  // if (digitalRead(this->mod->getGpio()) == HIGH)
+  // {
+  //   Serial.println(" SX126x GPIO pin is HIGH");
+  // }
+  // else
+  // {
+  //   Serial.println(" SX126x GPIO pin is LOW");
+  // }
+
+  // while (digitalRead(this->mod->getGpio()) == HIGH)
+  // {
+  //   Serial.println(" SX126x waiting for GPIO pin to go LOW");
+  //   delay(100);
+  // }
+
   this->mod->spiConfig.widths[RADIOLIB_MODULE_SPI_WIDTH_ADDR] = Module::BITS_16;
   this->mod->spiConfig.widths[RADIOLIB_MODULE_SPI_WIDTH_CMD] = Module::BITS_8;
   this->mod->spiConfig.statusPos = 1;
+
   this->mod->spiConfig.cmds[RADIOLIB_MODULE_SPI_COMMAND_READ] = RADIOLIB_SX126X_CMD_READ_REGISTER;
   this->mod->spiConfig.cmds[RADIOLIB_MODULE_SPI_COMMAND_WRITE] = RADIOLIB_SX126X_CMD_WRITE_REGISTER;
+
   this->mod->spiConfig.cmds[RADIOLIB_MODULE_SPI_COMMAND_NOP] = RADIOLIB_SX126X_CMD_NOP;
   this->mod->spiConfig.cmds[RADIOLIB_MODULE_SPI_COMMAND_STATUS] = RADIOLIB_SX126X_CMD_GET_STATUS;
+
   this->mod->spiConfig.stream = true;
   this->mod->spiConfig.parseStatusCb = SPIparseStatus;
 
   // try to find the SX126x chip
-  if (!SX126x::findChip(this->chipType))
-  {
-    RADIOLIB_DEBUG_BASIC_PRINTLN("No SX126x found!");
-    this->mod->term();
-    return (RADIOLIB_ERR_CHIP_NOT_FOUND);
-  }
-  RADIOLIB_DEBUG_BASIC_PRINTLN("M\tSX126x");
+  // if (!SX126x::findChip(this->chipType))
+  // {
+  //   RADIOLIB_DEBUG_BASIC_PRINTLN("No SX126x found!");
+  //   this->mod->term();
+  //   return (RADIOLIB_ERR_CHIP_NOT_FOUND);
+  // }
+  // RADIOLIB_DEBUG_BASIC_PRINTLN("M\tSX126x");
 
   // reset the module and verify startup
   int16_t state = reset();
@@ -2758,6 +2797,8 @@ bool SX126x::findChip(const char *verStr)
   bool flagFound = false;
   while ((i < 10) && !flagFound)
   {
+    Serial.print("Trying to find SX126x chip, attempt ");
+    Serial.println(i + 1);
     // reset the module
     reset();
 

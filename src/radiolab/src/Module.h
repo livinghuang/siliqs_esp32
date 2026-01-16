@@ -4,7 +4,7 @@
 #include "TypeDef.h"
 #include "Hal.h"
 #include "utils/Utils.h"
-
+#define RADIOLIB_BUILD_ARDUINO
 #if defined(RADIOLIB_BUILD_ARDUINO)
 #include <SPI.h>
 #endif

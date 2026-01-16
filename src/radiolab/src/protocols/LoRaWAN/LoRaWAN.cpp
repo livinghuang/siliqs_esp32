@@ -1581,6 +1581,7 @@ int16_t LoRaWANNode::transmitUplink(LoRaWANChannel_t *chnl, uint8_t *in, uint8_t
   console.log(sqDEBUG, "eirp:" + String(eirp));
   console.log(sqDEBUG, "txpowermax:" + String(this->txPowerMax));
   console.log(sqDEBUG, "txpowersteps:" + String(this->txPowerSteps));
+
   // add by living huang 20251020
   RADIOLIB_ASSERT(state);
 
@@ -1653,6 +1654,7 @@ int16_t LoRaWANNode::receiveCommon(uint8_t dir, const LoRaWANChannel_t *dlChanne
     // set the physical layer configuration for downlink
     this->phyLayer->standby();
     state = this->setPhyProperties(&dlChannels[window], dir, this->txPowerMax - 2 * this->txPowerSteps);
+
     RADIOLIB_ASSERT(state);
 
     // calculate the Rx timeout
@@ -4262,15 +4264,19 @@ bool LoRaWANNode::pollClassC(uint8_t *dataDown, size_t *lenDown, uint8_t *portDo
 
   LoRaWANEvent_t eventDown;
 
+  bool rst = false;
   int16_t state = this->parseDownlink(dataDown, lenDown, &eventDown);
   if (state != RADIOLIB_ERR_NONE)
   {
     console.log(sqDEBUG, "LoRaWANNode::pollClassC: parseDownlink failed");
-    return false;
   }
-  *portDown = eventDown.fPort;
-  console.log(sqDEBUG, "LoRaWANNode::pollClassC: downlink received");
-  console.log(sqDEBUG, "LoRaWANNode::pollClassC: port %d", *portDown);
+  else
+  {
+    *portDown = eventDown.fPort;
+    console.log(sqDEBUG, "LoRaWANNode::pollClassC: downlink received");
+    console.log(sqDEBUG, "LoRaWANNode::pollClassC: port %d", *portDown);
+    rst = true;
+  }
 
   // 收完再回到擬連續接收
   const RadioLibTime_t kLongRxTimeoutUs = 60000000UL;
@@ -4279,7 +4285,7 @@ bool LoRaWANNode::pollClassC(uint8_t *dataDown, size_t *lenDown, uint8_t *portDo
                                RADIOLIB_IRQ_RX_DEFAULT_FLAGS,
                                RADIOLIB_IRQ_RX_DEFAULT_MASK,
                                0);
-  return true;
+  return rst;
 }
 /* add by Living: 20251101 end */
 

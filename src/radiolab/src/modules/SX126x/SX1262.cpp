@@ -1,15 +1,20 @@
 #include "SX1262.h"
 #include <math.h>
-
+#include "siliqs_esp32.h"
 #if !RADIOLIB_EXCLUDE_SX126X
 
-SX1262::SX1262(Module* mod) : SX126x(mod) {
+SX1262::SX1262(Module *mod) : SX126x(mod)
+{
   chipType = RADIOLIB_SX1262_CHIP_TYPE;
 }
 
-int16_t SX1262::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, float tcxoVoltage, bool useRegulatorLDO) {
+int16_t SX1262::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, float tcxoVoltage, bool useRegulatorLDO)
+{
+  console.log(sqDEBUG, "SX1262::begin(freq=%.3f MHz, bw=%.1f kHz, sf=%d, cr=%d, syncWord=0x%02X, power=%d dBm, preambleLength=%d, tcxoVoltage=%.2f V, useRegulatorLDO=%s)", freq, bw, sf, cr, syncWord, power, preambleLength, tcxoVoltage, useRegulatorLDO ? "true" : "false");
+
   // execute common part
   int16_t state = SX126x::begin(cr, syncWord, preambleLength, tcxoVoltage, useRegulatorLDO);
+
   RADIOLIB_ASSERT(state);
 
   // configure publicly accessible settings
@@ -28,10 +33,11 @@ int16_t SX1262::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t sync
   state = setOutputPower(power);
   RADIOLIB_ASSERT(state);
 
-  return(state);
+  return (state);
 }
 
-int16_t SX1262::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t power, uint16_t preambleLength, float tcxoVoltage, bool useRegulatorLDO) {
+int16_t SX1262::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t power, uint16_t preambleLength, float tcxoVoltage, bool useRegulatorLDO)
+{
   // execute common part
   int16_t state = SX126x::beginFSK(br, freqDev, rxBw, preambleLength, tcxoVoltage, useRegulatorLDO);
   RADIOLIB_ASSERT(state);
@@ -46,10 +52,11 @@ int16_t SX1262::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t
   state = setOutputPower(power);
   RADIOLIB_ASSERT(state);
 
-  return(state);
+  return (state);
 }
 
-int16_t SX1262::beginLRFHSS(float freq, uint8_t bw, uint8_t cr, bool narrowGrid, int8_t power, float tcxoVoltage, bool useRegulatorLDO) {
+int16_t SX1262::beginLRFHSS(float freq, uint8_t bw, uint8_t cr, bool narrowGrid, int8_t power, float tcxoVoltage, bool useRegulatorLDO)
+{
   // execute common part
   int16_t state = SX126x::beginLRFHSS(bw, cr, narrowGrid, tcxoVoltage, useRegulatorLDO);
   RADIOLIB_ASSERT(state);
@@ -64,27 +71,31 @@ int16_t SX1262::beginLRFHSS(float freq, uint8_t bw, uint8_t cr, bool narrowGrid,
   state = setOutputPower(power);
   RADIOLIB_ASSERT(state);
 
-  return(state);
+  return (state);
 }
 
-int16_t SX1262::setFrequency(float freq) {
-  return(setFrequency(freq, false));
+int16_t SX1262::setFrequency(float freq)
+{
+  return (setFrequency(freq, false));
 }
 
-int16_t SX1262::setFrequency(float freq, bool skipCalibration) {
+int16_t SX1262::setFrequency(float freq, bool skipCalibration)
+{
   RADIOLIB_CHECK_RANGE(freq, 150.0, 960.0, RADIOLIB_ERR_INVALID_FREQUENCY);
 
   // check if we need to recalibrate image
-  if(!skipCalibration && (fabsf(freq - this->freqMHz) >= RADIOLIB_SX126X_CAL_IMG_FREQ_TRIG_MHZ)) {
+  if (!skipCalibration && (fabsf(freq - this->freqMHz) >= RADIOLIB_SX126X_CAL_IMG_FREQ_TRIG_MHZ))
+  {
     int16_t state = this->calibrateImage(freq);
     RADIOLIB_ASSERT(state);
   }
 
   // set frequency
-  return(SX126x::setFrequencyRaw(freq));
+  return (SX126x::setFrequencyRaw(freq));
 }
 
-int16_t SX1262::setOutputPower(int8_t power) {
+int16_t SX1262::setOutputPower(int8_t power)
+{
   // check if power value is configurable
   int16_t state = checkOutputPower(power, NULL);
   RADIOLIB_ASSERT(state);
@@ -103,30 +114,40 @@ int16_t SX1262::setOutputPower(int8_t power) {
   RADIOLIB_ASSERT(state);
 
   // restore OCP configuration
-  return(writeRegister(RADIOLIB_SX126X_REG_OCP_CONFIGURATION, &ocp, 1));
+  return (writeRegister(RADIOLIB_SX126X_REG_OCP_CONFIGURATION, &ocp, 1));
 }
 
-int16_t SX1262::checkOutputPower(int8_t power, int8_t* clipped) {
-  if(clipped) {
+int16_t SX1262::checkOutputPower(int8_t power, int8_t *clipped)
+{
+  if (clipped)
+  {
     *clipped = RADIOLIB_MAX(-9, RADIOLIB_MIN(22, power));
   }
   RADIOLIB_CHECK_RANGE(power, -9, 22, RADIOLIB_ERR_INVALID_OUTPUT_POWER);
-  return(RADIOLIB_ERR_NONE);
+  return (RADIOLIB_ERR_NONE);
 }
 
-int16_t SX1262::setModem(ModemType_t modem) {
-  switch(modem) {
-    case(ModemType_t::RADIOLIB_MODEM_LORA): {
-      return(this->begin());
-    } break;
-    case(ModemType_t::RADIOLIB_MODEM_FSK): {
-      return(this->beginFSK());
-    } break;
-    case(ModemType_t::RADIOLIB_MODEM_LRFHSS): {
-      return(this->beginLRFHSS());
-    } break;
-    default:
-      return(RADIOLIB_ERR_WRONG_MODEM);
+int16_t SX1262::setModem(ModemType_t modem)
+{
+  switch (modem)
+  {
+  case (ModemType_t::RADIOLIB_MODEM_LORA):
+  {
+    return (this->begin());
+  }
+  break;
+  case (ModemType_t::RADIOLIB_MODEM_FSK):
+  {
+    return (this->beginFSK());
+  }
+  break;
+  case (ModemType_t::RADIOLIB_MODEM_LRFHSS):
+  {
+    return (this->beginLRFHSS());
+  }
+  break;
+  default:
+    return (RADIOLIB_ERR_WRONG_MODEM);
   }
 }
 
