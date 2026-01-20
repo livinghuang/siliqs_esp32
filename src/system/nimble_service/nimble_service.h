@@ -6,7 +6,6 @@
 #include "siliqs_esp32.h"
 #include "nimble_src/NimBLEDevice.h"
 #include "esp_bt.h"
-#include "esp_bt_main.h"
 #include <vector>
 #include <freertos/queue.h>
 // 定义缓冲队列大小
