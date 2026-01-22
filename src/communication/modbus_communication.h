@@ -28,6 +28,9 @@ public:
   size_t receive_modbus(modbus_data_t *modbusData, size_t length = MODBUS_MAX_DATA_LENGTH, int timeout = -1);
   size_t receive_modbus(modbus_data_t *modbusData, char start_char, size_t length = MODBUS_MAX_DATA_LENGTH, int timeout = -1);
 
+  // Receive Modbus data frame with echo
+  size_t receive_modbus_with_echo(modbus_data_t *echoData, modbus_data_t *modbusData, size_t length = MODBUS_MAX_DATA_LENGTH, int timeout = -1);
+
   // Print Modbus data
   void print_data(modbus_data_t *modbusData);
 

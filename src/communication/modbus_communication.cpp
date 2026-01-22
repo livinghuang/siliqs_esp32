@@ -298,4 +298,64 @@ void ModbusCommunication::modbusSlaveTask(void *parameters)
   vTaskDelete(nullptr);
 }
 
+size_t ModbusCommunication::receive_modbus_with_echo(
+    modbus_data_t *echoData,
+    modbus_data_t *modbusData,
+    size_t length,
+    int timeout)
+{
+  enableReceive(); // 启用接收模式
+  int expect_payload_length = length - 4;
+  // Modbus 帧的总大小：地址(1字节) + 功能码(1字节) + 数据长度 + CRC(2字节)
+  uint8_t buffer[MODBUS_MAX_DATA_LENGTH + 4];
+  echoData->length += 4; // 包括地址、功能码和CRC
+  length += echoData->length;
+  console.log(sqINFO, "receive_modbus_with_echo Echo Data length: " + String(echoData->length));
+  console.log(sqINFO, "receive_modbus_with_echo length: " + String(length));
+
+  length = RS485Communication::receive((char *)buffer, length, timeout);
+
+  // 调用父类的 receive 函数接收整个 Modbus 帧
+  if (length < (4 + echoData->length))
+  {
+    // 如果接收失败，返回 false
+    console.log(sqINFO, "No data received from Modbus.");
+    console.log(sqINFO, buffer, length);
+    return 0;
+  }
+
+  uint8_t *receive_data_ptr = &buffer[echoData->length];
+  uint8_t receive_data_length = length - echoData->length;
+  console.log(sqINFO, "Received Modbus length:" + String(length));
+  console.log(sqINFO, "Received Modbus Frame:");
+  // 调试输出：打印接收的数据
+  console.log(sqINFO, receive_data_ptr, receive_data_length);
+  // 将接收到的数据解析为 modbus_data_t 结构
+  modbusData->address = receive_data_ptr[0];
+  modbusData->function = receive_data_ptr[1];
+  modbusData->length = receive_data_length - 4;
+
+  memcpy(modbusData->data, &receive_data_ptr[2], modbusData->length);
+
+  // 解析接收的 CRC
+  uint16_t received_crc = receive_data_ptr[receive_data_length - 2] | (receive_data_ptr[receive_data_length - 1] << 8);
+
+  console.log(sqINFO, "Received CRC: ");
+  console.log(sqINFO, (uint8_t *)&received_crc, 2);
+  uint16_t calculated_crc = calculateCRC(modbusData);
+  console.log(sqINFO, "\n Calculated CRC: ");
+  console.log(sqINFO, (uint8_t *)&calculated_crc, 2);
+  // 计算 CRC 并验证
+  if (calculated_crc == received_crc) // 返回是否 CRC 校验通过
+  {
+    console.log(sqINFO, "CRC check passed.");
+    return length;
+  }
+  else
+  {
+    console.log(sqINFO, "CRC check failed.");
+    return 0;
+  }
+}
+
 #endif
