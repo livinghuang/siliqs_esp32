@@ -199,15 +199,20 @@ void ATCommandService::OTAServer(const String &param)
 #ifdef USE_WEB_OTA_SERVER
 void ATCommandService::startWebOTAServer(const String &param)
 {
-  const char *defaultPassword = "siliqs.net"; // Default password (at least 8 characters)
+  // Factory default OTA AP password — intentionally public.
+  // Every SQC PCBA ships with this; documented in the user manual and
+  // in the firmware's bundled HTML pages (example/sq_*.html). Customers
+  // are expected to set their own via the ATWOTA <password> command.
+  // This constant is NOT a leaked secret.
+  const char *factoryDefaultPassword = "siliqs.net"; // must be ≥ 8 characters
   char *wifiPassword = nullptr;
 
   if (param.length() < 8)
   {
     this->sendResponse("Password is short, must be at least 8 characters, set to default");
     console.log(sqINFO, "Password is short, must be at least 8 characters, set to default");
-    // Use the default password (no need for dynamic allocation here)
-    wifiPassword = const_cast<char *>(defaultPassword); // Casting to char* for compatibility
+    // Use the factory default password (no need for dynamic allocation here)
+    wifiPassword = const_cast<char *>(factoryDefaultPassword); // Casting to char* for compatibility
   }
   else
   {

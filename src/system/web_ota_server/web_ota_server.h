@@ -5,6 +5,10 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <Update.h>
+// Factory default OTA AP password — intentionally public.
+// Every SQC PCBA ships with this; it is also documented in the bundled
+// HTML pages (example/sq_*.html) and the user manual. Customers set their
+// own via the ATWOTA <password> AT command. NOT a leaked secret.
 #define PASSWORD "siliqs.net"
 
 struct WebOTATaskParams

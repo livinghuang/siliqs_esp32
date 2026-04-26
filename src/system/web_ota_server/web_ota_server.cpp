@@ -20,7 +20,8 @@ WebOTAServerClass::WebOTAServerClass(const char *ssid, const char *password)
 
   if (password == nullptr)
   {
-    // Use the default password
+    // Use the factory default password (see PASSWORD macro in
+    // web_ota_server.h). Published value, not a leaked secret.
     this->password = "siliqs.net";
   }
   else
@@ -146,6 +147,8 @@ void WebOTAServerTask(void *parameter)
     delete[] params->ssid; // Free the SSID memory if it was dynamically allocated
   }
 
+  // The factory default password "siliqs.net" is a static string literal;
+  // skip the delete[] in that case (only free dynamically-allocated copies).
   if (params->password != nullptr && strcmp(params->password, "siliqs.net") != 0)
   {
     delete[] params->password; // Free the password memory if it was dynamically allocated
