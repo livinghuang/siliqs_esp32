@@ -458,11 +458,14 @@ void LoRaWanService::printParams()
   console.log(sqINFO, "NWKxKEY :");
   print_bytes(params->NWKxKEY, sizeof(params->NWKxKEY));
 
-  console.log(sqINFO, "FNWKSINT :");
-  print_bytes(params->FNWKSINT, sizeof(params->FNWKSINT));
+  if (params->LORAWAN_1_1)
+  {
+    console.log(sqINFO, "FNWKSINT :");
+    print_bytes(params->FNWKSINT, sizeof(params->FNWKSINT));
 
-  console.log(sqINFO, "SNWKSINT :");
-  print_bytes(params->SNWKSINT, sizeof(params->SNWKSINT));
+    console.log(sqINFO, "SNWKSINT :");
+    print_bytes(params->SNWKSINT, sizeof(params->SNWKSINT));
+  }
 
   // --- OTAA / ABP 模式提示 ---
   console.log(sqINFO, "\n[Mode Summary]");
@@ -614,6 +617,11 @@ bool LoRaWanService::begin(bool autogen)
   if (state == RADIOLIB_ERR_NONE)
   {
     console.log(sqINFO, F("Radio initialised OK"));
+    // RadioLib begin() defaults OCP to 60 mA (the SX1261 +15 dBm value); raise it to the
+    // SX1262 datasheet 140 mA so the high-power PA isn't current-limited/compressed if
+    // run near max power. (AS923 here caps at +16 dBm so it's defensive today, but keeps
+    // full output if the band/region is ever changed.)
+    radio.setCurrentLimit(140.0);
   }
   else
   {
