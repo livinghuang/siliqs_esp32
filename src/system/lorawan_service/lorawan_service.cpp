@@ -403,6 +403,15 @@ int LoRaWanService::active_node()
     console.log(sqINFO, "Active in ABP");
     state = node.activateABP();
   }
+#ifdef SQ_LORAWAN_UPLINK_DWELL_OFF
+  // Project opt-in: RadioLib's AS923 band enables the 400 ms uplink dwell limit by
+  // default, which caps DR2 payloads at 11 bytes. Networks that disable dwell time
+  // (TxParamSetupReq) set this so the node matches again right after a power loss or
+  // reflash, before any TxParamSetupReq arrives. Downlink dwell has no setter; keep the
+  // NS min_dr >= DR2 so the RX1 data rate is the same either way.
+  node.setDwellTime(false);
+  console.log(sqINFO, "Uplink dwell time limit disabled (SQ_LORAWAN_UPLINK_DWELL_OFF)");
+#endif
   return state;
 }
 
