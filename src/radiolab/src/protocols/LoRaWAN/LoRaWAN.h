@@ -82,7 +82,13 @@
 #define RADIOLIB_LORAWAN_CHANNEL_INDEX_NONE (0xFF >> 0)
 
 // recommended default settings
+// RX1 delay can be overridden per project (-DRADIOLIB_LORAWAN_RECEIVE_DELAY_1_MS=2000):
+// ABP devices use this until the NS sends RXTimingSetupReq, and fall back to it after a
+// power loss / reflash, so it must match the network's rx1_delay (e.g. 2 s for gateway-mesh
+// relays, where the relay round trip measured up to ~924 ms). Unset = LoRaWAN default 1 s.
+#ifndef RADIOLIB_LORAWAN_RECEIVE_DELAY_1_MS
 #define RADIOLIB_LORAWAN_RECEIVE_DELAY_1_MS (1000)
+#endif
 #define RADIOLIB_LORAWAN_RECEIVE_DELAY_2_MS ((RADIOLIB_LORAWAN_RECEIVE_DELAY_1_MS) + 1000)
 #define RADIOLIB_LORAWAN_RX1_DR_OFFSET (0)
 #define RADIOLIB_LORAWAN_JOIN_ACCEPT_DELAY_1_MS (5000)
