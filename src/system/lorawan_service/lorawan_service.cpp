@@ -541,6 +541,19 @@ int16_t LoRaWanService::lwActivate()
 
     // recall session from RTC deep-sleep preserved variable
     state = node.setBufferSession(LWsession); // send them to LoRaWAN stack
+#ifdef SQ_LORAWAN_PERSIST_SESSION
+    // RTC memory does not survive a power loss. Fall back to the copy kept in NVS so the
+    // node comes back with the same channels, frame counters, RX timing and ADR state the
+    // network server still has -- otherwise an ABP node silently restarts with only the
+    // default channels and the NS's LinkADRReq channel mask gets NACKed until ChirpStack
+    // stops sending ADR altogether (sqs-th-i-lorawan-fw log.md 2026-09-30).
+    if (state != RADIOLIB_ERR_NONE && store.isKey("session"))
+    {
+      store.getBytes("session", LWsession, RADIOLIB_LORAWAN_SESSION_BUF_SIZE);
+      state = node.setBufferSession(LWsession);
+      console.log(sqINFO, "Session restored from flash (after power loss): %d", state);
+    }
+#endif
 
     // if we have booted more than once we should have a session to restore, so report any failure
     // otherwise no point saying there's been a failure when it was bound to fail with an empty LWsession var.
@@ -732,6 +745,15 @@ void LoRaWanService::send_and_receive(const uint8_t *dataUp, size_t lenUp, uint8
   // now save session to RTC memory
   uint8_t *persist = node.getBufferSession();
   memcpy(LWsession, persist, RADIOLIB_LORAWAN_SESSION_BUF_SIZE);
+#ifdef SQ_LORAWAN_PERSIST_SESSION
+  // Also keep a copy in NVS so a power loss restores the session (see lwActivate()).
+  // Written after every uplink so the frame counter never goes backwards after a
+  // restore. NVS wear-levels across the partition; at a 15 s interval that is roughly
+  // two years of flash endurance, far more at production intervals.
+  store.begin("radiolib");
+  store.putBytes("session", LWsession, RADIOLIB_LORAWAN_SESSION_BUF_SIZE);
+  store.end();
+#endif
 
   // Check if a downlink was received
   // (state 0 = no downlink, state 1/2 = downlink in window Rx1/Rx2)
