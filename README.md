@@ -165,3 +165,6 @@ Ensure that the `Siliq_ESP32` folder inside the extracted content is correctly p
 ---
 
 透過 **Siliq_ESP32** 框架，您可以輕鬆探索其豐富功能，並快速開發自己的專案。更多資訊請參考專案文件或訪問 [GitHub Repository](https://github.com/your-repo-url)。
+
+## LoRaWAN ABP power-loss contract
+Before changing how the LoRaWAN session survives a power loss (frame counters, RTC/NVS restore, RX1 delay, dwell), read [ENG-0001](https://github.com/siliqs/engineering-decisions/blob/main/decisions/ENG-0001-abp-power-loss.md) in `siliqs/engineering-decisions`. It is a settled decision (2026-10-27) that also binds future ports (nRF54).
