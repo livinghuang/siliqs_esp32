@@ -1,3 +1,9 @@
+// ENG-0001 (ABP power-loss contract, settled 2026-10-27): read
+// https://github.com/siliqs/engineering-decisions/blob/main/decisions/ENG-0001-abp-power-loss.md
+// before changing session handling (SQ_LORAWAN_PERSIST_SESSION, RTC/NVS restore, frame counters,
+// RX1 delay, dwell). Keep nothing (fCnt restarts at 0) or keep everything and fall back to
+// nothing when the saved copy is lost; never keep only part. Do not reverse without Living's
+// explicit approval. Ports to other MCUs (nRF54) must keep the same behaviour.
 #include "bsp.h"
 #ifdef USE_LORAWAN // Only compile when USE_LORAWAN is enabled
 #include "lorawan_service.h"
@@ -542,6 +548,8 @@ int16_t LoRaWanService::lwActivate()
     // recall session from RTC deep-sleep preserved variable
     state = node.setBufferSession(LWsession); // send them to LoRaWAN stack
 #ifdef SQ_LORAWAN_PERSIST_SESSION
+    // ENG-0001 ("keeps everything" mode; on a failed restore
+    // fall through to a fresh session so fCnt restarts at 0 and gateway Auto-Resync takes over).
     // RTC memory does not survive a power loss. Fall back to the copy kept in NVS so the
     // node comes back with the same channels, frame counters, RX timing and ADR state the
     // network server still has -- otherwise an ABP node silently restarts with only the
