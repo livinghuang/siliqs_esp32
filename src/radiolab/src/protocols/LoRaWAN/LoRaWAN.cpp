@@ -620,19 +620,19 @@ int16_t LoRaWANNode::setBufferSession(const uint8_t *persistentBuffer)
   {
     console.log(sqDEBUG, "The Session buffer (%04x) does not match the Nonces buffer (%04x)",
                 signatureInSession, signatureNonces);
+#if defined(SQ_LORAWAN_PRINT_KEYS) && SQ_LORAWAN_PRINT_KEYS // session buffer starts with the session keys
     Serial.println("RADIOLIB_LORAWAN_SESSION_BUF:");
     for (int i = 0; i < RADIOLIB_LORAWAN_SESSION_BUF_SIZE; i++)
     {
-      Serial.print(persistentBuffer[i], HEX);
-      Serial.print(" ");
+      Serial.print(persistentBuffer[i], HEX); Serial.print(" ");
     }
     Serial.println();
     Serial.println("RADIOLIB_LORAWAN_NONCES_BUF:");
     for (int i = 0; i < RADIOLIB_LORAWAN_NONCES_BUF_SIZE; i++)
     {
-      Serial.print(this->bufferNonces[i], HEX);
-      Serial.print(" ");
+      Serial.print(this->bufferNonces[i], HEX); Serial.print(" ");
     }
+#endif
     Serial.printf("The Session buffer (%04x) does not match the Nonces buffer (%04x)",
                   signatureInSession, signatureNonces);
     return (RADIOLIB_ERR_SESSION_DISCARDED);
