@@ -322,6 +322,17 @@ LoRaWanService::~LoRaWanService()
   stop(); // Ensure the service is stopped and resources are released
 }
 
+// Session keys (APPxKEY / NWKxKEY / FNWKSINT / SNWKSINT) are NOT printed by
+// default: anyone with a USB cable could read them off the console. Only
+// DevEUI / DevAddr / JoinEUI are printed. For bench debugging, build with
+// -DSQ_LORAWAN_PRINT_KEYS=1 (never for a shipped image).
+#ifndef SQ_LORAWAN_PRINT_KEYS
+#define SQ_LORAWAN_PRINT_KEYS 0
+#endif
+#if SQ_LORAWAN_PRINT_KEYS
+#warning "SQ_LORAWAN_PRINT_KEYS=1: LoRaWAN session keys are printed on the console. Do not ship this build."
+#endif
+
 void LoRaWanService::autoGenKeys()
 {
   console.log(sqINFO, F("Auto generate keys"));
@@ -339,17 +350,19 @@ void LoRaWanService::autoGenKeys()
   print_bytes_reverse((uint8_t *)&params->DEVEUI, sizeof(params->DEVEUI));
 
   memcpy(&params->APPxKEY, chipidStr, 16);
+  memcpy(&params->NWKxKEY, chipidStr, 16);
+  memcpy(&params->FNWKSINT, chipidStr, 16);
+  memcpy(&params->SNWKSINT, chipidStr, 16);
+#if SQ_LORAWAN_PRINT_KEYS
   Serial.print("APPxKEY:");
   print_bytes((uint8_t *)&params->APPxKEY, sizeof(params->APPxKEY));
-  memcpy(&params->NWKxKEY, chipidStr, 16);
   Serial.print("NWKxKEY:");
   print_bytes((uint8_t *)&params->NWKxKEY, sizeof(params->NWKxKEY));
-  memcpy(&params->FNWKSINT, chipidStr, 16);
   Serial.print("FNWKSINT:");
   print_bytes((uint8_t *)&params->FNWKSINT, sizeof(params->FNWKSINT));
-  memcpy(&params->SNWKSINT, chipidStr, 16);
   Serial.print("SNWKSINT:");
   print_bytes((uint8_t *)&params->SNWKSINT, sizeof(params->SNWKSINT));
+#endif
 }
 int LoRaWanService::begin_node()
 {
@@ -466,6 +479,7 @@ void LoRaWanService::printParams()
   console.log(sqINFO, "DEVADDR :");
   print_bytes_reverse((uint8_t *)&params->DEVADDR, sizeof(params->DEVADDR));
 
+#if SQ_LORAWAN_PRINT_KEYS
   console.log(sqINFO, "\n[Keys]");
   console.log(sqINFO, "APPxKEY :");
   print_bytes(params->APPxKEY, sizeof(params->APPxKEY));
@@ -500,6 +514,10 @@ void LoRaWanService::printParams()
     else
       console.log(sqINFO, "LoRaWAN 1.0.x ABP -> APPxKEY=AppSKey, NWKxKEY=NwkSKey, FNWKSINT/SNWKSINT not used");
   }
+
+#else
+  console.log(sqINFO, "\n[Keys] not printed (build with SQ_LORAWAN_PRINT_KEYS=1 to debug)");
+#endif
 
   console.log(sqINFO, "========================================");
 }
